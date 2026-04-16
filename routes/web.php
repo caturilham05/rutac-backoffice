@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,8 +18,18 @@ Route::get('/backoffice', function () {
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/backoffice/order', function(){
-    return Inertia::render('Backoffice/Order');
+    return Inertia::render('Backoffice/Orders/Order');
 })->middleware(['auth', 'verified'])->name('order');
+
+Route::get('/backoffice/configuration/shopee-fee', function(){
+    return Inertia::render('Backoffice/Configuration/ShopeeFee');
+})->middleware(['auth', 'verified'])->name('ShopeeFee');
+
+Route::middleware(['auth', 'verified'])->group(function(){
+    Route::get('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'index'])->name('ShopeeFee');
+    // Route::get('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'create'])->name('ShopeeFee');
+    Route::post('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'store'])->name('ShopeeFeePost');
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

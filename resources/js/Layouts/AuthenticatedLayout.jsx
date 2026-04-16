@@ -30,15 +30,34 @@ export default function AuthenticatedLayout({ header, children }) {
                                 >
                                     Dashboard
                                 </NavLink>
-                            </div>
 
-                            <div className="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                                 <NavLink
                                     href={route('order')}
                                     active={route().current('order')}
                                 >
                                     Order
                                 </NavLink>
+                                <div className="flex items-center">
+                                    <Dropdown>
+                                        <Dropdown.Trigger>
+                                            <button
+                                                type="button"
+                                                className="inline-flex items-center border-b-2 border-transparent px-1 pt-1 text-sm font-medium leading-5 text-gray-500 hover:text-gray-700"
+                                            >
+                                                Configuration
+                                                <svg className="ms-1 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                                    <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                                                </svg>
+                                            </button>
+                                        </Dropdown.Trigger>
+
+                                        <Dropdown.Content align="left">
+                                            <Dropdown.Link href={route('ShopeeFee')}>
+                                                Configuration Shopee
+                                            </Dropdown.Link>
+                                        </Dropdown.Content>
+                                    </Dropdown>
+                                </div>
                             </div>
                         </div>
 
