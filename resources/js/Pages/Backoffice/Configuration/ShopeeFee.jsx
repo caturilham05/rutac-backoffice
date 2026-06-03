@@ -1,5 +1,5 @@
 import React from 'react'
-import { Head } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, usePage } from '@inertiajs/react';
 import InputLabel from '@/Components/InputLabel';
@@ -7,10 +7,19 @@ import InputError from '@/Components/InputError';
 import DataTable from '@/Components/DataTable';
 
 function ShopeeFee() {
-    const { setting } = usePage().props;
+    const { setting, flash, marketplaces } = usePage().props;
 
-    // 🔥 columns
     const columns = [
+        {
+            key: 'marketplace',
+            label: 'Marketplace',
+            render: (row) => `${row.marketplace?.marketplace ?? ''}`,
+        },
+        {
+            key: 'store',
+            label: 'Store',
+            render: (row) => `${row.marketplace?.store ?? ''}`,
+        },
         {
             key: 'admin_fee',
             label: 'Admin Fee',
@@ -52,29 +61,60 @@ function ShopeeFee() {
             label: 'Operational Fee',
             render: (row) => `${row.operational ?? 0}%`,
         },
+        {
+            key: 'action',
+            label: 'Action',
+            render: (row) => (
+                <div className="flex gap-2">
+                    <Link
+                        href={route('shopeeFee.edit', row.id)}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded"
+                    >
+                        Edit
+                    </Link>
+                    <button
+                        onClick={() => handleDelete(row.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded"
+                    >
+                        Delete
+                    </button>
+                </div>
+            )
+        },
     ];
 
-    // 🔥 FIX: harus array
-    const tableData = setting ? [setting] : [];
+    const tableData = setting ? setting : [];
 
-    // 🔥 form
-    const { data, setData, post, errors } = useForm({
-        admin_fee: setting?.admin_fee ?? '',
-        free_shipping: setting?.free_shipping ?? '',
-        extra_promo: setting?.extra_promo ?? '',
+    const { data, setData, post, errors, processing, reset } = useForm({
+        admin_fee     : setting?.admin_fee ?? '',
+        free_shipping : setting?.free_shipping ?? '',
+        extra_promo   : setting?.extra_promo ?? '',
         processing_fee: setting?.processing_fee ?? '',
-        affiliate: setting?.affiliate ?? '',
-        live: setting?.live ?? '',
-        premi_fee: setting?.premi_fee ?? '',
-        operational: setting?.operational ?? '',
+        affiliate     : setting?.affiliate ?? '',
+        live          : setting?.live ?? '',
+        premi_fee     : setting?.premi_fee ?? '',
+        operational   : setting?.operational ?? '',
     });
 
     const submit = (e) => {
         e.preventDefault();
         post(route('ShopeeFeePost'), {
-            preserveScroll: true,
+            preserveScroll: false,
+            onSuccess: () => reset(),
         });
     };
+
+    const handleDelete = (id) => {
+        if (!confirm('Yakin ingin menghapus data ini?')) {
+            return
+        }
+
+        console.log(id)
+
+        router.delete(route('shopeeFee.delete', id), {
+            preserveScroll: false,
+        })
+    }
 
     return (
         <AuthenticatedLayout
@@ -86,6 +126,18 @@ function ShopeeFee() {
         >
             <Head title="ShopeeFee" />
 
+            {flash.success && (
+                <div className="mb-4 mt-4 p-4 bg-green-300 text-green-700 rounded">
+                    {flash.success}
+                </div>
+            )}
+
+            {flash.error && (
+                <div className="mb-4 mt-4 p-4 bg-red-300 text-red-700 rounded">
+                    {flash.error}
+                </div>
+            )}
+
             <div className="p-6 space-y-6">
 
                 {/* 🔥 TABLE */}
@@ -93,6 +145,25 @@ function ShopeeFee() {
 
                 {/* 🔥 FORM */}
                 <form onSubmit={submit} className="space-y-4">
+                    <div>
+                        <InputLabel
+                            htmlFor="marketplace_id"
+                            value="Marketplace Name"
+                        />
+                        <select
+                            className="mt-1 block w-full border-gray-300 rounded-md"
+                            // value={data.marketplace}
+                            onChange={(e) => setData("marketplace_id", e.target.value)}
+                        >
+                            <option value="">Pilih Marketplace</option>
+                            {
+                                marketplaces?.map((v) => (
+                                    <option value={v.id} key={v.id}>{v.marketplace} - {v.store}</option>
+                                ))
+                            }
+                        </select>
+                        <InputError message={errors.marketplace_id} />
+                    </div>
 
                     <div>
                         <InputLabel htmlFor="admin_fee" value="Admin Fee (%)" />
@@ -182,7 +253,14 @@ function ShopeeFee() {
                         <InputError message={errors.operational} className="mt-2" />
                     </div>
 
-                    <button className="px-4 py-2 bg-blue-500 text-white rounded">
+                    <button className={`
+                        px-4 py-2 rounded text-white transition
+                        ${processing
+                            ? 'bg-gray-400 cursor-not-allowed'
+                            : 'bg-blue-500 hover:bg-blue-600'
+                        }
+                    `}
+                    disabled={processing}>
                         Save
                     </button>
                 </form>

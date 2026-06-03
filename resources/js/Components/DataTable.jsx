@@ -3,7 +3,6 @@ export default function DataTable({
     data = [],
     pagination = null,
 }) {
-    console.log(columns)
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
             <div className="overflow-x-auto">

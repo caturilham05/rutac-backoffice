@@ -31,6 +31,7 @@ class ShopeeFeeRequest extends FormRequest
             'live'           => ['required', 'numeric', 'min:0', 'max:100'],
             'premi_fee'      => ['required', 'numeric', 'min:0', 'max:100'],
             'operational'    => ['required', 'numeric', 'min:0', 'max:100'],
+            'marketplace_id' => ['required'],
 
             // rupiah
             'processing_fee' => ['required', 'numeric', 'min:0'],
@@ -58,6 +59,7 @@ class ShopeeFeeRequest extends FormRequest
             'live'           => 'Live Fee',
             'premi_fee'      => 'Premi Fee',
             'operational'    => 'Operational Fee',
+            'marketplace_id' => 'Marketplace Id',
         ];
     }
 }
