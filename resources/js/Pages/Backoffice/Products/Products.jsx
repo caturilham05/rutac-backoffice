@@ -1,9 +1,93 @@
 import React from 'react'
+import { Head, Link, router } from '@inertiajs/react';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { useForm, usePage } from '@inertiajs/react';
+import DataTable from '@/Components/DataTable';
+import PrimaryButton from '@/Components/PrimaryButton';
 
 function Products() {
-  return (
-    <div>Products</div>
-  )
+    const {products, flash} = usePage().props;
+    const columns = [
+        {
+            key: 'name',
+            label: 'Product Name',
+            render: (row) => `${row.name ?? ''}`
+        },
+        {
+            key: 'cat_name',
+            label: 'Category Name',
+            render: (row) => `${row.cat_name ?? ''}`
+        },
+        {
+            key: 'description',
+            label: 'Description',
+            render: (row) => `${row.description ?? ''}`
+        },
+        {
+            key: 'edit',
+            label: 'Action',
+            render: (row) => (
+                <div className="flex gap-2">
+                    <Link
+                        href={route('products.edit', row.id)}
+                        className="px-3 py-1 bg-yellow-500 text-white rounded"
+                    >
+                        Edit
+                    </Link>
+                    <button
+                        onClick={() => handleDelete(row.id)}
+                        className="px-3 py-1 bg-red-500 text-white rounded"
+                    >
+                        Delete
+                    </button>
+                </div>
+            )
+        },
+    ];
+
+    const handleDelete = (id) => {
+        if (!confirm('Yakin ingin menghapus data ini?')) {
+            return
+        }
+
+        router.delete(route('products.delete', id), {
+            preserveScroll: false,
+        })
+    }
+
+
+    return (
+        <AuthenticatedLayout
+            header={
+                <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                    Product List
+                </h2>
+            }
+        >
+            <Head title="Product List" />
+            {flash.success && (
+                <div className="mb-4 mt-4 p-4 bg-green-300 text-green-700 rounded">
+                    {flash.success}
+                </div>
+            )}
+
+            {flash.error && (
+                <div className="mb-4 mt-4 p-4 bg-red-300 text-red-700 rounded">
+                    {flash.error}
+                </div>
+            )}
+
+            <PrimaryButton className="py-2 mx-4 mt-4" onClick={() => router.visit(route('products.create'))}>Add Product</PrimaryButton>
+
+            <div className="py-4">
+                <div className="mx-auto max-w-7xl sm:px-6 lg:px-4">
+                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                        <DataTable columns={columns} data={products} />
+                    </div>
+                </div>
+            </div>
+        </AuthenticatedLayout>
+    )
 }
 
 export default Products

@@ -46,7 +46,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                         </Dropdown.Trigger>
 
                                         <Dropdown.Content align="left">
-                                            <Dropdown.Link href={route('order')}>
+                                            <Dropdown.Link href={route('products')}>
                                                 Product List
                                             </Dropdown.Link>
                                             <Dropdown.Link href={route('product_category')}>

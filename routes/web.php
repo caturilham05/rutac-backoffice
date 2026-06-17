@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProductCategoryController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
@@ -23,6 +24,13 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice/Orders/Order', function(){
         return Inertia::render('Backoffice/Orders/Order');
     })->name('order');
+
+    Route::get('/backoffice/products/product-list', [ProductController::class, 'index'])->name('products');
+    Route::get('/backoffice/products/product-list/create', [ProductController::class, 'create'])->name('products.create');
+    Route::post('/backoffice/products/product-list/create', [ProductController::class, 'store'])->name('products.store');
+    Route::get('/backoffice/products/product-list/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
+    Route::put('/backoffice/products/product-list/edit/{id}', [ProductController::class, 'put'])->name('products.put');
+    Route::delete('/backoffice/products/product-list/{product}', [ProductController::class, 'delete'])->name('products.delete');
 
     Route::get('/backoffice/products/product-category', [ProductCategoryController::class, 'index'])->name('product_category');
     Route::post('/backoffice/products/product-category', [ProductCategoryController::class, 'store'])->name('product_category.store');
