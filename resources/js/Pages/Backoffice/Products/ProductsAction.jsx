@@ -10,26 +10,29 @@ import Checkbox from '@/Components/Checkbox';
 function ProductsAction() {
     const {products, categories} = usePage().props;
     const {data, setData, put, post, processing, errors, reset} = useForm({
-        id         : products.id ?? 0,
-        cat_id     : products.cat_id ?? 0,
+        id         : products.id ?? '',
+        cat_id     : products.cat_id ?? '',
         cat_name   : products.cat_name ?? '',
         name       : products.name ?? '',
         description: products.description ?? '',
         has_variant: products.has_variant ?? false,
+        sku_id     : products.sku_id ?? '',
         sku        : products.sku ?? '',
         stock      : products.stock ?? '',
         price      : products.price ?? '',
-        variants   : [],
+        variants   : products.items ?? [],
     });
 
     let headerText = '';
     let routeCond  = '';
+    let isEdit     = 0;
     if (Object.keys(products).length === 0) {
         headerText = 'Product Create';
         routeCond  = 'products.store';
     } else {
         headerText = 'Product Edit';
         routeCond  = 'products.put';
+        isEdit     = 1;
     }
 
     const submit = (e) => {
@@ -70,10 +73,12 @@ function ProductsAction() {
             // reset default variasi
             setData("variants", [
                 {
-                    name : "",
-                    price: '',
-                    stock: '',
-                    sku  : ""
+                    id    : null,
+                    sku_id: null,
+                    name  : "",
+                    price : '',
+                    stock : '',
+                    sku   : ""
                 },
             ]);
 
@@ -104,7 +109,7 @@ function ProductsAction() {
                 <form className="space-y-4" onSubmit={submit}>
                     <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
                         <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">Informasi Produk</h2>
+                            <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200 mb-5">Informasi Produk</h2>
 
                             <div>
                                 <InputLabel
@@ -160,34 +165,40 @@ function ProductsAction() {
                     <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 mt-6">
                         <div className="bg-white shadow rounded-lg p-8">
 
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-10">
+                            <h2 className="text-2xl font-semibold text-gray-800 mb-5">
                                 Informasi Penjualan
                             </h2>
 
                             {/* Variasi */}
-                            <div className="mb-8">
-                                <label className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-4">
-                                    <span className="w-3 h-3 bg-orange-500 rounded-full"></span>
-                                    Variasi
-                                </label>
+                            {
+                                (
+                                    !isEdit || (isEdit && products.has_variant === 1)
+                                ) && (
+                                    <div className="mb-8">
+                                        <label className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-4">
+                                            <span className="w-3 h-3 bg-orange-500 rounded-full"></span>
+                                            Variasi
+                                        </label>
 
-                                <button
-                                    type="button"
-                                    onClick={() => setData("has_variant", !data.has_variant)}
-                                    className="
-                                        border border-dashed border-gray-300
-                                        rounded-lg px-6 py-4
-                                        text-orange-500 font-medium
-                                        hover:bg-orange-50
-                                        transition
-                                    "
-                                >
-                                    + Aktifkan Variasi
-                                </button>
-                            </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setData("has_variant", !data.has_variant)}
+                                            className="
+                                                border border-dashed border-gray-300
+                                                rounded-lg px-6 py-4
+                                                text-orange-500 font-medium
+                                                hover:bg-orange-50
+                                                transition
+                                            "
+                                        >
+                                            + Aktifkan Variasi
+                                        </button>
+                                    </div>
+                                )
+                            }
 
                             {/* Pakai Variant */}
-                            {data.has_variant && (
+                            {Boolean(data.has_variant) && (
                                 <div className="mt-6">
                                     <div className="space-y-4">
                                         {data.variants.map((variant, variantIndex) => (

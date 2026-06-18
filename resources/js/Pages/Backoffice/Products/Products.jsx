@@ -14,14 +14,37 @@ function Products() {
             render: (row) => `${row.name ?? ''}`
         },
         {
-            key: 'cat_name',
-            label: 'Category Name',
-            render: (row) => `${row.cat_name ?? ''}`
+            key: 'price',
+            label: 'Price',
+            render: (row) => {
+                if (!row.has_variant) {
+                    const minPrice = Math.min(...row.items.map(item => Number(item.price)));
+                    return `Rp ${minPrice.toLocaleString('id-ID')}`;
+                } else {
+                    const minPrice = Math.min(...row.items.map(item => Number(item.price)));
+                    const maxPrice = Math.max(...row.items.map(item => Number(item.price)));
+
+                    return `Rp ${minPrice.toLocaleString('id-ID')} - Rp ${maxPrice.toLocaleString('id-ID')}`;
+                }
+            }
         },
         {
-            key: 'description',
-            label: 'Description',
-            render: (row) => `${row.description ?? ''}`
+            key: 'stock',
+            label: 'Stock',
+            render: (row) => {
+                let stockTotal = 0;
+
+                if (!row.has_variant) {
+                    stockTotal = row.items[0].stock;
+                } else {
+                    stockTotal = row.items.reduce(
+                        (total, item) => total + +item.stock,
+                        0
+                    );
+                }
+
+                return stockTotal
+            }
         },
         {
             key: 'edit',

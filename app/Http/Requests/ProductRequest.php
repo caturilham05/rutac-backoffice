@@ -30,17 +30,20 @@ class ProductRequest extends FormRequest
 
         if ($this->boolean('has_variant')) {
             $rules += [
-                'variants'         => ['required', 'array', 'min:1'],
-                'variants.*.name'  => ['required'],
-                'variants.*.price' => ['required', 'numeric', 'min:0'],
-                'variants.*.stock' => ['required', 'integer', 'min:0'],
-                'variants.*.sku'   => ['nullable'],
+                'variants'          => ['required', 'array', 'min:1'],
+                'variants.*.id'     => ['nullable', 'integer'],
+                'variants.*.sku_id' => ['nullable', 'integer'],
+                'variants.*.name'   => ['required'],
+                'variants.*.price'  => ['required', 'numeric', 'min:0'],
+                'variants.*.stock'  => ['required', 'integer', 'min:0'],
+                'variants.*.sku'    => ['nullable'],
             ];
         } else {
             $rules += [
-                'price' => ['required', 'numeric', 'min:0'],
-                'stock' => ['required', 'integer', 'min:0'],
-                'sku'   => ['nullable'],
+                'price'  => ['required', 'numeric', 'min:0'],
+                'stock'  => ['required', 'integer', 'min:0'],
+                'sku'    => ['nullable'],
+                'sku_id' => ['nullable']
             ];
         }
 

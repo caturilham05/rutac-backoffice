@@ -15,8 +15,10 @@ class ProductController extends Controller
 {
     public function index(): Response
     {
+        $products = Product::productGet();
         return Inertia::render('Backoffice/Products/Products', [
-            'products' => Product::orderBy('id', 'desc')->get()
+            // 'products' => Product::orderBy('id', 'desc')->get()
+            'products' => $products
         ]);
     }
 
@@ -37,17 +39,43 @@ class ProductController extends Controller
 
         try {
             Product::productUpsert($data);
+            return redirect()->route('products')->with('success', sprintf('product [%s] berhasil ditambahkan', $data['name'] ?? ''));
         } catch (\Throwable $th) {
+            dd($th);
             return redirect()->route('products')->with('error', sprintf('error: %s. code: %s', $th->getMessage(), $th->getCode()));
         }
-        return redirect()->route('products')->with('success', sprintf('product [%s] berhasil ditambahkan', $data['name'] ?? ''));
     }
 
     public function edit(int $id): Response
     {
-        $category = Product_category::get();
+        $category        = Product_category::get();
+        $products        = Product::with(['category', 'variants.skus', 'skus'])->findOrFail($id);
+        $products->items = collect();
+
+        if ($products->has_variant)
+        {
+            $products->items = $products->variants->map(function($variant) {
+                return [
+                    'id'         => $variant->id,
+                    'product_id' => $variant->product_id,
+                    'name'       => $variant->name,
+                    'sku_id'     => $variant->skus?->id,
+                    'sku'        => $variant->skus?->name,
+                    'stock'      => $variant->skus?->stock,
+                    'price'      => $variant->skus?->original_price,
+                ];
+            });
+            $products->unsetRelation('variants');
+            $products->unsetRelation('skus');
+        } else {
+            $products->sku_id = $products->skus?->id;
+            $products->sku    = $products->skus?->name;
+            $products->price  = $products->skus?->original_price;
+            $products->stock  = $products->skus?->stock;
+        }
+
         return Inertia::render('Backoffice/Products/ProductsAction', [
-            'products'   => Product::findOrFail($id),
+            'products'   => $products,
             'categories' => $category
         ]);
     }
@@ -58,8 +86,12 @@ class ProductController extends Controller
         $category         = Product_category::findOrFail($data['cat_id']);
         $data['cat_name'] = $category->name ?? '';
         $data['id']       = $id;
-        Product::productUpsert($data);
-        return redirect()->route('products')->with('success', sprintf('product [%s] berhasil diupdate', $data['name'] ?? ''));
+        try {
+            Product::productUpsert($data);
+            return redirect()->route('products')->with('success', sprintf('product [%s] berhasil diupdate', $data['name'] ?? ''));
+        } catch (\Throwable $th) {
+            return redirect()->route('products')->with('error', sprintf('error: %s. code: %s', $th->getMessage(), $th->getCode()));
+        }
     }
 
     public function delete(Product $product): RedirectResponse

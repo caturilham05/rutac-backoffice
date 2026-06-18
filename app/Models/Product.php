@@ -35,6 +35,15 @@ class Product extends Model
                     throw new \Exception('data tidak valid', 400);
                 }
 
+                $variant_id = array_column($data['variants'], 'id');
+                $sku_id     = array_column($data['variants'], 'sku_id');
+
+                if (!empty($data['id']))
+                {
+                    Product_variant::where('product_id', $data['id'])->whereNotIn('id', $variant_id)->delete();
+                    Product_sku::where('product_id', $data['id'])->whereNotIn('id', $sku_id)->delete();
+                }
+
                 foreach ($data['variants'] as $variant) {
                     $productVariantData = [
                         'product_id' => $product->id ?? 0,
@@ -49,7 +58,7 @@ class Product extends Model
                     $productSkuData = [
                         'product_id'         => $product->id ?? 0,
                         'product_variant_id' => $productVariantInsert->id ?? 0,
-                        'name'               => !empty($variant['sku']) ? $variant['sku'] : sprintf('%s-%s', strtolower($data['name']), $variant['name']),
+                        'name'               => !empty($variant['sku']) ? $variant['sku'] : sprintf('%s-%s', self::prefixSku($data['name']), $variant['name']),
                         'stock'              => $variant['stock'],
                         'original_price'     => $variant['price']
                     ];
@@ -63,12 +72,7 @@ class Product extends Model
                 return $product ?? [];
             }
 
-
-            $prefix = collect(explode(' ', $data['name']))
-                ->map(fn ($word) => strtolower(substr($word, 0, 1)))
-                ->implode('');
-
-            $prefixSku      = $prefix . '-' . $product->id ?? 0;
+            $prefixSku      = self::prefixSku($data['name']) . '-' . $product->id ?? 0;
             $productSkuData = [
                 'product_id'         => $product->id ?? 0,
                 'product_variant_id' => 0,
@@ -96,14 +100,88 @@ class Product extends Model
         return $this->hasOne(Product_category::class, 'id', 'cat_id');
     }
 
-
     public function variants(): HasMany
     {
         return $this->hasMany(Product_variant::class, 'product_id');
     }
 
-    public function skus(): HasMany
+    public function skus(): HasOne
     {
-        return $this->hasMany(Product_sku::class, 'product_id');
+        return $this->hasOne(Product_sku::class, 'product_id');
+    }
+
+    private static function prefixSku(string $text)
+    {
+        return collect(explode(' ', $text))->map(fn ($word) => strtolower(substr($word, 0, 1)))->implode('');
+    }
+
+    public static function productGet(int $id = 0)
+    {
+        $query = self::with(['category', 'variants.skus', 'skus']);
+        if (empty($id)) {
+            $products = $query->get()->map(function ($product) {
+
+                if ($product->has_variant) {
+
+                    $product->items = $product->variants->map(function ($variant) {
+                        return [
+                            'id'         => $variant->id,
+                            'product_id' => $variant->product_id,
+                            'name'       => $variant->name,
+                            'sku_id'     => $variant->skus?->id,
+                            'sku'        => $variant->skus?->name,
+                            'stock'      => $variant->skus?->stock,
+                            'price'      => $variant->skus?->original_price,
+                        ];
+                    });
+
+                } else {
+
+                    $product->items = collect([
+                        [
+                            'id'         => 0,
+                            'product_id' => $product->id,
+                            'name'       => $product->name,
+                            'sku_id'     => $product->skus?->id,
+                            'sku'        => $product->skus?->name,
+                            'stock'      => $product->skus?->stock,
+                            'price'      => $product->skus?->original_price,
+                        ]
+                    ]);
+                }
+
+                $product->unsetRelation('variants');
+                $product->unsetRelation('skus');
+
+                return $product;
+            });
+        } else {
+            $products = $query->findOrFail($id);
+            $products->items = collect();
+
+            if ($products->has_variant)
+            {
+                $products->items = $products->variants->map(function($variant) {
+                    return [
+                        'id'         => $variant->id,
+                        'product_id' => $variant->product_id,
+                        'name'       => $variant->name,
+                        'sku_id'     => $variant->skus?->id,
+                        'sku'        => $variant->skus?->name,
+                        'stock'      => $variant->skus?->stock,
+                        'price'      => $variant->skus?->original_price,
+                    ];
+                });
+                $products->unsetRelation('variants');
+                $products->unsetRelation('skus');
+            } else {
+                $products->sku_id = $products->skus?->id;
+                $products->sku    = $products->skus?->name;
+                $products->price  = $products->skus?->original_price;
+                $products->stock  = $products->skus?->stock;
+            }
+        }
+
+        return $products;
     }
 }
