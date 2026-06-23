@@ -1,0 +1,1 @@
+import{j as s}from"./app-CrZlmX7N.js";function u({message:e,type:r="success",className:t="",...n}){if(!e)return null;const l={success:"bg-green-300 text-green-700",error:"bg-red-300 text-red-700",warning:"bg-yellow-300 text-yellow-700",info:"bg-blue-300 text-blue-700"};return e?s.jsx("div",{...n,className:`mb-4 mt-4 p-4 rounded ${l[r]} ${t}`,children:e}):null}export{u as F};

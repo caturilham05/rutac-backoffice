@@ -4,10 +4,18 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, usePage } from '@inertiajs/react';
 import DataTable from '@/Components/DataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
+import FlashMessage from '@/Components/FlashMessage';
 
 function Products() {
     const {products, flash} = usePage().props;
     const columns = [
+        {
+            key: 'detail',
+            label: '',
+            // render: (row) => {
+            //     return `Dropdown`
+            // }
+        },
         {
             key: 'name',
             label: 'Product Name',
@@ -78,7 +86,6 @@ function Products() {
         })
     }
 
-
     return (
         <AuthenticatedLayout
             header={
@@ -89,15 +96,11 @@ function Products() {
         >
             <Head title="Product List" />
             {flash.success && (
-                <div className="mb-4 mt-4 p-4 bg-green-300 text-green-700 rounded">
-                    {flash.success}
-                </div>
+                <FlashMessage type="success" message={flash.success} />
             )}
 
             {flash.error && (
-                <div className="mb-4 mt-4 p-4 bg-red-300 text-red-700 rounded">
-                    {flash.error}
-                </div>
+                <FlashMessage type="error" message={flash.error} />
             )}
 
             <PrimaryButton className="py-2 mx-4 mt-4" onClick={() => router.visit(route('products.create'))}>Add Product</PrimaryButton>

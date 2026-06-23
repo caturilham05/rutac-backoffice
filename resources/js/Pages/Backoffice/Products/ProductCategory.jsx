@@ -5,6 +5,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import DataTable from '@/Components/DataTable';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
+import FlashMessage from '@/Components/FlashMessage';
 
 function ProductCategory() {
     const {catList, flash} = usePage().props;
@@ -67,16 +68,13 @@ function ProductCategory() {
         }
     >
         <Head title="Product Category" />
+
         {flash.success && (
-            <div className="mb-4 mt-4 p-4 bg-green-300 text-green-700 rounded">
-                {flash.success}
-            </div>
+            <FlashMessage type="success" message={flash.success} />
         )}
 
         {flash.error && (
-            <div className="mb-4 mt-4 p-4 bg-red-300 text-red-700 rounded">
-                {flash.error}
-            </div>
+            <FlashMessage type="error" message={flash.error} />
         )}
 
         <div className="py-4">
@@ -91,10 +89,10 @@ function ProductCategory() {
             <form onSubmit={submit} className="space-y-4">
                 <InputLabel htmlFor="name" value="Category Name" />
                 <input
-                type="text"
-                className="mt-1 block w-full border-gray-300 rounded-md"
-                value={data.name}
-                onChange={(e) => setData("name", e.target.value)}
+                    type="text"
+                    className="mt-1 block w-full border-gray-300 rounded-md"
+                    value={data.name}
+                    onChange={(e) => setData("name", e.target.value)}
                 />
                 <InputError message={errors.name} />
 

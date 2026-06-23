@@ -117,7 +117,7 @@ class Product extends Model
 
     public static function productGet(int $id = 0)
     {
-        $query = self::with(['category', 'variants.skus', 'skus']);
+        $query = self::with(['category', 'variants.skus', 'skus'])->orderBy('id', 'desc');
         if (empty($id)) {
             $products = $query->get()->map(function ($product) {
 
