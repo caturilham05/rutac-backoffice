@@ -23,6 +23,8 @@ function ProductsAction() {
         variants   : products.items ?? [],
     });
 
+    // console.log(data)
+
     let headerText = '';
     let routeCond  = '';
     let isEdit     = 0;
@@ -166,7 +168,7 @@ function ProductsAction() {
                         <div className="bg-white shadow rounded-lg p-8">
 
                             <h2 className="text-2xl font-semibold text-gray-800 mb-5">
-                                Informasi Penjualan
+                                Informasi Variant
                             </h2>
 
                             {/* Variasi */}

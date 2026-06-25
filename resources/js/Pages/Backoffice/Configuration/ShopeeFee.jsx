@@ -5,6 +5,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import DataTable from '@/Components/DataTable';
+import {Trash, SquarePen} from 'lucide-react';
 
 function ShopeeFee() {
     const { setting, flash, marketplaces } = usePage().props;
@@ -70,13 +71,13 @@ function ShopeeFee() {
                         href={route('shopeeFee.edit', row.id)}
                         className="px-3 py-1 bg-yellow-500 text-white rounded"
                     >
-                        Edit
+                        <SquarePen size={15} />
                     </Link>
                     <button
                         onClick={() => handleDelete(row.id)}
                         className="px-3 py-1 bg-red-500 text-white rounded"
                     >
-                        Delete
+                        <Trash size={15} />
                     </button>
                 </div>
             )

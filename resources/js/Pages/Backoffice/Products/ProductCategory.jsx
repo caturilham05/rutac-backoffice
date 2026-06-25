@@ -6,6 +6,7 @@ import DataTable from '@/Components/DataTable';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
 import FlashMessage from '@/Components/FlashMessage';
+import {Trash, SquarePen} from 'lucide-react';
 
 function ProductCategory() {
     const {catList, flash} = usePage().props;
@@ -24,13 +25,13 @@ function ProductCategory() {
                         href={route('product_category.edit', row.id)}
                         className="px-3 py-1 bg-yellow-500 text-white rounded"
                     >
-                        Edit
+                        <SquarePen size={15} />
                     </Link>
                     <button
                         onClick={() => handleDelete(row.id)}
                         className="px-3 py-1 bg-red-500 text-white rounded"
                     >
-                        Delete
+                        <Trash size={15} />
                     </button>
                 </div>
             )

@@ -5,6 +5,7 @@ import { useForm, usePage } from '@inertiajs/react';
 import DataTable from '@/Components/DataTable';
 import PrimaryButton from '@/Components/PrimaryButton';
 import FlashMessage from '@/Components/FlashMessage';
+import {Trash, SquarePen, Plus} from 'lucide-react';
 
 function Products() {
     const {products, flash} = usePage().props;
@@ -12,9 +13,6 @@ function Products() {
         {
             key: 'detail',
             label: '',
-            // render: (row) => {
-            //     return `Dropdown`
-            // }
         },
         {
             key: 'name',
@@ -63,13 +61,13 @@ function Products() {
                         href={route('products.edit', row.id)}
                         className="px-3 py-1 bg-yellow-500 text-white rounded"
                     >
-                        Edit
+                        <SquarePen size={15} />
                     </Link>
                     <button
                         onClick={() => handleDelete(row.id)}
                         className="px-3 py-1 bg-red-500 text-white rounded"
                     >
-                        Delete
+                        <Trash size={15}/>
                     </button>
                 </div>
             )
@@ -103,7 +101,7 @@ function Products() {
                 <FlashMessage type="error" message={flash.error} />
             )}
 
-            <PrimaryButton className="py-2 mx-4 mt-4" onClick={() => router.visit(route('products.create'))}>Add Product</PrimaryButton>
+            <PrimaryButton className="py-2 mx-4 mt-4" onClick={() => router.visit(route('products.create'))}><Plus size={15} />Add Product</PrimaryButton>
 
             <div className="py-4">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-4">

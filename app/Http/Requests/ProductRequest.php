@@ -56,8 +56,11 @@ class ProductRequest extends FormRequest
             '*.required'                => ':attribute wajib diisi',
             'variants.*.name.required'  => ':attribute wajib diisi',
             'variants.*.price.required' => ':attribute wajib diisi',
+            'variants.*.price.numeric'  => ':attribute harus berupa angka',
+            'variants.*.price.min'      => ':attribute minimal 0',
             'variants.*.stock.required' => ':attribute wajib diisi',
-            // 'variants'                  => 'variant tidak valid'
+            'variants.*.stock.numeric'  => ':attribute harus berupa angka',
+            'variants.*.stock.min'      => ':attribute minimal 0',
         ];
     }
 

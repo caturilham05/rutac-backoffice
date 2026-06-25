@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('invoice', 250)->nullable();
             $table->string('vendor', 250)->nullable();
             $table->double('price');
-            $table->date('purchase_date');
             $table->timestamps();
         });
     }

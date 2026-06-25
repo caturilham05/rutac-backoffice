@@ -4,6 +4,7 @@ use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,10 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice/Orders/Order', function(){
         return Inertia::render('Backoffice/Orders/Order');
     })->name('order');
+
+    Route::get('/backoffice/purchases/purchases-list', [PurchaseController::class, 'index'])->name('purchases.list');
+    Route::get('/backoffice/purchases/purchases-create', [PurchaseController::class, 'create'])->name('purchases.create');
+    Route::post('/backoffice/purchases/purchases-list', [PurchaseController::class, 'store'])->name('purchases.store');
 
     Route::get('/backoffice/products/product-list', [ProductController::class, 'index'])->name('products');
     Route::get('/backoffice/products/product-list/create', [ProductController::class, 'create'])->name('products.create');
