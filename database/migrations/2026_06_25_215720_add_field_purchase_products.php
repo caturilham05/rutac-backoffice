@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('purchase_products', function (Blueprint $table) {
-            $table->bigInteger('purchase_id');
+            $table->bigInteger('purchase_id')->unsigned();
             $table->index('purchase_id');
-            $table->foreign('purchase_id')->unsigned()->references('id')->on('purchases')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('purchase_id')->references('id')->on('purchases')->onUpdate('cascade')->onDelete('cascade');
         });
     }
 
