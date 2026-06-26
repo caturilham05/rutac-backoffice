@@ -15,34 +15,12 @@ export default function DataTable({
         }));
     };
 
-    // Render isi cell untuk baris variant — sejajar dengan kolom parent
-    const renderVariantCell = (col, item) => {
-        if (col.key === 'detail') return null;
-        if (col.key === 'action') return null;
-        if (col.key === 'name') {
-            return (
-                <span className="pl-6 text-gray-600 dark:text-gray-400">
-                    {item.name}
-                </span>
-            );
+    const renderDetail = (col, item, row) => {
+        if (col.renderDetail)
+        {
+            return col.renderDetail(item, row)
         }
-        if (col.key === 'price') {
-            return (
-                <span className="text-gray-600 dark:text-gray-400">
-                    Rp {Number(item.price).toLocaleString('id-ID')}
-                </span>
-            );
-        }
-        if (col.key === 'stock') {
-            return (
-                <span className="text-gray-600 dark:text-gray-400">
-                    {item.stock}
-                </span>
-            );
-        }
-        // Fallback: tampilkan item[col.key] jika ada
-        return item[col.key] ?? null;
-    };
+    }
 
     return (
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-700">
@@ -97,8 +75,10 @@ export default function DataTable({
                                             className="bg-gray-50 dark:bg-gray-800/30 border-b border-gray-100 dark:border-gray-700/50 last:border-0"
                                         >
                                             {columns.map((col) => (
-                                                <td key={col.key} className="px-4 py-2">
-                                                    {renderVariantCell(col, item)}
+                                                <td key={col.key} className="py-2">
+                                                    <span className="pl-3 text-gray-600 dark:text-gray-400">
+                                                        {renderDetail(col, item, row)}
+                                                    </span>
                                                 </td>
                                             ))}
                                         </tr>

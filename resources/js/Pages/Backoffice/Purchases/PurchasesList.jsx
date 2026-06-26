@@ -11,27 +11,56 @@ function PurchasesList() {
     const {purchases, flash} = usePage().props;
     const columns = [
         {
-            key: 'invoice',
-            label: 'Invoice',
+            key  : 'detail',
+            label: 'detail'
+        },
+        {
+            key   : 'invoice',
+            label : 'Invoice',
             render: (row) => `${row.invoice ?? ''}`
         },
         {
-            key: 'vendor',
-            label: 'Vendor',
+            key   : 'vendor',
+            label : 'Vendor',
             render: (row) => `${row.vendor ?? ''}`
         },
         {
-            key: 'price',
-            label: 'Price',
+            key   : 'purchase_date',
+            label : 'Purchase Date',
+            render: (row) => `${row.created_at_formatted ?? ''}`
+        },
+        {
+            key         : 'product_name',
+            label       : 'Product Name',
+            renderDetail: (item) => `${item.product_name}`,
+            render      : (item) => `-`
+        },
+        {
+            key   : 'qty',
+            label : 'Quantity',
+            render: (row) => {
+                let qtyTotal = 0;
+
+                qtyTotal = row.items.reduce(
+                    (total, item) => total + +item.qty,
+                    0
+                );
+
+                return qtyTotal
+            },
+            renderDetail: (item) => `${item.qty}`
+        },
+        {
+            key   : 'price',
+            label : 'Price Total',
             render: (row) => {
                 let price = Number(row.price);
                 return `Rp ${price.toLocaleString('id-ID')}`
+            },
+            renderDetail: (row) => {
+                let price = Number(row.price);
+                return `Rp ${price.toLocaleString('id-ID')}`
             }
-        },
-        {
-            key: 'purchase_date',
-            label: 'Purchase Date',
-            render: (row) => `${row.created_at_formatted ?? ''}`
         },
         {
             key: 'edit',

@@ -11,17 +11,24 @@ function Products() {
     const {products, flash} = usePage().props;
     const columns = [
         {
-            key: 'detail',
-            label: '',
+            key       : 'detail',
+            label     : '',
         },
         {
-            key: 'name',
-            label: 'Product Name',
-            render: (row) => `${row.name ?? ''}`
+            key         : 'name',
+            label       : 'Product Name',
+            render      : (row) => `${row.name ?? ''}`,
+            renderDetail: (item) => `${item.name ?? ''}`
         },
         {
-            key: 'price',
-            label: 'Price',
+            key         : 'sku',
+            label       : 'SKU',
+            render      : (row) => `-`,
+            renderDetail: (item) => `${item.sku}`
+        },
+        {
+            key   : 'price',
+            label : 'Price',
             render: (row) => {
                 if (!row.has_variant) {
                     const minPrice = Math.min(...row.items.map(item => Number(item.price)));
@@ -32,11 +39,12 @@ function Products() {
 
                     return `Rp ${minPrice.toLocaleString('id-ID')} - Rp ${maxPrice.toLocaleString('id-ID')}`;
                 }
-            }
+            },
+            renderDetail: (item) => `Rp ${Number(item.price).toLocaleString('id-ID')}`
         },
         {
-            key: 'stock',
-            label: 'Stock',
+            key   : 'stock',
+            label : 'Stock',
             render: (row) => {
                 let stockTotal = 0;
 
@@ -50,11 +58,18 @@ function Products() {
                 }
 
                 return stockTotal
-            }
+            },
+            renderDetail: (item) => `${item.stock}`
         },
         {
-            key: 'edit',
-            label: 'Action',
+            key         : 'category',
+            label       : 'Category',
+            render      : (row) => `${row.cat_name ?? ''}`,
+            renderDetail: (item, row) => `${row.cat_name}`
+        },
+        {
+            key   : 'edit',
+            label : 'Action',
             render: (row) => (
                 <div className="flex gap-2">
                     <Link

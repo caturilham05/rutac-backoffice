@@ -40,7 +40,14 @@ class PurchaseController extends Controller
 
     public function index(): Response
     {
-        $purchases = Purchase::orderBy('id', 'desc')->get();
+        $purchases = Purchase::with(['purchase_products'])->orderBy('id', 'desc')->get();
+        $purchases->map(function($purchase){
+            $purchase['items'] = $purchase->purchase_products ?? [];
+            $purchase->unsetRelation('purchase_products');
+
+            return $purchase;
+        });
+
         return Inertia::render('Backoffice/Purchases/PurchasesList', [
             'purchases' => $purchases
         ]);
