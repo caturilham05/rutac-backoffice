@@ -33,4 +33,45 @@ class Marketplace extends Model
             ]
         );
     }
+
+    public static function marketplacePagination(int $per_page = 15, array $filters = [], ?string $sort = null, string $direction = 'asc')
+    {
+        $query = self::query();
+
+        if (!empty($filters['marketplace'])) {
+            $query->where('marketplace', $filters['marketplace']);
+        }
+
+        if (!empty($filters['store'])) {
+            $query->where('store', $filters['store']);
+        }
+
+        if ($sort && in_array($sort, ['marketplace', 'store'])) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
+        return $query->paginate($per_page);
+    }
+
+    public static function marketplaceOptions(string $column): array
+    {
+        if (!in_array($column, ['marketplace', 'store'])) {
+            return [];
+        }
+
+        return self::query()
+            ->select($column)
+            ->distinct()
+            ->orderBy($column)
+            ->pluck($column)
+            ->filter()
+            ->values()
+            ->map(fn ($value) => [
+                'value' => $value,
+                'label' => $value,
+            ])
+            ->all();
+    }
 }

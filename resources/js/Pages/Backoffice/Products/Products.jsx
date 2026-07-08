@@ -1,68 +1,82 @@
-import React, { useMemo } from 'react'
-import { Head, Link, router } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useForm, usePage } from '@inertiajs/react';
 import DataTable from '@/Components/DataTable';
-import PrimaryButton from '@/Components/PrimaryButton';
 import FlashMessage from '@/Components/FlashMessage';
-import {Trash, SquarePen, Plus} from 'lucide-react';
+import PrimaryButton from '@/Components/PrimaryButton';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Plus, SquarePen, Trash } from 'lucide-react';
+import { useMemo } from 'react';
 
 function Products() {
-    const {products, flash, filters, sort, direction, categories} = usePage().props;
+    const { products, flash, filters, sort, direction, categories, options } =
+        usePage().props;
 
-    const filterConfig = useMemo(() => [
-        {
-            key: 'name',
-            label: 'Product Name',
-            type: 'text',
-            placeholder: 'Search product...'
-        },
-        {
-            key: 'category',
-            label: 'Category',
-            type: 'select',
-            options: [{ value: '', label: 'All Categories' }, ...categories.map(c => ({ value: c.id, label: c.name }))]
-        }
-    ], [categories]);
+    const filterConfig = useMemo(
+        () => [
+            {
+                key: 'name',
+                label: 'Product Name',
+                type: 'autocomplete',
+                placeholder: 'Search product...',
+                options: options || [],
+            },
+            {
+                key: 'category',
+                label: 'Category',
+                type: 'select',
+                options: [
+                    { value: '', label: 'All Categories' },
+                    ...categories.map((c) => ({ value: c.id, label: c.name })),
+                ],
+            },
+        ],
+        [categories, options],
+    );
 
     const sortableColumns = ['name', 'price', 'stock', 'cat_name'];
 
     const columns = [
         {
-            key       : 'detail',
-            label     : '',
+            key: 'detail',
+            label: '',
         },
         {
-            key         : 'name',
-            label       : 'Product Name',
-            render      : (row) => `${row.name ?? ''}`,
-            renderDetail: (item) => `${item.name ?? ''}`
+            key: 'name',
+            label: 'Product Name',
+            render: (row) => `${row.name ?? ''}`,
+            renderDetail: (item) => `${item.name ?? ''}`,
         },
         {
-            key         : 'sku',
-            label       : 'SKU',
-            render      : (row) => `-`,
-            renderDetail: (item) => `${item.sku}`
+            key: 'sku',
+            label: 'SKU',
+            render: () => `-`,
+            renderDetail: (item) => `${item.sku}`,
         },
         {
-            key   : 'price',
-            label : 'Price',
+            key: 'price',
+            label: 'Price',
             render: (row) => {
                 if (!row.has_variant) {
-                    const minPrice = Math.min(...row.items.map(item => Number(item.price)));
+                    const minPrice = Math.min(
+                        ...row.items.map((item) => Number(item.price)),
+                    );
                     return `Rp ${minPrice.toLocaleString('id-ID')}`;
                 } else {
-                    const minPrice = Math.min(...row.items.map(item => Number(item.price)));
-                    const maxPrice = Math.max(...row.items.map(item => Number(item.price)));
+                    const minPrice = Math.min(
+                        ...row.items.map((item) => Number(item.price)),
+                    );
+                    const maxPrice = Math.max(
+                        ...row.items.map((item) => Number(item.price)),
+                    );
 
                     return `Rp ${minPrice.toLocaleString('id-ID')} - Rp ${maxPrice.toLocaleString('id-ID')}`;
                 }
             },
-            renderDetail: (item) => `Rp ${Number(item.price).toLocaleString('id-ID')}`
+            renderDetail: (item) =>
+                `Rp ${Number(item.price).toLocaleString('id-ID')}`,
         },
         {
-            key   : 'stock',
-            label : 'Stock',
+            key: 'stock',
+            label: 'Stock',
             render: (row) => {
                 let stockTotal = 0;
 
@@ -71,51 +85,51 @@ function Products() {
                 } else {
                     stockTotal = row.items.reduce(
                         (total, item) => total + +item.stock,
-                        0
+                        0,
                     );
                 }
 
-                return stockTotal
+                return stockTotal;
             },
-            renderDetail: (item) => `${item.stock}`
+            renderDetail: (item) => `${item.stock}`,
         },
         {
-            key         : 'category',
-            label       : 'Category',
-            render      : (row) => `${row.cat_name ?? ''}`,
-            renderDetail: (item, row) => `${row.cat_name}`
+            key: 'category',
+            label: 'Category',
+            render: (row) => `${row.cat_name ?? ''}`,
+            renderDetail: (item, row) => `${row.cat_name}`,
         },
         {
-            key   : 'edit',
-            label : 'Action',
+            key: 'edit',
+            label: 'Action',
             render: (row) => (
                 <div className="flex gap-2">
                     <Link
                         href={route('products.edit', row.id)}
-                        className="px-3 py-1 bg-yellow-500 text-white rounded"
+                        className="rounded bg-yellow-500 px-3 py-1 text-white"
                     >
                         <SquarePen size={15} />
                     </Link>
                     <button
                         onClick={() => handleDelete(row.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded"
+                        className="rounded bg-red-500 px-3 py-1 text-white"
                     >
-                        <Trash size={15}/>
+                        <Trash size={15} />
                     </button>
                 </div>
-            )
+            ),
         },
     ];
 
     const handleDelete = (id) => {
         if (!confirm('Yakin ingin menghapus data ini?')) {
-            return
+            return;
         }
 
         router.delete(route('products.delete', id), {
             preserveScroll: false,
-        })
-    }
+        });
+    };
 
     return (
         <AuthenticatedLayout
@@ -130,11 +144,15 @@ function Products() {
                 <FlashMessage type="success" message={flash.success} />
             )}
 
-            {flash.error && (
-                <FlashMessage type="error" message={flash.error} />
-            )}
+            {flash.error && <FlashMessage type="error" message={flash.error} />}
 
-            <PrimaryButton className="py-2 mx-4 mt-4" onClick={() => router.visit(route('products.create'))}><Plus size={15} />Add Product</PrimaryButton>
+            <PrimaryButton
+                className="mx-4 mt-4 py-2"
+                onClick={() => router.visit(route('products.create'))}
+            >
+                <Plus size={15} />
+                Add Product
+            </PrimaryButton>
 
             <div className="py-4">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-4">
@@ -154,7 +172,7 @@ function Products() {
                 </div>
             </div>
         </AuthenticatedLayout>
-    )
+    );
 }
 
-export default Products
+export default Products;

@@ -66,4 +66,35 @@ class Purchase extends Model
     {
         return $this->hasMany(Purchase_product::class, 'purchase_id', 'id');
     }
+
+    public static function purchasePagination(int $per_page = 15, array $filters = [], ?string $sort = null, string $direction = 'asc', bool $pagination = true)
+    {
+        $query = self::with(['purchase_products']);
+
+        if (!empty($filters['invoice'])) {
+            $query->where('invoice', 'like', '%'.$filters['invoice'].'%');
+        }
+
+        if (!empty($filters['vendor'])) {
+            $query->where('vendor', 'like', '%'.$filters['vendor'].'%');
+        }
+
+        if (!empty($filters['created_at'])) {
+            $query->whereDate('created_at', $filters['created_at']);
+        }
+
+        if ($sort && in_array($sort, ['invoice', 'created_at', 'qty', 'price'])) {
+            if ($sort === 'qty') {
+                $query->orderBy(
+                    Purchase_product::select('qty')->whereColumn('purchase_id', 'purchase.id')->limit(1),
+                    $direction
+                );
+            } else {
+                $query->orderBy($sort, $direction);
+            }
+        }
+
+        $purchases = $query->paginate($per_page);
+        return $purchases;
+    }
 }

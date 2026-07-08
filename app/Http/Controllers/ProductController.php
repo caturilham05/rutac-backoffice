@@ -13,9 +13,11 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
+    protected $set_page = 25;
+
     public function index(Request $request): Response
     {
-        $perPage    = $request->integer('per_page', 25);
+        $perPage    = $request->integer('per_page', $this->set_page);
         $filterData = $request->only(['name', 'category']);
         $sort       = $request->input('sort');
         $direction  = $request->input('direction', 'asc');
@@ -29,6 +31,7 @@ class ProductController extends Controller
             'filters'    => $filterData,
             'sort'       => $sort,
             'direction'  => $direction,
+            'options'    => Product::productOptions(),
         ]);
     }
 

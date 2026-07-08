@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { usePage } from '@inertiajs/react';
@@ -8,7 +8,30 @@ import {Trash, SquarePen, Plus} from 'lucide-react';
 import FlashMessage from '@/Components/FlashMessage';
 
 function PurchasesList() {
-    const {purchases, flash} = usePage().props;
+    const {purchases, flash, filters, sort, direction} = usePage().props;
+
+    const filterConfig = useMemo(() => [
+        {
+            key        : 'invoice',
+            label      : 'Invoice',
+            type       : 'text',
+            placeholder: 'Seach Invoice ...'
+        },
+        {
+            key        : 'vendor',
+            label      : 'Vendor',
+            type       : 'text',
+            placeholder: 'Search vendor ...'
+        },
+        {
+            key  : 'created_at',
+            label: 'Purchase Date',
+            type : 'date'
+        },
+    ])
+
+    const sortableColumns = ['invoice', 'created_at', 'qty', 'price'];
+
     const columns = [
         {
             key  : 'detail',
@@ -25,7 +48,7 @@ function PurchasesList() {
             render: (row) => `${row.vendor ?? ''}`
         },
         {
-            key   : 'purchase_date',
+            key   : 'created_at',
             label : 'Purchase Date',
             render: (row) => `${row.created_at_formatted ?? ''}`
         },
@@ -93,7 +116,18 @@ function PurchasesList() {
             <div className="py-4">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-4">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
-                        <DataTable columns={columns} data={purchases} />
+                        <DataTable
+                            columns={columns}
+                            data={purchases.data}
+                            pagination={purchases}
+                            filterValues={filters || {}}
+                            sortColumn={sort || null}
+                            sortDirection={direction || 'asc'}
+                            filterConfig={filterConfig}
+                            sortableColumns={sortableColumns}
+                            baseUrl={route('purchases.list')}
+
+                        />
                     </div>
                 </div>
             </div>

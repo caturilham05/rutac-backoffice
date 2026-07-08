@@ -115,7 +115,7 @@ class Product extends Model
         return collect(explode(' ', $text))->map(fn ($word) => strtolower(substr($word, 0, 1)))->implode('');
     }
 
-    public static function productGet(int $id = 0, int $perPage = 15, array $filters = [], string $sort = null, string $direction = 'asc', bool $paginate = true)
+    public static function productGet(int $id = 0, int $perPage = 15, array $filters = [], ?string $sort = null, string $direction = 'asc', bool $paginate = true)
     {
         $query = self::with(['category', 'variants.skus', 'skus']);
 
@@ -210,5 +210,21 @@ class Product extends Model
         }
 
         return $products;
+    }
+
+    public static function productOptions(): array
+    {
+        return self::query()
+            ->select('name')
+            ->distinct()
+            ->orderBy('name')
+            ->pluck('name')
+            ->filter()
+            ->values()
+            ->map(fn ($value) => [
+                'value' => $value,
+                'label' => $value,
+            ])
+            ->all();
     }
 }

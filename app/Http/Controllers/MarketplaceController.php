@@ -6,16 +6,29 @@ use App\Http\Requests\MarketplaceRequest;
 use App\Models\Marketplace;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Redirect;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class MarketplaceController extends Controller
 {
-    public function index(): Response
+    protected int $set_page = 15;
+
+    public function index(Request $request): Response
     {
+        $per_page  = $request->integer('per_page', $this->set_page);
+        $filters   = $request->only(['marketplace', 'store']);
+        $sort      = $request->input('sort');
+        $direction = $request->input('direction', 'asc');
+
         return Inertia::render('Backoffice/Marketplace/Marketplace', [
-            'marketplaces' => Marketplace::OrderBy('id', 'desc')->get()
+            'marketplaces' => Marketplace::marketplacePagination($per_page, $filters, $sort, $direction),
+            'filters'      => $filters,
+            'sort'         => $sort,
+            'direction'    => $direction,
+            'options'      => [
+                'marketplace' => Marketplace::marketplaceOptions('marketplace'),
+                'store'       => Marketplace::marketplaceOptions('store'),
+            ],
         ]);
     }
 
@@ -38,6 +51,7 @@ class MarketplaceController extends Controller
         $data       = $request->validated();
         $data['id'] = $id;
         Marketplace::marketplaceUpsert($data);
+
         return redirect()->route('marketplace')->with('success', 'Marketplace berhasil diupdate');
     }
 

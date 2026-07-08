@@ -13,6 +13,8 @@ use Inertia\Response;
 
 class PurchaseController extends Controller
 {
+    protected $set_page = 25;
+
     private function generateInvoice(string $code): string
     {
         $now = now();
@@ -38,9 +40,14 @@ class PurchaseController extends Controller
         );
     }
 
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $purchases = Purchase::with(['purchase_products'])->orderBy('id', 'desc')->get();
+        $per_page    = $request->integer('per_page', $this->set_page);
+        $filter_data = $request->only(['invoice', 'vendor', 'created_at']);
+        $sort        = $request->input('sort');
+        $direction   = $request->input('direction', 'asc');
+        $purchases = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);
+        // $purchases = Purchase::with(['purchase_products'])->orderBy('id', 'desc')->get();
         $purchases->map(function($purchase){
             $purchase['items'] = $purchase->purchase_products ?? [];
             $purchase->unsetRelation('purchase_products');
@@ -49,7 +56,10 @@ class PurchaseController extends Controller
         });
 
         return Inertia::render('Backoffice/Purchases/PurchasesList', [
-            'purchases' => $purchases
+            'purchases' => $purchases,
+            'filters'   => $filter_data,
+            'sort'      => $sort,
+            'direction' => $direction
         ]);
     }
 
