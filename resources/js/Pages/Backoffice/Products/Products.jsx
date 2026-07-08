@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { Head, Link, router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { useForm, usePage } from '@inertiajs/react';
@@ -8,7 +8,25 @@ import FlashMessage from '@/Components/FlashMessage';
 import {Trash, SquarePen, Plus} from 'lucide-react';
 
 function Products() {
-    const {products, flash} = usePage().props;
+    const {products, flash, filters, sort, direction, categories} = usePage().props;
+
+    const filterConfig = useMemo(() => [
+        {
+            key: 'name',
+            label: 'Product Name',
+            type: 'text',
+            placeholder: 'Search product...'
+        },
+        {
+            key: 'category',
+            label: 'Category',
+            type: 'select',
+            options: [{ value: '', label: 'All Categories' }, ...categories.map(c => ({ value: c.id, label: c.name }))]
+        }
+    ], [categories]);
+
+    const sortableColumns = ['name', 'price', 'stock', 'cat_name'];
+
     const columns = [
         {
             key       : 'detail',
@@ -121,7 +139,17 @@ function Products() {
             <div className="py-4">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-4">
                     <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
-                        <DataTable columns={columns} data={products} />
+                        <DataTable
+                            columns={columns}
+                            data={products.data}
+                            pagination={products}
+                            filterValues={filters || {}}
+                            sortColumn={sort || null}
+                            sortDirection={direction || 'asc'}
+                            filterConfig={filterConfig}
+                            sortableColumns={sortableColumns}
+                            baseUrl={route('products')}
+                        />
                     </div>
                 </div>
             </div>

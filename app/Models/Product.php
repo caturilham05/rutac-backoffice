@@ -115,46 +115,73 @@ class Product extends Model
         return collect(explode(' ', $text))->map(fn ($word) => strtolower(substr($word, 0, 1)))->implode('');
     }
 
-    public static function productGet(int $id = 0)
+    public static function productGet(int $id = 0, int $perPage = 15, array $filters = [], string $sort = null, string $direction = 'asc', bool $paginate = true)
     {
-        $query = self::with(['category', 'variants.skus', 'skus'])->orderBy('id', 'desc');
+        $query = self::with(['category', 'variants.skus', 'skus']);
+
+        if (!empty($filters['name'])) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        }
+        if (!empty($filters['category'])) {
+            $query->where('cat_id', $filters['category']);
+        }
+
+        if ($sort && in_array($sort, ['name', 'price', 'stock', 'cat_name'])) {
+            if ($sort === 'price' || $sort === 'stock') {
+                $query->orderBy(
+                    Product_sku::select($sort === 'price' ? 'original_price' : 'stock')
+                        ->whereColumn('product_id', 'products.id')
+                        ->limit(1),
+                    $direction
+                );
+            } else {
+                $query->orderBy($sort, $direction);
+            }
+        } else {
+            $query->orderBy('id', 'desc');
+        }
+
         if (empty($id)) {
-            $products = $query->get()->map(function ($product) {
+            if ($paginate) {
+                $products = $query->paginate($perPage)->through(function ($product) {
 
-                if ($product->has_variant) {
+                    if ($product->has_variant) {
 
-                    $product->items = $product->variants->map(function ($variant) {
-                        return [
-                            'id'         => $variant->id,
-                            'product_id' => $variant->product_id,
-                            'name'       => $variant->name,
-                            'sku_id'     => $variant->skus?->id,
-                            'sku'        => $variant->skus?->name,
-                            'stock'      => $variant->skus?->stock,
-                            'price'      => $variant->skus?->original_price,
-                        ];
-                    });
+                        $product->items = $product->variants->map(function ($variant) {
+                            return [
+                                'id'         => $variant->id,
+                                'product_id' => $variant->product_id,
+                                'name'       => $variant->name,
+                                'sku_id'     => $variant->skus?->id,
+                                'sku'        => $variant->skus?->name,
+                                'stock'      => $variant->skus?->stock,
+                                'price'      => $variant->skus?->original_price,
+                            ];
+                        });
 
-                } else {
+                    } else {
 
-                    $product->items = collect([
-                        [
-                            'id'         => 0,
-                            'product_id' => $product->id,
-                            'name'       => $product->name,
-                            'sku_id'     => $product->skus?->id,
-                            'sku'        => $product->skus?->name,
-                            'stock'      => $product->skus?->stock,
-                            'price'      => $product->skus?->original_price,
-                        ]
-                    ]);
-                }
+                        $product->items = collect([
+                            [
+                                'id'         => 0,
+                                'product_id' => $product->id,
+                                'name'       => $product->name,
+                                'sku_id'     => $product->skus?->id,
+                                'sku'        => $product->skus?->name,
+                                'stock'      => $product->skus?->stock,
+                                'price'      => $product->skus?->original_price,
+                            ]
+                        ]);
+                    }
 
-                $product->unsetRelation('variants');
-                $product->unsetRelation('skus');
+                    $product->unsetRelation('variants');
+                    $product->unsetRelation('skus');
 
-                return $product;
-            });
+                    return $product;
+                });
+            } else {
+                $products = $query->get();
+            }
         } else {
             $products = $query->findOrFail($id);
             $products->items = collect();

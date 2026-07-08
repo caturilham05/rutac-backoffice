@@ -13,12 +13,22 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $products = Product::productGet();
+        $perPage    = $request->integer('per_page', 25);
+        $filterData = $request->only(['name', 'category']);
+        $sort       = $request->input('sort');
+        $direction  = $request->input('direction', 'asc');
+
+        $products   = Product::productGet(0, $perPage, $filterData, $sort, $direction);
+        $categories = Product_category::select('id', 'name')->get();
+
         return Inertia::render('Backoffice/Products/Products', [
-            // 'products' => Product::orderBy('id', 'desc')->get()
-            'products' => $products
+            'products'   => $products,
+            'categories' => $categories,
+            'filters'    => $filterData,
+            'sort'       => $sort,
+            'direction'  => $direction,
         ]);
     }
 

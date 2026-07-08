@@ -56,7 +56,7 @@ class PurchaseController extends Controller
     public function create(): Response
     {
         $invoice        = $this->generateInvoice('PURC');
-        $products       = Product::productGet();
+        $products       = Product::productGet(0, 15, [], null, 'asc', false);
         return Inertia::render('Backoffice/Purchases/PurchasesCreate', [
             'invoice'  => $invoice,
             'products' => $products ?? []
