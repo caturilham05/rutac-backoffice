@@ -1,23 +1,20 @@
-import React from 'react'
-import { Head } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useForm, usePage } from '@inertiajs/react';
-import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
-
+import InputLabel from '@/Components/InputLabel';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 function ProductCategoryEdit() {
-    const {category} = usePage().props;
-    const {data, setData, put, processing, errors} = useForm({
-        id   : category.id,
-        name : category.name ?? '',
+    const { category } = usePage().props;
+    const { data, setData, put, processing, errors } = useForm({
+        id: category.id,
+        name: category.name ?? '',
     });
 
     const submit = (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
         put(route('product_category.put', category.id));
-    }
+    };
 
     return (
         <AuthenticatedLayout
@@ -30,20 +27,19 @@ function ProductCategoryEdit() {
             <Head title="Product Category Edit" />
 
             <div className="py-6">
-                <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                    <div className="bg-white shadow rounded-lg p-6">
+                <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+                    <div className="rounded-lg bg-white p-6 shadow">
                         <form className="space-y-4" onSubmit={submit}>
                             <div>
-                                <InputLabel
-                                    htmlFor="name"
-                                    value="Name"
-                                />
+                                <InputLabel htmlFor="name" value="Name" />
 
                                 <input
                                     type="text"
                                     value={data.name}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 rounded-md"
+                                    onChange={(e) =>
+                                        setData('name', e.target.value)
+                                    }
+                                    className="mt-1 block w-full rounded-md border-gray-300"
                                 />
 
                                 <InputError message={errors.name} />
@@ -53,26 +49,17 @@ function ProductCategoryEdit() {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="
-                                        px-4 py-2 rounded text-white transition
-                                        bg-blue-500 hover:bg-blue-600
-                                        disabled:bg-gray-400
-                                        disabled:cursor-not-allowed
-                                    "
+                                    className="rounded bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400"
                                 >
                                     Update
                                 </button>
                             </div>
-
                         </form>
-
                     </div>
-
                 </div>
             </div>
-
         </AuthenticatedLayout>
-    )
+    );
 }
 
-export default ProductCategoryEdit
+export default ProductCategoryEdit;

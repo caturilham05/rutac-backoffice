@@ -1,9 +1,8 @@
-import React from 'react'
-import { Head } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head } from '@inertiajs/react';
 
 function Order() {
-  return (
+    return (
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
@@ -23,8 +22,7 @@ function Order() {
                 </div>
             </div>
         </AuthenticatedLayout>
-
-    )
+    );
 }
 
-export default Order
+export default Order;

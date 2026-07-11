@@ -1,44 +1,40 @@
-import {React, useState} from 'react'
-import { Head } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { useForm, usePage } from '@inertiajs/react';
-import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
-import Checkbox from '@/Components/Checkbox';
-
+import InputLabel from '@/Components/InputLabel';
+import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 function ProductsAction() {
-    const {products, categories} = usePage().props;
-    const {data, setData, put, post, processing, errors, reset} = useForm({
-        id         : products.id ?? '',
-        cat_id     : products.cat_id ?? '',
-        cat_name   : products.cat_name ?? '',
-        name       : products.name ?? '',
+    const { products, categories } = usePage().props;
+    const { data, setData, put, post, processing, errors, reset } = useForm({
+        id: products.id ?? '',
+        cat_id: products.cat_id ?? '',
+        cat_name: products.cat_name ?? '',
+        name: products.name ?? '',
         description: products.description ?? '',
         has_variant: products.has_variant ?? false,
-        sku_id     : products.sku_id ?? '',
-        sku        : products.sku ?? '',
-        stock      : products.stock ?? '',
-        price      : products.price ?? '',
-        variants   : products.items ?? [],
+        sku_id: products.sku_id ?? '',
+        sku: products.sku ?? '',
+        stock: products.stock ?? '',
+        price: products.price ?? '',
+        variants: products.items ?? [],
     });
 
     // console.log(data)
 
     let headerText = '';
-    let routeCond  = '';
-    let isEdit     = 0;
+    let routeCond = '';
+    let isEdit = 0;
     if (Object.keys(products).length === 0) {
         headerText = 'Product Create';
-        routeCond  = 'products.store';
+        routeCond = 'products.store';
     } else {
         headerText = 'Product Edit';
-        routeCond  = 'products.put';
-        isEdit     = 1;
+        routeCond = 'products.put';
+        isEdit = 1;
     }
 
     const submit = (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
         if (Object.keys(products).length === 0) {
             post(route(routeCond), {
@@ -48,39 +44,39 @@ function ProductsAction() {
         } else {
             put(route(routeCond, products.id), {
                 preserveScroll: false,
-                onSuccess: () => reset()
+                onSuccess: () => reset(),
             });
         }
-    }
+    };
 
     const addVariant = () => {
-        setData("variants", [
+        setData('variants', [
             ...data.variants,
             {
-                name : "",
+                name: '',
                 price: '',
                 stock: '',
-                sku  : ""
-            }
+                sku: '',
+            },
         ]);
     };
 
     const removeVariant = (index) => {
-        const variants = data.variants.filter((_, i) => i !== index)
-        setData("variants", variants);
+        const variants = data.variants.filter((_, i) => i !== index);
+        setData('variants', variants);
 
         if (variants.length === 0) {
-            setData("has_variant", false);
+            setData('has_variant', false);
 
             // reset default variasi
-            setData("variants", [
+            setData('variants', [
                 {
-                    id    : null,
+                    id: null,
                     sku_id: null,
-                    name  : "",
-                    price : '',
-                    stock : '',
-                    sku   : ""
+                    name: '',
+                    price: '',
+                    stock: '',
+                    sku: '',
                 },
             ]);
 
@@ -92,9 +88,9 @@ function ProductsAction() {
         const variants = [...data.variants];
         variants[index] = {
             ...variants[index],
-            [field]: value
-        }
-        setData("variants", variants);
+            [field]: value,
+        };
+        setData('variants', variants);
     };
 
     return (
@@ -109,54 +105,59 @@ function ProductsAction() {
 
             <div className="py-6">
                 <form className="space-y-4" onSubmit={submit}>
-                    <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
-                        <div className="bg-white shadow rounded-lg p-6">
-                            <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200 mb-5">Informasi Produk</h2>
+                    <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
+                        <div className="rounded-lg bg-white p-6 shadow">
+                            <h2 className="mb-5 text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
+                                Informasi Produk
+                            </h2>
 
                             <div>
-                                <InputLabel
-                                    htmlFor="name"
-                                    value="Name"
-                                />
+                                <InputLabel htmlFor="name" value="Name" />
 
                                 <input
                                     type="text"
                                     value={data.name || ''}
-                                    onChange={(e) => setData('name', e.target.value)}
-                                    className="mt-1 block w-full border-gray-300 rounded-md"
+                                    onChange={(e) =>
+                                        setData('name', e.target.value)
+                                    }
+                                    className="mt-1 block w-full rounded-md border-gray-300"
                                 />
 
                                 <InputError message={errors.name} />
                             </div>
 
                             <div>
-                                <InputLabel
-                                    htmlFor="cat_id"
-                                    value="Category"
-                                />
+                                <InputLabel htmlFor="cat_id" value="Category" />
                                 <select
-                                    className="mt-1 block w-full border-gray-300 rounded-md"
+                                    className="mt-1 block w-full rounded-md border-gray-300"
                                     value={data.cat_id || ''}
-                                    onChange={(e) => setData("cat_id", e.target.value)}
+                                    onChange={(e) =>
+                                        setData('cat_id', e.target.value)
+                                    }
                                 >
                                     <option value="">Select Category</option>
-                                    {
-                                        categories?.map((v) => (
-                                            <option value={v.id} key={v.id}>{v.name}</option>
-                                        ))
-                                    }
+                                    {categories?.map((v) => (
+                                        <option value={v.id} key={v.id}>
+                                            {v.name}
+                                        </option>
+                                    ))}
                                 </select>
                                 <InputError message={errors.cat_id} />
                             </div>
 
                             <div>
-                                <InputLabel htmlFor="description" value="Description" />
+                                <InputLabel
+                                    htmlFor="description"
+                                    value="Description"
+                                />
 
                                 <textarea
                                     id="description"
-                                    className="mt-1 block w-full border-gray-300 rounded-md"
+                                    className="mt-1 block w-full rounded-md border-gray-300"
                                     value={data.description || ''}
-                                    onChange={(e) => setData("description", e.target.value)}
+                                    onChange={(e) =>
+                                        setData('description', e.target.value)
+                                    }
                                     rows={5}
                                 />
                             </div>
@@ -164,158 +165,190 @@ function ProductsAction() {
                     </div>
 
                     {/* Infomrasi Penjualan */}
-                    <div className="max-w-4xl mx-auto sm:px-6 lg:px-8 mt-6">
-                        <div className="bg-white shadow rounded-lg p-8">
-
-                            <h2 className="text-2xl font-semibold text-gray-800 mb-5">
+                    <div className="mx-auto mt-6 max-w-4xl sm:px-6 lg:px-8">
+                        <div className="rounded-lg bg-white p-8 shadow">
+                            <h2 className="mb-5 text-2xl font-semibold text-gray-800">
                                 Informasi Variant
                             </h2>
 
                             {/* Variasi */}
-                            {
-                                (
-                                    !isEdit || (isEdit && products.has_variant === 1)
-                                ) && (
-                                    <div className="mb-8">
-                                        <label className="flex items-center gap-2 text-lg font-medium text-gray-700 mb-4">
-                                            <span className="w-3 h-3 bg-orange-500 rounded-full"></span>
-                                            Variasi
-                                        </label>
+                            {(!isEdit ||
+                                (isEdit && products.has_variant === 1)) && (
+                                <div className="mb-8">
+                                    <label className="mb-4 flex items-center gap-2 text-lg font-medium text-gray-700">
+                                        <span className="h-3 w-3 rounded-full bg-orange-500"></span>
+                                        Variasi
+                                    </label>
 
-                                        <button
-                                            type="button"
-                                            onClick={() => setData("has_variant", !data.has_variant)}
-                                            className="
-                                                border border-dashed border-gray-300
-                                                rounded-lg px-6 py-4
-                                                text-orange-500 font-medium
-                                                hover:bg-orange-50
-                                                transition
-                                            "
-                                        >
-                                            + Aktifkan Variasi
-                                        </button>
-                                    </div>
-                                )
-                            }
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setData(
+                                                'has_variant',
+                                                !data.has_variant,
+                                            )
+                                        }
+                                        className="rounded-lg border border-dashed border-gray-300 px-6 py-4 font-medium text-orange-500 transition hover:bg-orange-50"
+                                    >
+                                        + Aktifkan Variasi
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Pakai Variant */}
                             {Boolean(data.has_variant) && (
                                 <div className="mt-6">
                                     <div className="space-y-4">
-                                        {data.variants.map((variant, variantIndex) => (
-                                            <div
-                                                key={variantIndex}
-                                                className="bg-gray-50 border rounded-lg p-6"
-                                            >
-                                                {/* Header */}
-                                                <div className="flex justify-between items-center mb-4">
-                                                    <h3 className="text-xl font-medium">
-                                                        Variasi {variantIndex + 1}
-                                                    </h3>
+                                        {data.variants.map(
+                                            (variant, variantIndex) => (
+                                                <div
+                                                    key={variantIndex}
+                                                    className="rounded-lg border bg-gray-50 p-6"
+                                                >
+                                                    {/* Header */}
+                                                    <div className="mb-4 flex items-center justify-between">
+                                                        <h3 className="text-xl font-medium">
+                                                            Variasi{' '}
+                                                            {variantIndex + 1}
+                                                        </h3>
 
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => removeVariant(variantIndex)}
-                                                        className="text-gray-500 hover:text-red-500 text-2xl"
-                                                    >
-                                                        ×
-                                                    </button>
-                                                </div>
-                                                <div className="grid gap-4">
-                                                    {/* Nama Variasi */}
-                                                    <div>
-                                                        <InputLabel value="Nama Variasi" />
-                                                        <input
-                                                            type="text"
-                                                            value={variant.name || ''}
-                                                            onChange={(e) =>
-                                                                updateVariant(
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                removeVariant(
                                                                     variantIndex,
-                                                                    "name",
-                                                                    e.target.value
                                                                 )
                                                             }
-                                                            className="w-full rounded-md border-gray-300"
-                                                            placeholder="Contoh: Merah, XL, Large"
-                                                        />
-                                                        <InputError message={errors[`variants.${variantIndex}.name`]} />
+                                                            className="text-2xl text-gray-500 hover:text-red-500"
+                                                        >
+                                                            ×
+                                                        </button>
                                                     </div>
-
-                                                    {/* Harga */}
-                                                    <div>
-                                                        <InputLabel value="Harga" />
-                                                        <div className="flex border rounded-lg overflow-hidden">
-                                                            <div className="px-4 flex items-center bg-gray-50 border-r">
-                                                                Rp
-                                                            </div>
-
+                                                    <div className="grid gap-4">
+                                                        {/* Nama Variasi */}
+                                                        <div>
+                                                            <InputLabel value="Nama Variasi" />
                                                             <input
-                                                                type="number"
-                                                                value={variant.price || ''}
+                                                                type="text"
+                                                                value={
+                                                                    variant.name ||
+                                                                    ''
+                                                                }
                                                                 onChange={(e) =>
                                                                     updateVariant(
                                                                         variantIndex,
-                                                                        "price",
-                                                                        e.target.value
+                                                                        'name',
+                                                                        e.target
+                                                                            .value,
                                                                     )
                                                                 }
-                                                                className="w-full border-0 focus:ring-0"
+                                                                className="w-full rounded-md border-gray-300"
+                                                                placeholder="Contoh: Merah, XL, Large"
+                                                            />
+                                                            <InputError
+                                                                message={
+                                                                    errors[
+                                                                        `variants.${variantIndex}.name`
+                                                                    ]
+                                                                }
                                                             />
                                                         </div>
-                                                        <InputError message={errors[`variants.${variantIndex}.price`]} />
-                                                    </div>
 
-                                                    {/* Stok */}
-                                                    <div>
-                                                        <InputLabel value="Stok" />
-                                                        <input
-                                                            type="number"
-                                                            value={variant.stock || ''}
-                                                            onChange={(e) =>
-                                                                updateVariant(
-                                                                    variantIndex,
-                                                                    "stock",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            className="w-full rounded-md border-gray-300"
-                                                        />
-                                                        <InputError message={errors[`variants.${variantIndex}.stock`]} />
-                                                    </div>
+                                                        {/* Harga */}
+                                                        <div>
+                                                            <InputLabel value="Harga" />
+                                                            <div className="flex overflow-hidden rounded-lg border">
+                                                                <div className="flex items-center border-r bg-gray-50 px-4">
+                                                                    Rp
+                                                                </div>
 
-                                                    {/* SKU */}
-                                                    <div>
-                                                        <InputLabel value="SKU" />
-                                                        <input
-                                                            type="text"
-                                                            value={variant.sku || ''}
-                                                            onChange={(e) =>
-                                                                updateVariant(
-                                                                    variantIndex,
-                                                                    "sku",
-                                                                    e.target.value
-                                                                )
-                                                            }
-                                                            className="w-full rounded-md border-gray-300"
-                                                        />
+                                                                <input
+                                                                    type="number"
+                                                                    value={
+                                                                        variant.price ||
+                                                                        ''
+                                                                    }
+                                                                    onChange={(
+                                                                        e,
+                                                                    ) =>
+                                                                        updateVariant(
+                                                                            variantIndex,
+                                                                            'price',
+                                                                            e
+                                                                                .target
+                                                                                .value,
+                                                                        )
+                                                                    }
+                                                                    className="w-full border-0 focus:ring-0"
+                                                                />
+                                                            </div>
+                                                            <InputError
+                                                                message={
+                                                                    errors[
+                                                                        `variants.${variantIndex}.price`
+                                                                    ]
+                                                                }
+                                                            />
+                                                        </div>
+
+                                                        {/* Stok */}
+                                                        <div>
+                                                            <InputLabel value="Stok" />
+                                                            <input
+                                                                type="number"
+                                                                value={
+                                                                    variant.stock ||
+                                                                    ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateVariant(
+                                                                        variantIndex,
+                                                                        'stock',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-md border-gray-300"
+                                                            />
+                                                            <InputError
+                                                                message={
+                                                                    errors[
+                                                                        `variants.${variantIndex}.stock`
+                                                                    ]
+                                                                }
+                                                            />
+                                                        </div>
+
+                                                        {/* SKU */}
+                                                        <div>
+                                                            <InputLabel value="SKU" />
+                                                            <input
+                                                                type="text"
+                                                                value={
+                                                                    variant.sku ||
+                                                                    ''
+                                                                }
+                                                                onChange={(e) =>
+                                                                    updateVariant(
+                                                                        variantIndex,
+                                                                        'sku',
+                                                                        e.target
+                                                                            .value,
+                                                                    )
+                                                                }
+                                                                className="w-full rounded-md border-gray-300"
+                                                            />
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        ))}
+                                            ),
+                                        )}
                                     </div>
 
                                     <button
                                         type="button"
                                         onClick={addVariant}
-                                        className="
-                                            mt-4
-                                            px-4 py-2
-                                            border border-dashed border-orange-300
-                                            rounded-lg
-                                            text-orange-500
-                                            hover:bg-orange-50
-                                        "
+                                        className="mt-4 rounded-lg border border-dashed border-orange-300 px-4 py-2 text-orange-500 hover:bg-orange-50"
                                     >
                                         + Tambah Variasi
                                     </button>
@@ -327,19 +360,27 @@ function ProductsAction() {
                                 <>
                                     {/* Harga */}
                                     <div className="mb-8">
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            <span className="text-red-500">*</span> Harga
+                                        <label className="mb-2 block font-medium text-gray-700">
+                                            <span className="text-red-500">
+                                                *
+                                            </span>{' '}
+                                            Harga
                                         </label>
 
-                                        <div className="flex border rounded-lg overflow-hidden">
-                                            <div className="px-4 flex items-center bg-gray-50 border-r text-gray-500">
+                                        <div className="flex overflow-hidden rounded-lg border">
+                                            <div className="flex items-center border-r bg-gray-50 px-4 text-gray-500">
                                                 Rp
                                             </div>
 
                                             <input
                                                 type="number"
                                                 value={data.price || ''}
-                                                onChange={(e) => setData("price", e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'price',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 className="w-full border-0 focus:ring-0"
                                                 placeholder="Input"
                                             />
@@ -349,14 +390,19 @@ function ProductsAction() {
 
                                     {/* Stok */}
                                     <div className="mb-8">
-                                        <label className="block font-medium text-gray-700 mb-2">
-                                            <span className="text-red-500">*</span> Stok
+                                        <label className="mb-2 block font-medium text-gray-700">
+                                            <span className="text-red-500">
+                                                *
+                                            </span>{' '}
+                                            Stok
                                         </label>
 
                                         <input
                                             type="number"
                                             value={data.stock || ''}
-                                            onChange={(e) => setData("stock", e.target.value)}
+                                            onChange={(e) =>
+                                                setData('stock', e.target.value)
+                                            }
                                             className="w-full rounded-lg border-gray-300"
                                         />
                                         <InputError message={errors.stock} />
@@ -371,8 +417,10 @@ function ProductsAction() {
                                         <input
                                             type="text"
                                             value={data.sku || ''}
-                                            onChange={(e) => setData('sku', e.target.value)}
-                                            className="mt-1 block w-full border-gray-300 rounded-md"
+                                            onChange={(e) =>
+                                                setData('sku', e.target.value)
+                                            }
+                                            className="mt-1 block w-full rounded-md border-gray-300"
                                         />
 
                                         <InputError message={errors.sku} />
@@ -382,17 +430,12 @@ function ProductsAction() {
                         </div>
                     </div>
 
-                    <div className="max-w-4xl mx-auto sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-4xl sm:px-6 lg:px-8">
                         <div className="flex justify-end">
                             <button
                                 type="submit"
                                 disabled={processing}
-                                className="
-                                    px-4 py-2 rounded text-white transition
-                                    bg-blue-500 hover:bg-blue-600
-                                    disabled:bg-gray-400
-                                    disabled:cursor-not-allowed
-                                "
+                                className="rounded bg-blue-500 px-4 py-2 text-white transition hover:bg-blue-600 disabled:cursor-not-allowed disabled:bg-gray-400"
                             >
                                 {headerText}
                             </button>
@@ -400,10 +443,8 @@ function ProductsAction() {
                     </div>
                 </form>
             </div>
-
         </AuthenticatedLayout>
-
-    )
+    );
 }
 
-export default ProductsAction
+export default ProductsAction;
