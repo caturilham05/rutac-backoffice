@@ -92,6 +92,8 @@ class Purchase extends Model
             } else {
                 $query->orderBy($sort, $direction);
             }
+        } else {
+            $query->orderBy('id', 'desc');
         }
 
         $purchases = $query->paginate($per_page);
