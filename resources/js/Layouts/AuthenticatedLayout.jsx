@@ -134,7 +134,7 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 Purchase List
                                             </Dropdown.Link>
                                             <Dropdown.Link
-                                                href={route('order')}
+                                                href={route('purchases.products')}
                                             >
                                                 Purchase Products
                                             </Dropdown.Link>
@@ -380,8 +380,8 @@ export default function AuthenticatedLayout({ header, children }) {
                                     Purchase List
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
-                                    href={route('order')}
-                                    active={route().current('order')}
+                                    href={route('purchases.products')}
+                                    active={route().current('purchases.products')}
                                 >
                                     Purchase Products
                                 </ResponsiveNavLink>

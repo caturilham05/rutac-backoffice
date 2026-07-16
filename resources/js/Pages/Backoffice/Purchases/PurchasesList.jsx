@@ -8,7 +8,6 @@ import { useMemo } from 'react';
 
 function PurchasesList() {
     const { purchases, flash, filters, sort, direction } = usePage().props;
-    console.log(purchases)
 
     const filterConfig = useMemo(() => [
         {
@@ -24,13 +23,13 @@ function PurchasesList() {
             placeholder: 'Search vendor ...',
         },
         {
-            key: 'created_at',
+            key: 'purchase_date',
             label: 'Purchase Date',
             type: 'date',
         },
     ]);
 
-    const sortableColumns = ['invoice', 'created_at', 'qty', 'price'];
+    const sortableColumns = ['invoice', 'purchase_date', 'qty', 'price'];
 
     const columns = [
         {

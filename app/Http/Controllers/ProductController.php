@@ -13,7 +13,7 @@ use Inertia\Response;
 
 class ProductController extends Controller
 {
-    protected $set_page = 25;
+    protected $set_page = 10;
 
     public function index(Request $request): Response
     {

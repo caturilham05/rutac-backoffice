@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PurchaseRequest;
 use App\Models\Product;
+use App\Models\Product_category;
 use App\Models\Purchase;
+use App\Models\Purchase_product;
 use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -13,7 +15,7 @@ use Inertia\Response;
 
 class PurchaseController extends Controller
 {
-    protected $set_page = 25;
+    protected $set_page = 10;
 
     private function generateInvoice(string $code): string
     {
@@ -88,10 +90,21 @@ class PurchaseController extends Controller
         }
     }
 
-    // public function purchaseProductsIndex(Request $request): Response {
-    //     $per_page    = $request->integer('per_page', $this->set_page);
-    //     $filter_data = $request->only(['product_name', 'cat_name', 'created_at']);
-    //     $sort        = $request->input('sort');
-    //     $direction   = $request->input('direction', 'asc');
-    // }
+    public function indexPurchaseProducts(Request $request): Response {
+        $per_page    = $request->integer('per_page', $this->set_page);
+        $filter_data = $request->only(['product_name', 'cat_name', 'invoice']);
+        $sort        = $request->input('sort');
+        $direction   = $request->input('direction', 'asc');
+        $categories  = Product_category::select('name')->get();
+
+        $purchase_products = Purchase_product::purchaseProductPagination($per_page, $filter_data, $sort, $direction);
+
+        return Inertia::render('Backoffice/Purchases/PurchaseProducts', [
+            'purchase_products' => $purchase_products,
+            'filters'           => $filter_data,
+            'sort'              => $sort,
+            'direction'         => $direction,
+            'categories'        => $categories,
+        ]);
+    }
 }

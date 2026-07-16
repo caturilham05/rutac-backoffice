@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice/purchases/purchases-list', [PurchaseController::class, 'index'])->name('purchases.list');
     Route::get('/backoffice/purchases/purchases-create', [PurchaseController::class, 'create'])->name('purchases.create');
     Route::post('/backoffice/purchases/purchases-list', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('/backoffice/purchases/purchases-products', [PurchaseController::class, 'indexPurchaseProducts'])->name('purchases.products');
 
     Route::get('/backoffice/products/product-list', [ProductController::class, 'index'])->name('products');
     Route::get('/backoffice/products/product-list/create', [ProductController::class, 'create'])->name('products.create');
