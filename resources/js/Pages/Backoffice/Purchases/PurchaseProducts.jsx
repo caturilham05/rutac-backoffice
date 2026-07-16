@@ -40,7 +40,7 @@ function PurchaseProducts() {
         {
             key   : 'invoice',
             label : 'Invoice',
-            render: (row) => `${row.purchase.invoice ?? ''}`,
+            render: (row) => `${row.purchase?.invoice ?? ''}`,
         },
         {
             key   : 'product_name',
