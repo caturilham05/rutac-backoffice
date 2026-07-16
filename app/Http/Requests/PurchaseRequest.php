@@ -26,7 +26,7 @@ class PurchaseRequest extends FormRequest
             'discount'              => ['integer', 'min:0'],
             'additional_fee'        => ['integer', 'min:0'],
             'products'              => ['required', 'array', 'min:1'],
-            'products.*.product_id' => ['required'],
+            'products.*.product_id' => ['required', 'distinct'],
             'products.*.price'      => ['required', 'integer', 'min:0'],
             'products.*.qty'        => ['required', 'integer', 'min:0'],
         ];
@@ -40,6 +40,7 @@ class PurchaseRequest extends FormRequest
             '*.integer'                      => ':attribute harus berupa angka',
             'products.*.array'               => ':attribute harus ada datanya',
             'products.*.product_id.required' => ':attribute wajib diisi',
+            'products.*.product_id.distinct' => 'Produk yang dipilih tidak boleh sama.',
             'products.*.price.required'      => ':attribute wajib diisi',
             'products.*.price.integer'       => ':attribute harus berupa angka',
             'products.*.price.min'           => ':attribute minimal 0',
