@@ -5,13 +5,19 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import Autocomplete from '@mui/material/Autocomplete';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { Fragment } from 'react';
 
 function PurchasesCreate() {
     const { invoice, products } = usePage().props;
     const { data, setData, post, processing, errors, reset } = useForm({
-        vendor: '',
-        products: [],
+        purchase_date : null,
+        vendor        : '',
+        discount      : null,
+        additional_fee: null,
+        products      : [],
     });
 
     const submit = (e) => {
@@ -90,6 +96,17 @@ function PurchasesCreate() {
                                 />
 
                                 <InputError message={errors.vendor} />
+                            </Fragment>
+
+                            <Fragment>
+                                <InputLabel htmlFor="purchase_date" value="Purchase Date" />
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        className="my-2 block w-full"
+                                        onChange={(val) => setData('purchase_date', val?.format('YYYY-MM-DD'))}
+                                    />
+                                </LocalizationProvider>
+                                <InputError message={errors.purchase_date} />
                             </Fragment>
 
                             <Fragment>

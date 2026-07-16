@@ -43,7 +43,7 @@ class PurchaseController extends Controller
     public function index(Request $request): Response
     {
         $per_page    = $request->integer('per_page', $this->set_page);
-        $filter_data = $request->only(['invoice', 'vendor', 'created_at']);
+        $filter_data = $request->only(['invoice', 'vendor', 'purchase_date']);
         $sort        = $request->input('sort');
         $direction   = $request->input('direction', 'asc');
         $purchases   = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);
@@ -87,4 +87,11 @@ class PurchaseController extends Controller
             return redirect()->route('purchases.list')->with('error', sprintf('error: %s. code: %s', $th->getMessage(), $th->getCode()));
         }
     }
+
+    // public function purchaseProductsIndex(Request $request): Response {
+    //     $per_page    = $request->integer('per_page', $this->set_page);
+    //     $filter_data = $request->only(['product_name', 'cat_name', 'created_at']);
+    //     $sort        = $request->input('sort');
+    //     $direction   = $request->input('direction', 'asc');
+    // }
 }

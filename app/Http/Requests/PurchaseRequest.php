@@ -22,6 +22,7 @@ class PurchaseRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
+            'purchase_date'         => ['required', 'date'],
             'vendor'                => ['required'],
             'discount'              => ['integer', 'min:0'],
             'additional_fee'        => ['integer', 'min:0'],
@@ -53,6 +54,7 @@ class PurchaseRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'purchase_date'         => 'Purchase Date',
             'vendor'                => 'Vendor',
             'discount'              => 'Discount',
             'additional_fee'        => 'Biaya tambahan',

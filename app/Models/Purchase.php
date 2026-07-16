@@ -9,12 +9,20 @@ use Illuminate\Support\Facades\DB;
 class Purchase extends Model
 {
     protected $table    = 'purchases';
-    protected $fillable = ['invoice', 'vendor', 'price', 'discount', 'additional_fee'];
-    protected $appends  = ['created_at_formatted'];
+    protected $fillable = ['invoice', 'vendor', 'price', 'discount', 'additional_fee', 'purchase_date'];
+    protected $appends  = ['created_at_formatted', 'purchase_date_formatted'];
+    protected $casts    = [
+        'purchase_date' => 'date',
+    ];
 
     public function getCreatedAtFormattedAttribute(): string
     {
         return $this->created_at->translatedFormat('d F Y');
+    }
+
+    public function getPurchaseDateFormattedAttribute(): ?string
+    {
+        return $this->purchase_date?->translatedFormat('d F Y');
     }
 
     public static function purchaseInsert(array $data)
@@ -29,6 +37,7 @@ class Purchase extends Model
                 'price'          => $price_total,
                 'discount'       => $data['discount'],
                 'additional_fee' => $data['additional_fee'],
+                'purchase_date'  => $data['purchase_date'],
             ]);
 
             $product_ids    = array_column($data['products'], 'product_id');
@@ -81,11 +90,11 @@ class Purchase extends Model
             $query->where('vendor', 'like', '%'.$filters['vendor'].'%');
         }
 
-        if (!empty($filters['created_at'])) {
-            $query->whereDate('created_at', $filters['created_at']);
+        if (!empty($filters['purchase_date'])) {
+            $query->whereDate('purchase_date', $filters['purchase_date']);
         }
 
-        if ($sort && in_array($sort, ['invoice', 'created_at', 'qty', 'price'])) {
+        if ($sort && in_array($sort, ['invoice', 'purchase_date', 'qty', 'price'])) {
             if ($sort === 'qty') {
                 $query->orderBy(
                     Purchase_product::select('qty')->whereColumn('purchase_id', 'purchase.id')->limit(1),

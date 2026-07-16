@@ -48,9 +48,9 @@ function PurchasesList() {
             render: (row) => `${row.vendor ?? ''}`,
         },
         {
-            key: 'created_at',
+            key: 'purchase_date',
             label: 'Purchase Date',
-            render: (row) => `${row.created_at_formatted ?? ''}`,
+            render: (row) => `${row.purchase_date_formatted ?? ''}`,
         },
         {
             key: 'product_name',
