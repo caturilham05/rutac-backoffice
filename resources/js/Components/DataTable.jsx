@@ -384,6 +384,10 @@ export default function DataTable({
             {pagination && (
                 <div className="flex items-center justify-between border-t p-3 text-sm">
                     <div className="text-gray-500">
+                        Total {data.length}
+                    </div>
+
+                    <div className="text-gray-500">
                         Page {pagination.current_page} of {pagination.last_page}
                     </div>
 
