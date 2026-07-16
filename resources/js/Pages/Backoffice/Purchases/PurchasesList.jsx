@@ -8,6 +8,7 @@ import { useMemo } from 'react';
 
 function PurchasesList() {
     const { purchases, flash, filters, sort, direction } = usePage().props;
+    console.log(purchases)
 
     const filterConfig = useMemo(() => [
         {
@@ -82,6 +83,22 @@ function PurchasesList() {
             renderDetail: (row) => {
                 let price = Number(row.price);
                 return `Rp ${price.toLocaleString('id-ID')}`;
+            },
+        },
+        {
+            key: 'discount',
+            label: 'Discount',
+            render: (row) => {
+                let discount = Number(row.discount);
+                return `Rp ${discount.toLocaleString('id-ID')}`;
+            },
+        },
+        {
+            key: 'additional_fee',
+            label: 'Additional Fee',
+            render: (row) => {
+                let additional_fee = Number(row.additional_fee);
+                return `Rp ${additional_fee.toLocaleString('id-ID')}`;
             },
         },
         {

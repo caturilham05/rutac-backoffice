@@ -27,7 +27,7 @@ class PurchaseController extends Controller
         $nextIncrement = 1;
 
         if ($lastPurchase) {
-            $parts = explode('/', $lastPurchase->invoice);
+            $parts         = explode('/', $lastPurchase->invoice);
             $nextIncrement = ((int) end($parts)) + 1;
         }
 
@@ -46,14 +46,15 @@ class PurchaseController extends Controller
         $filter_data = $request->only(['invoice', 'vendor', 'created_at']);
         $sort        = $request->input('sort');
         $direction   = $request->input('direction', 'asc');
-        $purchases = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);
-        // $purchases = Purchase::with(['purchase_products'])->orderBy('id', 'desc')->get();
+        $purchases   = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);
         $purchases->map(function($purchase){
             $purchase['items'] = $purchase->purchase_products ?? [];
+            $purchase['price'] = $purchase->price - $purchase->discount + $purchase->additional_fee;
             $purchase->unsetRelation('purchase_products');
 
             return $purchase;
         });
+
 
         return Inertia::render('Backoffice/Purchases/PurchasesList', [
             'purchases' => $purchases,

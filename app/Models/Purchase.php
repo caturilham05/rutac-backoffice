@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\DB;
 class Purchase extends Model
 {
     protected $table    = 'purchases';
-    protected $fillable = ['invoice', 'vendor', 'price'];
+    protected $fillable = ['invoice', 'vendor', 'price', 'discount', 'additional_fee'];
     protected $appends  = ['created_at_formatted'];
 
     public function getCreatedAtFormattedAttribute(): string
@@ -24,9 +24,11 @@ class Purchase extends Model
             $price_total = array_sum($prices);
 
             $purchase = self::create([
-                'vendor'  => $data['vendor'],
-                'invoice' => $data['invoice'],
-                'price'   => $price_total
+                'vendor'         => $data['vendor'],
+                'invoice'        => $data['invoice'],
+                'price'          => $price_total,
+                'discount'       => $data['discount'],
+                'additional_fee' => $data['additional_fee'],
             ]);
 
             $product_ids    = array_column($data['products'], 'product_id');

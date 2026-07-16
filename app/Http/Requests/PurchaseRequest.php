@@ -23,6 +23,8 @@ class PurchaseRequest extends FormRequest
     {
         $rules = [
             'vendor'                => ['required'],
+            'discount'              => ['integer', 'min:0'],
+            'additional_fee'        => ['integer', 'min:0'],
             'products'              => ['required', 'array', 'min:1'],
             'products.*.product_id' => ['required'],
             'products.*.price'      => ['required', 'integer', 'min:0'],
@@ -35,6 +37,7 @@ class PurchaseRequest extends FormRequest
     {
         return [
             '*.required'                     => ':attribute wajib diisi',
+            '*.integer'                      => ':attribute harus berupa angka',
             'products.*.array'               => ':attribute harus ada datanya',
             'products.*.product_id.required' => ':attribute wajib diisi',
             'products.*.price.required'      => ':attribute wajib diisi',
@@ -50,6 +53,8 @@ class PurchaseRequest extends FormRequest
     {
         return [
             'vendor'                => 'Vendor',
+            'discount'              => 'Discount',
+            'additional_fee'        => 'Biaya tambahan',
             'products.*'            => 'Products',
             'products.*.product_id' => 'Nama Produk',
             'products.*.price'      => 'Harga',

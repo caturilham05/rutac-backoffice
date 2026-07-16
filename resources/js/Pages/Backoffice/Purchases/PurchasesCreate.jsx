@@ -54,30 +54,6 @@ function PurchasesCreate() {
         }
     };
 
-    // const FieldAutoComplete = () => (
-    //     <div className="py-3">
-    //         <Stack spacing={2} sx={{width: 'auto'}}>
-    //             <Autocomplete
-    //                 id="free-solo-demo3"
-    //                 freeSolo
-    //                 resetHighlightOnMouseLeave
-    //                 options={products}
-    //                 value={}
-    //                 renderInput={(params) => (
-    //                     <TextField {...params} label="Pilih Produk" />
-    //                 )}
-    //                 getOptionLabel={(option) => typeof option === 'string' ? option : option.name}
-    //                 isOptionEqualToValue={(option, value) => {
-    //                     if (typeof value === 'string') {
-    //                         return option.name === value;
-    //                     }
-    //                     return option.name === value.name;
-    //                 }}
-    //             />
-    //         </Stack>
-    //     </div>
-    // )
-
     return (
         <AuthenticatedLayout
             header={
@@ -114,6 +90,42 @@ function PurchasesCreate() {
                                 />
 
                                 <InputError message={errors.vendor} />
+                            </Fragment>
+
+                            <Fragment>
+                                <InputLabel htmlFor="discount" value="Discount" />
+                                <div className="flex overflow-hidden rounded-lg border">
+                                    <div className="flex items-center border-r bg-gray-50 px-4">
+                                        Rp
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        onChange={(e) =>
+                                            setData('discount', e.target.value)
+                                        }
+                                        className="w-full border-0 focus:ring-0"
+                                    />
+                                </div>
+                                <InputError message={errors.discount} />
+                            </Fragment>
+
+                            <Fragment>
+                                <InputLabel htmlFor="additional_fee" value="Additional Fee" />
+                                <div className="flex overflow-hidden rounded-lg border">
+                                    <div className="flex items-center border-r bg-gray-50 px-4">
+                                        Rp
+                                    </div>
+
+                                    <input
+                                        type="text"
+                                        onChange={(e) =>
+                                            setData('additional_fee', e.target.value)
+                                        }
+                                        className="w-full border-0 focus:ring-0"
+                                    />
+                                </div>
+                                <InputError message={errors.additional_fee} />
                             </Fragment>
                         </div>
 
