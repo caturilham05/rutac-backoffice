@@ -3,7 +3,7 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { SquarePen, Trash } from 'lucide-react';
+import { SquarePen, Trash, KeyRound } from 'lucide-react';
 import { useMemo } from 'react';
 
 function Marketplace() {
@@ -88,6 +88,12 @@ function Marketplace() {
             label: 'Action',
             render: (row) => (
                 <div className="flex gap-2">
+                    <Link
+                        href={route('shopee.auth',  {id: row.id})}
+                        className="rounded bg-green-500 px-3 py-1 text-white"
+                    >
+                        <KeyRound size={15} />
+                    </Link>
                     <Link
                         href={route('marketplace.edit', row.id)}
                         className="rounded bg-yellow-500 px-3 py-1 text-white"
