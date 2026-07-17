@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\AuthMarketplaceController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
@@ -23,6 +24,9 @@ Route::get('/', function () {
         'canRegister' => Route::has('register'),
     ]);
 });
+
+Route::get('/auth-marketplace', [AuthMarketplaceController::class, 'auth_shopee']);
+Route::get('/callback', [AuthMarketplaceController::class, 'callback'])->name('shopee.callback');
 
 Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice', function(){
