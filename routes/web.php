@@ -9,6 +9,13 @@ use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Redis;
+
+Route::get('/redis-test', function () {
+    Redis::set('test', now()->toDateTimeString());
+
+    return Redis::get('test');
+});
 
 Route::get('/', function () {
     return Inertia::render('Home', [
