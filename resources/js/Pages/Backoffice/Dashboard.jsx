@@ -1,7 +1,8 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 
 export default function Dashboard() {
+    const {flash} = usePage().props;
     return (
         <AuthenticatedLayout
             header={
@@ -12,15 +13,17 @@ export default function Dashboard() {
         >
             <Head title="Dashboard" />
 
-            <div className="py-12">
-                <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
-                        <div className="p-6 text-gray-900 dark:text-gray-100">
-                            You're logged in!
-                        </div>
-                    </div>
+            {flash.success && (
+                <div className="mb-4 mt-4 rounded bg-green-300 p-4 text-green-700">
+                    {flash.success}
                 </div>
-            </div>
+            )}
+
+            {flash.error && (
+                <div className="mb-4 mt-4 rounded bg-red-300 p-4 text-red-700">
+                    {flash.error}
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

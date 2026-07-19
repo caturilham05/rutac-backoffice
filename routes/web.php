@@ -25,9 +25,6 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/auth-shopee', [AuthMarketplaceController::class, 'auth_shopee'])->name('shopee.auth');
-Route::get('/callback-shopee', [AuthMarketplaceController::class, 'callback'])->name('shopee.callback');
-
 Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice', function(){
         return Inertia::render('Backoffice/Dashboard');
@@ -36,6 +33,10 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice/Orders/Order', function(){
         return Inertia::render('Backoffice/Orders/Order');
     })->name('order');
+
+    Route::get('/auth-shopee', [AuthMarketplaceController::class, 'auth_shopee'])->name('shopee.auth');
+    Route::get('/callback-shopee', [AuthMarketplaceController::class, 'callback'])->name('shopee.callback');
+    Route::get('/refresh-shopee', [AuthMarketplaceController::class, 'refresh_token_shopee'])->name('shopee.refresh');
 
     Route::get('/backoffice/purchases/purchases-list', [PurchaseController::class, 'index'])->name('purchases.list');
     Route::get('/backoffice/purchases/purchases-create', [PurchaseController::class, 'create'])->name('purchases.create');

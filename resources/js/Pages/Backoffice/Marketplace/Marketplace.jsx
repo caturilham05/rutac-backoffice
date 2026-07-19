@@ -124,6 +124,11 @@ function Marketplace() {
             render: (row) => `${row.chiper ?? ''}`,
         },
         {
+            key   : 'token_expires_at',
+            label : 'Token Expired At',
+            render: (row) => `${row.token_expires_at ?? ''}`,
+        },
+        {
             key   : 'refresh_token_expires_at',
             label : 'Refresh Token Expired At',
             render: (row) => `${row.refresh_token_expires_at ?? ''}`,

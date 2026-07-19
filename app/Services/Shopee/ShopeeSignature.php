@@ -9,13 +9,7 @@ class ShopeeSignature
      */
     public function make(int $partnerId, string $partnerKey , string $path, int $timestamp)
     {
-        try {
-            $baseString = sprintf("%s%s%s", $partnerId, $path, $timestamp);
-            return hash_hmac('sha256', $baseString, $partnerKey);
-
-        } catch (\Throwable $th) {
-            dd($th);
-            // return response->json(['error' => $th->getMessage()]);
-        }
+        $baseString = sprintf("%s%s%s", $partnerId, $path, $timestamp);
+        return hash_hmac('sha256', $baseString, $partnerKey);
     }
 }

@@ -23,19 +23,13 @@ class Marketplace extends Model
 
     public static function marketplaceUpsert($data = [])
     {
-        return self::updateOrCreate(
-            [
-                'id' => $data['id'] ?? null
-            ],
-            [
-                'marketplace'      => $data['marketplace'],
-                'store'            => $data['store'],
-                'shop_id'          => $data['shop_id'] ?? null,
-                'access_token'     => $data['access_token'] ?? null,
-                'refresh_token'    => $data['refresh_token'] ?? null,
-                'token_expires_at' => $data['expire_in_datetime'] ?? null,
-            ]
-        );
+        $condition = [
+            'id' => $data['id'],
+        ];
+
+        unset($data['id']);
+
+        return self::updateOrCreate($condition, $data);
     }
 
     public static function marketplacePagination(int $per_page = 15, array $filters = [], ?string $sort = null, string $direction = 'asc')
