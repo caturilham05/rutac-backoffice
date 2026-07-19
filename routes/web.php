@@ -57,9 +57,9 @@ Route::middleware(['auth', 'verified'])->group(function(){
 
     Route::get('/backoffice/marketplace', [MarketplaceController::class, 'index'])->name('marketplace');
     Route::post('/backoffice/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
-    Route::get('/backoffice/marketplace/edit/{id}', [MarketplaceController::class, 'edit'])->name('marketplace.edit');
+    Route::match(['get', 'post'], '/backoffice/marketplace/edit/{id}', [MarketplaceController::class, 'edit'])->name('marketplace.edit');
     Route::put('/backoffice/marketplace/edit/{id}', [MarketplaceController::class, 'put'])->name('marketplace.put');
-    Route::delete('/backoffice/marketplace/{marketplace}', [MarketplaceController::class, 'delete'])->name('marketplace.delete');
+    Route::match(['delete', 'post'], '/backoffice/marketplace/{id}', [MarketplaceController::class, 'delete'])->name('marketplace.delete');
 
     Route::get('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'index'])->name('ShopeeFee');
     Route::post('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'store'])->name('ShopeeFeePost');

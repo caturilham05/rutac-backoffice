@@ -3,105 +3,169 @@ import InputError from '@/Components/InputError';
 import InputLabel from '@/Components/InputLabel';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
-import { SquarePen, Trash, KeyRound } from 'lucide-react';
-import { useMemo } from 'react';
+import Modal from '@/Components/Modal';
+import SecondaryButton from '@/Components/SecondaryButton';
+import TextInput from '@/Components/TextInput';
+import { SquarePen, Trash, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { useMemo, useState } from 'react';
 
 function Marketplace() {
     const { marketplaces, flash, filters, sort, direction, options } =
         usePage().props;
 
+    const [confirmingAction, setConfirmingAction] = useState(null);   // 'edit' or 'delete'
+    const [password, setPassword]                 = useState('');
+    const [showPassword, setShowPassword]         = useState(false);
+    const [selectedId, setSelectedId]             = useState(null);
+    const [showAllData, setShowAllData]           = useState({});
+
+    const closeModal = () => {
+        setConfirmingAction(null);
+        setPassword('');
+        setSelectedId(null);
+    };
+
+    const handleConfirmAction = (e) => {
+        e.preventDefault();
+        if (confirmingAction === 'edit') {
+            router.post(
+                route('marketplace.edit', selectedId),
+                { password },
+                {
+                    preserveScroll: false,
+                    onFinish: () => closeModal(),
+                },
+            );
+        } else if (confirmingAction === 'delete') {
+            router.delete(route('marketplace.delete', selectedId), {
+                data: { password },
+                preserveScroll: false,
+                onFinish: () => closeModal(),
+            });
+        }
+    };
+
     const filterConfig = useMemo(
         () => [
             {
-                key: 'marketplace',
-                label: 'Marketplace',
-                type: 'autocomplete',
-                options: options?.marketplace || [],
+                key        : 'marketplace',
+                label      : 'Marketplace',
+                type       : 'autocomplete',
+                options    : options?.marketplace || [],
                 placeholder: 'Search marketplace ...',
             },
             {
-                key: 'store',
-                label: 'Store',
-                type: 'autocomplete',
-                options: options?.store || [],
+                key        : 'store',
+                label      : 'Store',
+                type       : 'autocomplete',
+                options    : options?.store || [],
                 placeholder: 'Search store ...',
             },
         ],
         [options],
     );
 
+    const toggleShow = (id) => {
+        setShowAllData(prev => ({
+            ...prev,
+            [id]: !prev[id],
+        }));
+    };
+
+    const displayValue = (id, value, limit = 10) => {
+        if (!showAllData[id]) {
+            return '*****';
+        }
+
+        if (value === null) {
+            return '-';
+        }
+
+        return String(value) && value.length > limit ? `${value.slice(0, limit)}...` : value;
+    }
+
     const sortableColumns = ['marketplace', 'store'];
 
     const columns = [
         {
-            key: 'marketplace_id',
-            label: 'Marketplace Id Origin',
-            render: (row) => `${row.marketplace_id ?? 0}`,
+            key   : 'marketplace_id',
+            label : 'Marketplace Id Origin',
+            // render: (row) => {showAllData[row.id] ? `${row.marketplace_id}` : '*********'},
+            render: (row) => displayValue(row.id, row.marketplace_id),
         },
         {
-            key: 'shop_id',
-            label: 'Shop Id',
-            render: (row) => `${row.shop_id ?? 0}`,
+            key   : 'shop_id',
+            label : 'Shop Id',
+            render: (row) => displayValue(row.id, row.shop_id),
         },
         {
-            key: 'marketplace',
-            label: 'Marketplace',
+            key   : 'marketplace',
+            label : 'Marketplace',
             render: (row) => `${row.marketplace ?? ''}`,
         },
         {
-            key: 'store',
-            label: 'Store',
+            key   : 'store',
+            label : 'Store',
             render: (row) => `${row.store ?? ''}`,
         },
         {
-            key: 'access_token',
-            label: 'Access Token',
-            render: (row) => `${row.access_token ?? ''}`,
+            key   : 'access_token',
+            label : 'Access Token',
+            render: (row) => displayValue(row.id, row.access_token),
         },
         {
-            key: 'refresh_token',
-            label: 'Refresh Token',
-            render: (row) => `${row.refresh_token ?? ''}`,
+            key   : 'refresh_token',
+            label : 'Refresh Token',
+            render: (row) => displayValue(row.id, row.refresh_token),
         },
         {
-            key: 'chiper',
-            label: 'Chiper',
+            key   : 'chiper',
+            label : 'Chiper',
             render: (row) => `${row.chiper ?? ''}`,
         },
         {
-            key: 'refresh_token_expires_at',
-            label: 'Refresh Token Expired At',
+            key   : 'refresh_token_expires_at',
+            label : 'Refresh Token Expired At',
             render: (row) => `${row.refresh_token_expires_at ?? ''}`,
         },
         {
-            key: 'app_key',
-            label: 'App Key',
-            render: (row) => `${row.app_key ?? ''}`,
+            key   : 'app_key',
+            label : 'App Key',
+            render: (row) => displayValue(row.id, row.app_key),
         },
         {
-            key: 'app_secret',
-            label: 'App Secret',
+            key   : 'app_secret',
+            label : 'App Secret',
             render: (row) => `${row.app_secret ?? ''}`,
         },
         {
-            key: 'edit',
-            label: 'Action',
+            key   : 'edit',
+            label : 'Action',
             render: (row) => (
                 <div className="flex gap-2">
+                    <div onClick={() => toggleShow(row.id)} className="rounded bg-pink-500 px-3 py-1 text-white" style={{cursor: 'pointer'}}>
+                        {showAllData[row.id] ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </div>
                     <Link
                         href={route('shopee.auth',  {id: row.id})}
                         className="rounded bg-green-500 px-3 py-1 text-white"
                     >
                         <KeyRound size={15} />
                     </Link>
-                    <Link
-                        href={route('marketplace.edit', row.id)}
+                    <button
+                        onClick={() => {
+                            setSelectedId(row.id);
+                            setConfirmingAction('edit');
+                        }}
                         className="rounded bg-yellow-500 px-3 py-1 text-white"
                     >
                         <SquarePen size={15} />
-                    </Link>
+                    </button>
                     <button
-                        onClick={() => handleDelete(row.id)}
+                        onClick={() => {
+                            setSelectedId(row.id);
+                            setConfirmingAction('delete');
+                        }}
                         className="rounded bg-red-500 px-3 py-1 text-white"
                     >
                         <Trash size={15} />
@@ -124,15 +188,6 @@ function Marketplace() {
         });
     };
 
-    const handleDelete = (id) => {
-        if (!confirm('Yakin ingin menghapus data ini?')) {
-            return;
-        }
-
-        router.delete(route('marketplace.delete', id), {
-            preserveScroll: false,
-        });
-    };
 
     return (
         <AuthenticatedLayout
@@ -172,6 +227,61 @@ function Marketplace() {
                     </div>
                 </div>
             </div>
+
+            <Modal show={!!confirmingAction} onClose={closeModal}>
+                <form onSubmit={handleConfirmAction} className="p-6">
+                    <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                        Konfirmasi Password
+                    </h2>
+
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        Silahkan masukkan password anda untuk {confirmingAction} data
+                        marketplace ini.
+                    </p>
+
+                    <div className="mt-6">
+                        <InputLabel
+                            htmlFor="password"
+                            value="Password"
+                            className="sr-only"
+                        />
+
+                        <div className="relative mt-1 block w-3/4">
+                            <TextInput
+                                id="password"
+                                type={showPassword ? 'text' : 'password'}
+                                name="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="block w-full"
+                                isFocused
+                                placeholder="Password"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute inset-y-0 right-0 flex items-center pr-3"
+                            >
+                                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 flex justify-end">
+                        <SecondaryButton onClick={closeModal}>
+                            Batal
+                        </SecondaryButton>
+
+                        <button
+                            type="submit"
+                            className="ms-3 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                        >
+                            Konfirmasi
+                        </button>
+                    </div>
+                </form>
+            </Modal>
 
             <div className="px-4 py-2">
                 <form onSubmit={submit} className="space-y-4">
