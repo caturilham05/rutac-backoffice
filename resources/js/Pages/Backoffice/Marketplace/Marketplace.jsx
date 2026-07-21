@@ -6,7 +6,7 @@ import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import Modal from '@/Components/Modal';
 import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
-import { SquarePen, Trash, KeyRound, Eye, EyeOff } from 'lucide-react';
+import { SquarePen, Trash, KeyRound, Eye, EyeOff, LogOut } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 function Marketplace() {
@@ -152,10 +152,10 @@ function Marketplace() {
                         {showAllData[row.id] ? <EyeOff size={15} /> : <Eye size={15} />}
                     </div>
                     <Link
-                        href={route('shopee.auth',  {id: row.id})}
-                        className="rounded bg-green-500 px-3 py-1 text-white"
+                        href={row.shop_id ? route('shopee.cancel', { id: row.id }) : route('shopee.auth', { id: row.id })}
+                        className={`rounded px-3 py-1 text-white ${row.shop_id ? 'bg-red-500' : 'bg-green-500'}`}
                     >
-                        <KeyRound size={15} />
+                        {row.shop_id ? <LogOut size={15} /> : <KeyRound size={15} />}
                     </Link>
                     <button
                         onClick={() => {
