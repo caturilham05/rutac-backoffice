@@ -24,7 +24,6 @@ class RefreshShopeeTokens extends Command
             }
 
             $response['expire_in_datetime'] = date('Y-m-d H:i:s', time() + $response['expire_in']);
-            $marketplace_id                 = Marketplace::where('shop_id', 336094210)->value('id');
 
             $data = [
                 'id'               => $m->id,

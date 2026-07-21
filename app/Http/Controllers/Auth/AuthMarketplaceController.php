@@ -67,13 +67,13 @@ class AuthMarketplaceController extends Controller
         $response['expire_in_datetime'] = date('Y-m-d H:i:s', time() + $response['expire_in']);
         $marketplace = Marketplace::findOrFail($id);
         $data = [
-            'id'                 => $marketplace->id,
-            'marketplace'        => $marketplace->marketplace,
-            'store'              => $marketplace->store,
-            'shop_id'            => $shopId,
-            'access_token'       => $response['access_token'],
-            'refresh_token'      => $response['refresh_token'],
-            'expire_in_datetime' => $response['expire_in_datetime'],
+            'id'               => $marketplace->id,
+            'marketplace'      => $marketplace->marketplace,
+            'store'            => $marketplace->store,
+            'shop_id'          => $shopId,
+            'access_token'     => $response['access_token'],
+            'refresh_token'    => $response['refresh_token'],
+            'token_expires_at' => $response['expire_in_datetime'],
         ];
 
         try {
@@ -86,7 +86,36 @@ class AuthMarketplaceController extends Controller
 
     public function cancel_shopee(Request $request, Marketplace $marketplace)
     {
-        $shop_id = $marketplace->findOrfail($request->id)->shop_id;
-        dd($shop_id);
+        if (empty($marketplace->marketplace_id)) {
+            return redirect()->route('marketplace')->with('error', 'toko anda belum terautorisasi dengan sistem kami');
+        }
+
+        $redirectUrl = route('shopee.callback_cancel', $marketplace);
+        $url_cancel  = sprintf('https://open.shopee.com/cancel_auth?partner_id=%s&auth_type=seller&redirect_uri=%s&response_type=code', $marketplace->marketplace_id, $redirectUrl);
+
+        $response = Http::get($url_cancel);
+        if ($response->failed()) {
+            return redirect()->route('marketplace')->with('error', 'gagal request cancel');
+        }
+
+        return Inertia::location($url_cancel);
+    }
+
+    public function callback_cancel(Marketplace $marketplace)
+    {
+        $data = [
+            'id'               => $marketplace->id,
+            'shop_id'          => null,
+            'access_token'     => null,
+            'refresh_token'    => null,
+            'token_expires_at' => null,
+        ];
+
+        try {
+            Marketplace::marketplaceUpsert($data);
+            return redirect()->route('marketplace')->with('success', sprintf('Tokomu [%s] sudah tidak terotorisasi dengan sistem', $marketplace->store));
+        } catch (\Throwable $th) {
+            return redirect()->route('marketplace')->with('error', $th->getMessage());
+        }
     }
 }

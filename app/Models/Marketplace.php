@@ -23,11 +23,15 @@ class Marketplace extends Model
 
     public static function marketplaceUpsert($data = [])
     {
-        $condition = [
-            'id' => $data['id'],
-        ];
+        if (!empty($data['id'])) {
+            $condition = [
+                'id' => $data['id'],
+            ];
 
-        unset($data['id']);
+            unset($data['id']);
+        } else {
+            $condition = ['id' => null];
+        }
 
         return self::updateOrCreate($condition, $data);
     }

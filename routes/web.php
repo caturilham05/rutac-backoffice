@@ -37,7 +37,8 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/auth-shopee', [AuthMarketplaceController::class, 'auth_shopee'])->name('shopee.auth');
     Route::get('/callback-shopee', [AuthMarketplaceController::class, 'callback'])->name('shopee.callback');
     Route::get('/refresh-shopee', [AuthMarketplaceController::class, 'refresh_token_shopee'])->name('shopee.refresh');
-    Route::get('/cancel-shopee', [AuthMarketplaceController::class, 'cancel_shopee'])->name('shopee.cancel');
+    Route::get('/backoffice/{marketplace}/cancel-shopee', [AuthMarketplaceController::class, 'cancel_shopee'])->name('shopee.cancel');
+    Route::get('/backoffice/{marketplace}/callback-cancel-shopee', [AuthMarketplaceController::class, 'callback_cancel'])->name('shopee.callback_cancel');
 
     Route::get('/backoffice/purchases/purchases-list', [PurchaseController::class, 'index'])->name('purchases.list');
     Route::get('/backoffice/purchases/purchases-create', [PurchaseController::class, 'create'])->name('purchases.create');
