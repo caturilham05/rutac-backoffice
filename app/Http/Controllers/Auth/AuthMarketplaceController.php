@@ -83,4 +83,10 @@ class AuthMarketplaceController extends Controller
             return redirect()->route('marketplace')->with('error', $th->getMessage());
         }
     }
+
+    public function cancel_shopee(Request $request, Marketplace $marketplace)
+    {
+        $shop_id = $marketplace->findOrfail($request->id)->shop_id;
+        dd($shop_id);
+    }
 }
