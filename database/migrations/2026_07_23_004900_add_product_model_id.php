@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('product_skus', function (Blueprint $table) {
+            $table->bigInteger('product_model_id')->nullable();
             $table->unsignedBigInteger('product_model_id')->nullable()->change();
         });
     }

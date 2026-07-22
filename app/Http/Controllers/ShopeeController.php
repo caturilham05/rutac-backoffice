@@ -8,6 +8,7 @@ use App\Models\Product_sku;
 use App\Services\Shopee\ShopeeServices;
 use App\Services\Shopee\ShopeeSignature;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ShopeeController extends Controller
@@ -83,14 +84,13 @@ class ShopeeController extends Controller
 
                     $data[] = [
                         'id'               => $sku->id,
-                        'product_model_id' => $shopee['model_id'],
+                        'product_model_id' => (string)$shopee['model_id'],
                         'discount_price'   => $shopee['current_price'],
                         'original_price'   => $shopee['original_price'],
                         'updated_at'       => now()
                     ];
                 }
             }
-
             Product_sku::upsert(
                 $data,
                 ['id'], // kolom unik untuk mencocokkan record
