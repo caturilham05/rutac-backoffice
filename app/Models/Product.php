@@ -105,9 +105,14 @@ class Product extends Model
         return $this->hasMany(Product_variant::class, 'product_id');
     }
 
-    public function skus(): HasOne
+    // public function skus(): HasOne
+    // {
+    //     return $this->hasOne(Product_sku::class, 'product_id');
+    // }
+
+    public function skus(): HasMany
     {
-        return $this->hasOne(Product_sku::class, 'product_id');
+        return $this->HasMany(Product_sku::class, 'product_id');
     }
 
     private static function prefixSku(string $text)
