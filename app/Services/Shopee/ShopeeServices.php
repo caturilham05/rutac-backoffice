@@ -66,4 +66,88 @@ Class ShopeeServices
 
         return $response->json();
     }
+
+    public function getProducts(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $offset = 0, int $pageSize = 10)
+    {
+        $timestamp  = time();
+        $path       = "/api/v2/product/get_item_list";
+        $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_status=NORMAL&page_size=%s&offset=%s',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $timestamp,
+            $sign,
+            $accessToken,
+            $shopId,
+            $pageSize,
+            $offset
+        );
+
+        $response_items = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        if (!empty($response_items['error'])) {
+            throw new \Exception($response_items['message'], 400);
+        }
+
+        if (empty($response_items['response']['item'])) {
+            throw new \Exception('Data not found', 400);
+        }
+
+        $item_id_list = array_column($response_items['response']['item'], 'item_id');
+        $item_id_list = implode(',', $item_id_list);
+        $item_id_list_encode = urlencode('['.$item_id_list.']');
+
+        $path       = '/api/v2/product/get_item_base_info';
+        $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id_list=%s',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $timestamp,
+            $sign,
+            $accessToken,
+            $shopId,
+            $item_id_list
+        );
+
+        $response_item_info = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        if (!empty($response_item_info['error'])) {
+            throw new \Exception($response_item_info['message'], 400);
+        }
+
+        $pathModel       = '/api/v2/product/get_model_list';
+        $baseStringModel = $marketplace_id.$pathModel.$timestamp.$accessToken.$shopId;
+        $signModel       = hash_hmac('sha256', $baseStringModel, $app_key);
+
+        $http = Http::withHeaders(["Content-Type" => "application/json"]);
+        foreach ($response_item_info['response']['item_list'] as &$value) {
+            $urlModel = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id=%s',
+                $this->host,
+                $pathModel,
+                $marketplace_id,
+                $timestamp,
+                $signModel,
+                $accessToken,
+                $shopId,
+                $value['item_id']
+            );
+            $response_model = $http->get($urlModel)->json();
+
+            if (!empty($response_model['error'])) {
+                continue;
+            }
+
+            $value['item_model'] = $response_model['response']['model'];
+        }
+
+        return $response_item_info;
+    }
 }

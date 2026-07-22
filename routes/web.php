@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ShopeeController;
 use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -39,6 +40,7 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/refresh-shopee', [AuthMarketplaceController::class, 'refresh_token_shopee'])->name('shopee.refresh');
     Route::get('/backoffice/{marketplace}/cancel-shopee', [AuthMarketplaceController::class, 'cancel_shopee'])->name('shopee.cancel');
     Route::get('/backoffice/{marketplace}/callback-cancel-shopee', [AuthMarketplaceController::class, 'callback_cancel'])->name('shopee.callback_cancel');
+    Route::get('/backoffice/{marketplace}/shopee-get-products', [ShopeeController::class, 'shopeeGetProducts'])->name('shopee.get_products');
 
     Route::get('/backoffice/purchases/purchases-list', [PurchaseController::class, 'index'])->name('purchases.list');
     Route::get('/backoffice/purchases/purchases-create', [PurchaseController::class, 'create'])->name('purchases.create');
