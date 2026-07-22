@@ -30,51 +30,74 @@ class ShopeeController extends Controller
 
         try {
             $shopee_services = new ShopeeServices($this->signature);
-            // $products        = Product::with(['skus', 'variants'])->get();
-            // $productFilter   = $products->filter(function($product){
-            //     return $product->cat_name !== 'Material';
-            // });
 
             $model_skus = [];
-            $responses = $shopee_services->getProducts($access_token, $app_key, $marketplace_id, $shop_id);
+
+            $responses = $shopee_services->getProducts(
+                $access_token,
+                $app_key,
+                $marketplace_id,
+                $shop_id
+            );
+
             foreach ($responses['response']['item_list'] as $item) {
-                $model_skus = array_merge($model_skus, array_filter(array_column($item['item_model'], 'model_sku')));
+                foreach ($item['item_model'] as $model) {
+
+                    if (empty($model['model_sku'])) {
+                        continue;
+                    }
+
+                    $sku = strtolower(trim($model['model_sku']));
+
+                    $priceInfo = $model['price_info'][0] ?? [];
+
+                    $model_skus[$sku] = [
+                        'model_id'       => $model['model_id'],
+                        'current_price'  => $priceInfo['current_price'] ?? 0,
+                        'original_price' => $priceInfo['original_price'] ?? 0,
+                    ];
+                }
             }
+
+            $skuNames = array_keys($model_skus);
 
             $products = Product::with([
                 'variants',
-                'skus' => function ($query) use ($model_skus) {
-                    $query->whereIn('name', $model_skus);
+                'skus' => function ($query) use ($skuNames) {
+                    $query->whereIn('name', $skuNames);
                 }
             ])
-            ->whereHas('skus', function ($query) use ($model_skus) {
-                $query->whereIn('name', $model_skus);
+            ->whereHas('skus', function ($query) use ($skuNames) {
+                $query->whereIn('name', $skuNames);
             })
-            ->get()->toArray();
+            ->get();
 
-            dd($model_skus, $products);
+            $data = [];
+            foreach ($products as $product) {
+                foreach ($product->skus as $sku) {
+                    $shopee = $model_skus[strtolower($sku->name)] ?? null;
+
+                    if (!$shopee) {
+                        continue;
+                    }
+
+                    $data[] = [
+                        'id'               => $sku->id,
+                        'product_model_id' => $shopee['model_id'],
+                        'discount_price'   => $shopee['current_price'],
+                        'original_price'   => $shopee['original_price'],
+                        'updated_at'       => now()
+                    ];
+                }
+            }
+
+            Product_sku::upsert(
+                $data,
+                ['id'], // kolom unik untuk mencocokkan record
+                ['product_model_id', 'discount_price', 'original_price', 'updated_at'] // kolom yang diupdate
+            );
 
 
-            // $model_sku_data = [];
-            // foreach ($responses['response']['item_list'] as $response) {
-            //     foreach ($response['item_model'] as $item_model) {
-            //         if (!empty($item_model['model_sku'])) {
-            //             $model_sku                  = strtolower($item_model['model_sku']);
-            //             $model_sku_data[$model_sku] = $item_model['model_id'];
-            //         }
-            //     }
-            // }
-
-            // $model_sku_data = [];
-            // foreach ($productFilter as $product) {
-            //     foreach ($product->skus as $sku) {
-            //         if (!empty($sku->name)) {
-            //             $model_sku_data[$sku->name] = $sku->id;
-            //         }
-            //     }
-            // }
-
-            // dd($model_sku_data);
         } catch (\Throwable $th) {
             dd($th->getMessage());
             $log = Log::build([
