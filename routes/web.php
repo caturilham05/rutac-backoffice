@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
+use App\Http\Controllers\ShopeeAdsController;
 use App\Http\Controllers\ShopeeController;
 use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
@@ -71,6 +72,9 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::get('/backoffice/configuration/shopee-fee-create/edit/{id}', [ShopeeFeeController::class, 'edit'])->name('shopeeFee.edit');
     Route::put('/backoffice/configuration/shopee-fee-create/edit/{id}', [ShopeeFeeController::class, 'put'])->name('shopeeFee.put');
     Route::delete('/backoffice/configuration/shopee-fee-create/{configFee}', [ShopeeFeeController::class, 'delete'])->name('shopeeFee.delete');
+
+    Route::get('/backoffice/configuration/{marketplace}/ads-shopee', [ShopeeController::class, 'shopeeAds'])->name('shopee.ads');
+
 });
 
 Route::middleware('auth')->group(function () {

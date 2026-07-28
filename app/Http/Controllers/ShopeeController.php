@@ -107,4 +107,13 @@ class ShopeeController extends Controller
             $log->error("Error in shopeeGetProducts: " . $th->getMessage());
         }
     }
+
+    public function shopeeAds(Marketplace $marketplace)
+    {
+        $access_token   = $marketplace->access_token;
+        $shop_id        = $marketplace->shop_id;
+        $marketplace_id = $marketplace->marketplace_id;
+        $app_key        = $marketplace->app_key;
+        dd($marketplace);
+    }
 }

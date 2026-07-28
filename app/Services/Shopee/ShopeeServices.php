@@ -150,4 +150,27 @@ Class ShopeeServices
 
         return $response_item_info;
     }
+
+    public function getProductLevelCampaignIdList(string $accessToken, string $app_key, int $marketplace_id, int $shopId)
+    {
+        $timestamp  = time();
+        $path       = "/api/v2/ads/get_product_level_campaign_id_list";
+        $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&ad_type=all',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $timestamp,
+            $sign,
+            $accessToken,
+            $shopId
+        );
+
+        $response = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        dd($response);
+    }
 }
