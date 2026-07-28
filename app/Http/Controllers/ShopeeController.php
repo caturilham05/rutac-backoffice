@@ -130,8 +130,8 @@ class ShopeeController extends Controller
                     'bidding_method'     => $item['common_info']['bidding_method'],
                     'campaign_placement' => $item['common_info']['campaign_placement'],
                     'campaign_budget'    => $item['common_info']['campaign_budget'],
-                    'start_time'         => $item['common_info']['campaign_duration']['start_time'],
-                    'end_time'           => $item['common_info']['campaign_duration']['end_time'],
+                    'start_time'         => !empty($item['common_info']['campaign_duration']['start_time']) ? date('Y-m-d H:i:s', $item['common_info']['campaign_duration']['start_time']) : null,
+                    'end_time'           => !empty($item['common_info']['campaign_duration']['end_time']) ? date('Y-m-d H:i:s', $item['common_info']['campaign_duration']['end_time']) : null,
                     'item_id'            => $item['common_info']['item_id_list'][0],
                     'roas_target'        => $item['auto_bidding_info']['roas_target'],
                     'created_at'         => now(),
@@ -141,7 +141,7 @@ class ShopeeController extends Controller
 
             AdsShopee::adsUpsert($data);
         } catch (\Throwable $th) {
-            dd($th);
+            dd($th->getMessage());
         }
     }
 }
