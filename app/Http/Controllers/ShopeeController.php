@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdsShopee;
 use App\Models\Marketplace;
 use App\Models\Product;
 use App\Models\Product_sku;
@@ -10,6 +11,7 @@ use App\Services\Shopee\ShopeeSignature;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class ShopeeController extends Controller
 {
@@ -117,7 +119,27 @@ class ShopeeController extends Controller
 
         try {
             $shopee_services = new ShopeeServices($this->signature);
-            $ads = $shopee_services->getProductLevelCampaignSettingInfo($access_token, $app_key, $marketplace_id, $shop_id);
+            $ads             = $shopee_services->getProductLevelCampaignSettingInfo($access_token, $app_key, $marketplace_id, $shop_id);
+            $data = [];
+            foreach ($ads as $item) {
+                $data[] = [
+                    'campaign_id'        => $item['campaign_id'],
+                    'type'               => $item['common_info']['ad_type'],
+                    'name'               => $item['common_info']['ad_name'],
+                    'status'             => $item['common_info']['campaign_status'],
+                    'bidding_method'     => $item['common_info']['bidding_method'],
+                    'campaign_placement' => $item['common_info']['campaign_placement'],
+                    'campaign_budget'    => $item['common_info']['campaign_budget'],
+                    'start_time'         => $item['common_info']['campaign_duration']['start_time'],
+                    'end_time'           => $item['common_info']['campaign_duration']['end_time'],
+                    'item_id'            => $item['common_info']['item_id_list'][0],
+                    'roas_target'        => $item['auto_bidding_info']['roas_target'],
+                    'created_at'         => now(),
+                    'updated_at'         => now(),
+                ];
+            }
+
+            AdsShopee::adsUpsert($data);
         } catch (\Throwable $th) {
             dd($th);
         }

@@ -209,6 +209,7 @@ Class ShopeeServices
         $campaign_ongoing = array_values(array_filter($campaign_list, function ($value) {
             return $value['common_info']['campaign_status'] === 'ongoing';
         }));
-        dd($campaign_ongoing);
+
+        return $campaign_ongoing;
     }
 }

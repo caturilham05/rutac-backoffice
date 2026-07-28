@@ -13,4 +13,25 @@ class AdsShopee extends Model
         'start_time' => 'date',
         'end_date'   => 'date',
     ];
+
+    public static function adsUpsert($data = [])
+    {
+        return self::upsert(
+            $data,
+            ['campaign_id'], // unique key
+            [
+                'type',
+                'name',
+                'status',
+                'bidding_method',
+                'campaign_placement',
+                'campaign_budget',
+                'start_time',
+                'end_time',
+                'item_id',
+                'roas_target',
+                'updated_at',
+            ]
+        );
+    }
 }
