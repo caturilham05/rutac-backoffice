@@ -123,6 +123,7 @@ class ShopeeController extends Controller
             $data = [];
             foreach ($ads as $item) {
                 $data[] = [
+                    'marketplace_id'     => $marketplace->id,
                     'campaign_id'        => $item['campaign_id'],
                     'type'               => $item['common_info']['ad_type'],
                     'name'               => $item['common_info']['ad_name'],
