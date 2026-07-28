@@ -81,7 +81,16 @@ function Marketplace() {
             return '-';
         }
 
-        return String(value) && value.length > limit ? `${value.slice(0, limit)}...` : value;
+        const stringValue = String(value);
+        if (stringValue.length > limit) {
+            return (
+                <span title={stringValue}>
+                    {stringValue.slice(0, limit)}...
+                </span>
+            );
+        }
+
+        return stringValue;
     }
 
     const sortableColumns = ['marketplace', 'store'];
