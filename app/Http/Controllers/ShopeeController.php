@@ -114,6 +114,12 @@ class ShopeeController extends Controller
         $shop_id        = $marketplace->shop_id;
         $marketplace_id = $marketplace->marketplace_id;
         $app_key        = $marketplace->app_key;
-        dd($marketplace);
+
+        try {
+            $shopee_services = new ShopeeServices($this->signature);
+            $ads = $shopee_services->getProductLevelCampaignSettingInfo($access_token, $app_key, $marketplace_id, $shop_id);
+        } catch (\Throwable $th) {
+            dd($th);
+        }
     }
 }

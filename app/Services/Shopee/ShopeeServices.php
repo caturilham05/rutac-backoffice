@@ -11,18 +11,19 @@ Class ShopeeServices
     // protected $partnerId;
     // protected $partnerKey;
     protected $host;
+    protected $time;
 
     public function __construct(ShopeeSignature $signature)
     {
         $this->signature = $signature;
         $this->host      = env('SHOPEE_HOST');
-        // throw new \Exception('Not implemented');
+        $this->time      = time();
     }
 
     public function getTokenShopLevel(?string $code, int $shopId, int $id)
     {
         try {
-            $timestamp   = time();
+            $timestamp   = $this->time;
             $path        = "/api/v2/auth/token/get";
             $marketplace = Marketplace::findOrFail($id);
 
@@ -49,7 +50,7 @@ Class ShopeeServices
     public function getAccessTokenShopLevel(int $marketplace_id, int $shop_id, string $app_key, string $refres_token)
     {
         $path = "/api/v2/auth/access_token/get";
-        $timestamp = time();
+        $timestamp = $this->time;
         $sign      = $this->signature->make($marketplace_id, $app_key, $path, $timestamp);
         $url       = sprintf("%s%s?partner_id=%s&timestamp=%s&sign=%s", $this->host, $path, $marketplace_id, $timestamp, $sign);
         $body = [
@@ -69,7 +70,7 @@ Class ShopeeServices
 
     public function getProducts(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $offset = 0, int $pageSize = 10)
     {
-        $timestamp  = time();
+        $timestamp  = $this->time;
         $path       = "/api/v2/product/get_item_list";
         $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
         $sign       = hash_hmac('sha256', $baseString, $app_key);
@@ -151,13 +152,13 @@ Class ShopeeServices
         return $response_item_info;
     }
 
-    public function getProductLevelCampaignIdList(string $accessToken, string $app_key, int $marketplace_id, int $shopId)
+    private function getProductLevelCampaignIdList(string $accessToken, string $app_key, int $marketplace_id, int $shopId)
     {
-        $timestamp  = time();
+        $timestamp  = $this->time;
         $path       = "/api/v2/ads/get_product_level_campaign_id_list";
         $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
         $sign       = hash_hmac('sha256', $baseString, $app_key);
-        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&ad_type=all',
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s',
             $this->host,
             $path,
             $marketplace_id,
@@ -171,6 +172,43 @@ Class ShopeeServices
             "Content-Type" => "application/json"
         ])->get($url)->json();
 
-        dd($response);
+        return $response;
+    }
+
+    public function getProductLevelCampaignSettingInfo(string $accessToken, string $app_key, int $marketplace_id, int $shopId)
+    {
+        $ads_list = $this->getProductLevelCampaignIdList($accessToken, $app_key, $marketplace_id, $shopId);
+        if (!empty($ads_list['error'])) {
+            throw new \Exception($ads_list['message']);
+        }
+        $campaign_ids = array_column($ads_list['response']['campaign_list'], 'campaign_id');
+
+        $path       = "/api/v2/ads/get_product_level_campaign_setting_info";
+        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shopId;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&info_type_list=1,2,3,4&campaign_id_list=%s',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shopId,
+            implode(',', $campaign_ids)
+        );
+
+        $response = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        if (!empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        $campaign_list = $response['response']['campaign_list'];
+        $campaign_ongoing = array_values(array_filter($campaign_list, function ($value) {
+            return $value['common_info']['campaign_status'] === 'ongoing';
+        }));
+        dd($campaign_ongoing);
     }
 }

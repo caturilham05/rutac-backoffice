@@ -13,6 +13,18 @@ return new class extends Migration
     {
         Schema::create('ads_shopees', function (Blueprint $table) {
             $table->id();
+            $table->bigInteger('campaign_id')->nullable()->unsigned();
+            $table->string('type')->nullable();
+            $table->string('name')->nullable();
+            $table->string('status')->nullable();
+            $table->string('bidding_method')->nullable();
+            $table->string('campaign_placement')->nullable();
+            $table->double('campaign_budget')->nullable()->unsigned();
+            $table->timestamp('start_time')->nullable();
+            $table->timestamp('end_time')->nullable();
+            $table->bigInteger('item_id')->nullable()->unsigned();
+            $table->double('roas_target')->nullable()->unsigned();
+
             $table->timestamps();
         });
     }
