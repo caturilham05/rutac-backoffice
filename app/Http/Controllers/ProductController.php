@@ -72,19 +72,19 @@ class ProductController extends Controller
                     'id'         => $variant->id,
                     'product_id' => $variant->product_id,
                     'name'       => $variant->name,
-                    'sku_id'     => $variant->skus?->id,
-                    'sku'        => $variant->skus?->name,
-                    'stock'      => $variant->skus?->stock,
-                    'price'      => $variant->skus?->original_price,
+                    'sku_id'     => $variant->skus?->first()?->id,
+                    'sku'        => $variant->skus?->first()?->name,
+                    'stock'      => $variant->skus?->first()?->stock,
+                    'price'      => $variant->skus?->first()?->original_price,
                 ];
             });
             $products->unsetRelation('variants');
             $products->unsetRelation('skus');
         } else {
-            $products->sku_id = $products->skus?->id;
-            $products->sku    = $products->skus?->name;
-            $products->price  = $products->skus?->original_price;
-            $products->stock  = $products->skus?->stock;
+            $products->sku_id = $products->skus?->first()?->id;
+            $products->sku    = $products->skus?->first()?->name;
+            $products->price  = $products->skus?->first()?->original_price;
+            $products->stock  = $products->skus?->first()?->stock;
         }
 
         return Inertia::render('Backoffice/Products/ProductsAction', [

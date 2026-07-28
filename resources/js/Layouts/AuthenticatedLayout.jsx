@@ -16,7 +16,8 @@ export default function AuthenticatedLayout({ header, children }) {
         route().current('products') || route().current('product_category');
     const isOrdersActive = route().current('order');
     const isPurchaseActive = route().current('purchases.list');
-    const isConfigurationActive = route().current('ShopeeFee');
+    const isConfigurationActive =
+        route().current('ShopeeFee') || route().current('shopee.ads.index');
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -172,6 +173,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 href={route('ShopeeFee')}
                                             >
                                                 Configuration Marketplace
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={route('shopee.ads.index')}
+                                            >
+                                                Ads Shopee
                                             </Dropdown.Link>
                                         </Dropdown.Content>
                                     </Dropdown>
@@ -421,6 +427,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={route().current('ShopeeFee')}
                                 >
                                     Configuration Marketplace
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('shopee.ads.index')}
+                                    active={route().current('shopee.ads.index')}
+                                >
+                                    Ads Shopee
                                 </ResponsiveNavLink>
                             </div>
                         </details>

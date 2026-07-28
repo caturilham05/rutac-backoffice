@@ -73,6 +73,7 @@ Route::middleware(['auth', 'verified'])->group(function(){
     Route::put('/backoffice/configuration/shopee-fee-create/edit/{id}', [ShopeeFeeController::class, 'put'])->name('shopeeFee.put');
     Route::delete('/backoffice/configuration/shopee-fee-create/{configFee}', [ShopeeFeeController::class, 'delete'])->name('shopeeFee.delete');
 
+    Route::get('/backoffice/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
     Route::get('/backoffice/configuration/{marketplace}/ads-shopee', [ShopeeController::class, 'shopeeAds'])->name('shopee.ads');
 
 });

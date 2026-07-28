@@ -382,7 +382,7 @@ export default function DataTable({
             </div>
 
             {pagination && (
-                <div className="flex items-center justify-between border-t p-3 text-sm">
+                <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800/50">
                     <div className="text-gray-500">
                         Total {data.length}
                     </div>
