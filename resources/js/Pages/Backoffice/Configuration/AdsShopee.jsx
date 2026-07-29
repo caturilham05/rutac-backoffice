@@ -5,12 +5,16 @@ import { Pause, Play } from 'lucide-react';
 
 function AdsShopee() {
     const { ads, flash } = usePage().props;
-    console.log(flash)
+
+    const statusConfig = {
+        ongoing: { label: 'Ongoing', icon: <Pause size={15} />, nextAction: 'pause', color: 'bg-red-500' },
+        paused: { label: 'Paused', icon: <Play size={15} />, nextAction: 'resume', color: 'bg-green-500' }
+    };
 
     const columns = [
         { key: 'name', label: 'Campaign Name' },
         { key: 'type', label: 'Type' },
-        { key: 'status', label: 'Status' },
+        { key: 'status', label: 'Status', render: (row) => statusConfig[row.status]?.label || row.status },
         { key: 'bidding_method', label: 'Bidding Method' },
         { key: 'campaign_budget', label: 'Budget' },
         { key: 'start_time', label: 'Start Time' },
@@ -19,35 +23,27 @@ function AdsShopee() {
         {
             key: 'edit',
             label: 'Action',
-            render: (row) => statusIcon[row.status] && (
+            render: (row) => statusConfig[row.status] && (
                 <div className="flex gap-2">
                     <button
-                        onClick={() => {
-                            handleAds(row.marketplace_id, row.campaign_id, row.status);
-                        }}
-                        className={`rounded px-3 py-1 text-white ${
-                            row.status === 'ongoing'
-                                ? 'bg-red-500'
-                                : 'bg-green-500'
-                        }`}
+                        onClick={() => handleAds(row.marketplace_id, row.campaign_id, row.status)}
+                        className={`rounded px-3 py-1 text-white ${statusConfig[row.status].color}`}
                     >
-                        {statusIcon[row.status]}
+                        {statusConfig[row.status].icon}
                     </button>
                 </div>
             )
         }
     ];
 
-    const statusIcon = {
-        ongoing: <Pause size = {15} />,
-        paused : <Play size = {15} />
-    }
-
     const handleAds = (marketplaceId, campaignId, status) => {
+        const action = statusConfig[status]?.nextAction;
+        if (!action) return;
+
         router.post(route('shopee.ads.edit', marketplaceId), {
-            campaign_id   : campaignId,
-            edit_action   : status === 'ongoing' ? 'pause': (status === 'paused' ? 'resume' : ''),
-            preserveScroll: false
+            campaign_id: campaignId,
+            edit_action: action,
+            preserveScroll: true
         });
     }
 

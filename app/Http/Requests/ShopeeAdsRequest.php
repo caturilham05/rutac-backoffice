@@ -24,7 +24,7 @@ class ShopeeAdsRequest extends FormRequest
     {
         return [
             'campaign_id' => ['required', 'integer'],
-            'edit_action' => ['required']
+            'edit_action' => ['required', 'in:pause,resume']
         ];
     }
 

@@ -22,23 +22,22 @@ class AdsShopee extends Model
 
     public static function adsUpsert($data = [])
     {
+        if (empty($data)) {
+            return;
+        }
+
+        $firstRow = $data[0] ?? [];
+        $columns  = array_keys($firstRow);
+
+        $fillable = (new self())->getFillable();
+        $fillable[] = 'updated_at';
+
+        $updateColumns = array_intersect($columns, $fillable);
+
         return self::upsert(
             $data,
             ['campaign_id'], // unique key
-            [
-                'marketplace_id',
-                'type',
-                'name',
-                'status',
-                'bidding_method',
-                'campaign_placement',
-                'campaign_budget',
-                'start_time',
-                'end_time',
-                'item_id',
-                'roas_target',
-                'updated_at',
-            ]
+            array_values($updateColumns)
         );
     }
 }

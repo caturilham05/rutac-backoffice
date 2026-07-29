@@ -144,6 +144,8 @@ class ShopeeController extends Controller
             }
 
             AdsShopee::adsUpsert($data);
+
+            return $ads;
         } catch (\Throwable $th) {
             dd($th->getMessage());
         }
@@ -151,21 +153,36 @@ class ShopeeController extends Controller
 
     public function shopeeAdsEdit(ShopeeAdsRequest $request, Marketplace $marketplace): RedirectResponse
     {
-        $data           = $request->validated();
-        $access_token   = $marketplace->access_token;
-        $shop_id        = $marketplace->shop_id;
-        $marketplace_id = $marketplace->marketplace_id;
-        $app_key        = $marketplace->app_key;
+        $data = $request->validated();
+
+        $adsData = AdsShopee::where('campaign_id', $data['campaign_id'])->first();
+        if (!$adsData) {
+            return redirect()->route('shopee.ads.index')->with('error', sprintf('campaign id [%s] tidak terdaftar', $data['campaign_id']));
+        }
+
+        $isPause = $data['edit_action'] === 'pause';
+        $status  = $isPause ? 'paused' : 'ongoing';
+        $msg     = sprintf('Iklan [%s] berhasil %s', $adsData->name, $isPause ? 'dijeda' : 'diaktifkan');
 
         try {
             $shopee_services      = new ShopeeServices($this->signature);
             $data['reference_id'] = Str::uuid()->toString();
-            $ads_edit             = $shopee_services->editManualProductAds($access_token, $app_key, $marketplace_id, $shop_id, $data);
-            return redirect()->route('shopee.ads')->with('success', 'Jeda iklan berhasil');
-        } catch (\Throwable $th) {
-            return redirect()->route('shopee.ads', $marketplace)->with('error', $th->getMessage());
-        }
 
-        // dd($data, $request, $marketplace);
+            $shopee_services->editManualProductAds(
+                $marketplace->access_token,
+                $marketplace->app_key,
+                $marketplace->marketplace_id,
+                $marketplace->shop_id,
+                $data
+            );
+
+            AdsShopee::adsUpsert([
+                ['campaign_id' => $data['campaign_id'], 'status' => $status]
+            ]);
+
+            return redirect()->route('shopee.ads.index')->with('success', $msg);
+        } catch (\Throwable $th) {
+            return redirect()->route('shopee.ads.index')->with('error', $th->getMessage());
+        }
     }
 }
