@@ -160,10 +160,10 @@ class ShopeeController extends Controller
         try {
             $shopee_services      = new ShopeeServices($this->signature);
             $data['reference_id'] = Str::uuid()->toString();
-            $ads_edit = $shopee_services->editManualProductAds($access_token, $app_key, $marketplace_id, $shop_id, $data);
-            dd('');
+            $ads_edit             = $shopee_services->editManualProductAds($access_token, $app_key, $marketplace_id, $shop_id, $data);
+            return redirect()->route('shopee.ads')->with('success', 'Jeda iklan berhasil');
         } catch (\Throwable $th) {
-            dd($th->getMessage());
+            return redirect()->route('shopee.ads', $marketplace)->with('error', $th->getMessage());
         }
 
         // dd($data, $request, $marketplace);

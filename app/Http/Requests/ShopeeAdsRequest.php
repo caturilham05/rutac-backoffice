@@ -24,7 +24,7 @@ class ShopeeAdsRequest extends FormRequest
     {
         return [
             'campaign_id' => ['required', 'integer'],
-            'action'      => ['required']
+            'edit_action' => ['required']
         ];
     }
 
@@ -40,7 +40,7 @@ class ShopeeAdsRequest extends FormRequest
     {
         return [
             'campaign_id' => 'Campaign Id',
-            'action'      => 'Action'
+            'edit_action' => 'Action'
         ];
     }
 }

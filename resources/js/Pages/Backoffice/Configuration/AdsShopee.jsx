@@ -4,7 +4,8 @@ import { Head, usePage, Link, router } from '@inertiajs/react';
 import { Pause, Play } from 'lucide-react';
 
 function AdsShopee() {
-    const { ads } = usePage().props;
+    const { ads, flash } = usePage().props;
+    console.log(flash)
 
     const columns = [
         { key: 'name', label: 'Campaign Name' },
@@ -59,6 +60,18 @@ function AdsShopee() {
             }
         >
             <Head title="Shopee Ads" />
+
+            {flash.success && (
+                <div className="mb-4 mt-4 rounded bg-green-300 p-4 text-green-700">
+                    {flash.success}
+                </div>
+            )}
+
+            {flash.error && (
+                <div className="mb-4 mt-4 rounded bg-red-300 p-4 text-red-700">
+                    {flash.error}
+                </div>
+            )}
 
             <div className="p-6">
                 <DataTable

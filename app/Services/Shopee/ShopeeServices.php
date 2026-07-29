@@ -215,7 +215,6 @@ Class ShopeeServices
 
     public function editManualProductAds(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, array $data)
     {
-        dd($data);
         $path       = "/api/v2/ads/edit_manual_product_ads";
         $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
         $sign       = hash_hmac('sha256', $baseString, $app_key);
@@ -231,8 +230,13 @@ Class ShopeeServices
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json'
-        ])->withBody(json_encode($data), 'application/json')->post($url);
+        ])->withBody(json_encode($data), 'application/json')->post($url)->json();
 
-        dd($response->json());
+        if (!empty($response['error'])) {
+            throw new \Exception($response['message']);
+
+        }
+
+        return $response;
     }
 }
