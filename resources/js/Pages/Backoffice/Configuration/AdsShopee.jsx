@@ -43,10 +43,9 @@ function AdsShopee() {
     }
 
     const handleAds = (marketplaceId, campaignId, status) => {
-        console.log(marketplaceId, campaignId)
         router.post(route('shopee.ads.edit', marketplaceId), {
             campaign_id   : campaignId,
-            action        : status === 'ongoing' ? 'pause' : (status === 'paused' ? 'resume' : ''),
+            edit_action   : status === 'ongoing' ? 'pause': (status === 'paused' ? 'resume' : ''),
             preserveScroll: false
         });
     }

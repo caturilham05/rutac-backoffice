@@ -215,5 +215,24 @@ Class ShopeeServices
 
     public function editManualProductAds(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, array $data)
     {
+        dd($data);
+        $path       = "/api/v2/ads/edit_manual_product_ads";
+        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shop_id
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json'
+        ])->withBody(json_encode($data), 'application/json')->post($url);
+
+        dd($response->json());
     }
 }

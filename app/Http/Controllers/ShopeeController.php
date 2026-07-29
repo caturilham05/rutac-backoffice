@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShopeeAdsRequest;
 use App\Models\AdsShopee;
 use App\Models\Marketplace;
 use App\Models\Product;
@@ -148,8 +149,23 @@ class ShopeeController extends Controller
         }
     }
 
-    public function shopeeAdsEdit(Request $request, Marketplace $marketplace): RedirectResponse
+    public function shopeeAdsEdit(ShopeeAdsRequest $request, Marketplace $marketplace): RedirectResponse
     {
-        dd($request, $marketplace);
+        $data           = $request->validated();
+        $access_token   = $marketplace->access_token;
+        $shop_id        = $marketplace->shop_id;
+        $marketplace_id = $marketplace->marketplace_id;
+        $app_key        = $marketplace->app_key;
+
+        try {
+            $shopee_services      = new ShopeeServices($this->signature);
+            $data['reference_id'] = Str::uuid()->toString();
+            $ads_edit = $shopee_services->editManualProductAds($access_token, $app_key, $marketplace_id, $shop_id, $data);
+            dd('');
+        } catch (\Throwable $th) {
+            dd($th->getMessage());
+        }
+
+        // dd($data, $request, $marketplace);
     }
 }
