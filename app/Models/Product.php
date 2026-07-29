@@ -157,10 +157,10 @@ class Product extends Model
                                 'id'         => $variant->id,
                                 'product_id' => $variant->product_id,
                                 'name'       => $variant->name,
-                                'sku_id'     => $variant->skus?->first()?->id,
-                                'sku'        => $variant->skus?->first()?->name,
-                                'stock'      => $variant->skus?->first()?->stock,
-                                'price'      => $variant->skus?->first()?->original_price,
+                                'sku_id'     => $variant->skus?->id,
+                                'sku'        => $variant->skus?->name,
+                                'stock'      => $variant->skus?->stock,
+                                'price'      => $variant->skus?->original_price,
                             ];
                         });
 
@@ -198,10 +198,10 @@ class Product extends Model
                         'id'         => $variant->id,
                         'product_id' => $variant->product_id,
                         'name'       => $variant->name,
-                    'sku_id'     => $variant->skus?->first()?->id,
-                    'sku'        => $variant->skus?->first()?->name,
-                    'stock'      => $variant->skus?->first()?->stock,
-                    'price'      => $variant->skus?->first()?->original_price,
+                    'sku_id'     => $variant->skus?->id,
+                    'sku'        => $variant->skus?->name,
+                    'stock'      => $variant->skus?->stock,
+                    'price'      => $variant->skus?->original_price,
                     ];
                 });
                 $products->unsetRelation('variants');
