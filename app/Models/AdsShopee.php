@@ -15,9 +15,25 @@ class AdsShopee extends Model
         return $this->belongsTo(Marketplace::class);
     }
 
-    public static function getAdsShopeePaginated($perPage = 10)
+    public static function getAdsShopeePaginated($perPage = 10, $campaignName = null, $status = null, $sort = null, $direction = 'asc')
     {
-        return self::with('marketplace')->paginate($perPage);
+        $query = self::with('marketplace');
+
+        if ($campaignName) {
+            $query->where('name', 'like', "%{$campaignName}%");
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($sort) {
+            $query->orderBy($sort, $direction);
+        } else {
+            $query->orderBy('created_at', 'desc');
+        }
+
+        return $query->paginate($perPage);
     }
 
     public static function adsUpsert($data = [])

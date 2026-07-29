@@ -4,14 +4,19 @@ import { Head, usePage, Link, router } from '@inertiajs/react';
 import { Pause, Play } from 'lucide-react';
 
 function AdsShopee() {
-    const { ads, flash } = usePage().props;
+    const { ads, flash, filters, sort, campaigns } = usePage().props;
 
     const statusConfig = {
         ongoing: { label: 'Ongoing', icon: <Pause size={15} />, nextAction: 'pause', color: 'bg-red-500' },
-        paused: { label: 'Paused', icon: <Play size={15} />, nextAction: 'resume', color: 'bg-green-500' }
+        scheduled: { label: 'Scheduled', color: 'bg-blue-500' },
+        ended: { label: 'Ended', color: 'bg-gray-500' },
+        paused: { label: 'Paused', icon: <Play size={15} />, nextAction: 'resume', color: 'bg-green-500' },
+        deleted: { label: 'Deleted', color: 'bg-red-800' },
+        closed: { label: 'Closed', color: 'bg-gray-800' },
     };
 
     const columns = [
+        { key: 'campaign_id', label: 'Campaign ID' },
         { key: 'name', label: 'Campaign Name' },
         { key: 'type', label: 'Type' },
         { key: 'status', label: 'Status', render: (row) => statusConfig[row.status]?.label || row.status },
@@ -23,7 +28,7 @@ function AdsShopee() {
         {
             key: 'edit',
             label: 'Action',
-            render: (row) => statusConfig[row.status] && (
+            render: (row) => statusConfig[row.status] && statusConfig[row.status].nextAction && (
                 <div className="flex gap-2">
                     <button
                         onClick={() => handleAds(row.marketplace_id, row.campaign_id, row.status)}
@@ -75,6 +80,21 @@ function AdsShopee() {
                     data={ads.data}
                     pagination={ads}
                     baseUrl={route('shopee.ads.index')}
+                    filterConfig={[
+                        { key: 'campaign_name', label: 'Campaign Name', type: 'autocomplete', options: campaigns },
+                        { key: 'status', label: 'Status', type: 'select', options: [
+                            { value: 'ongoing', label: 'Ongoing' },
+                            { value: 'scheduled', label: 'Scheduled' },
+                            { value: 'ended', label: 'Ended' },
+                            { value: 'paused', label: 'Paused' },
+                            { value: 'deleted', label: 'Deleted' },
+                            { value: 'closed', label: 'Closed' },
+                        ]},
+                    ]}
+                    filterValues={filters}
+                    sortColumn={sort.sort}
+                    sortDirection={sort.direction}
+                    sortableColumns={['campaign_id', 'campaign_budget', 'roas_target']}
                 />
             </div>
         </AuthenticatedLayout>

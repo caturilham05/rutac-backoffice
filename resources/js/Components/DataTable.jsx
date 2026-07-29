@@ -21,7 +21,7 @@ export default function DataTable({
     baseUrl = null,
 }) {
     const [expandedRows, setExpandedRows] = useState({});
-    const [localFilters, setLocalFilters] = useState(filterValues);
+    const [localFilters, setLocalFilters] = useState(filterValues || {});
     const [localSortColumn, setLocalSortColumn] = useState(sortColumn);
     const [localSortDirection, setLocalSortDirection] = useState(sortDirection);
     const [showFilters, setShowFilters] = useState(false);
