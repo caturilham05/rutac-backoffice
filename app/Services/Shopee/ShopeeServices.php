@@ -212,4 +212,8 @@ Class ShopeeServices
 
         return $campaign_ongoing;
     }
+
+    public function editManualProductAds(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, array $data)
+    {
+    }
 }

@@ -8,9 +8,11 @@ use App\Models\Product;
 use App\Models\Product_sku;
 use App\Services\Shopee\ShopeeServices;
 use App\Services\Shopee\ShopeeSignature;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Str;
 
 class ShopeeController extends Controller
@@ -144,5 +146,10 @@ class ShopeeController extends Controller
         } catch (\Throwable $th) {
             dd($th->getMessage());
         }
+    }
+
+    public function shopeeAdsEdit(Request $request, Marketplace $marketplace): RedirectResponse
+    {
+        dd($request, $marketplace);
     }
 }

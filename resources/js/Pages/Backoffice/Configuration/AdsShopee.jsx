@@ -1,6 +1,6 @@
 import DataTable from '@/Components/DataTable';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, usePage, Link } from '@inertiajs/react';
+import { Head, usePage, Link, router } from '@inertiajs/react';
 import { Pause, Play } from 'lucide-react';
 
 function AdsShopee() {
@@ -18,13 +18,19 @@ function AdsShopee() {
         {
             key: 'edit',
             label: 'Action',
-            render: (row) => (
+            render: (row) => statusIcon[row.status] && (
                 <div className="flex gap-2">
                     <button
-                        onClick={() => handleAds(row.id)}
-                        className={`rounded px-3 py-1 text-white ${row.status === 'ongoing' ? 'bg-red-500' : 'bg-green-500'}`}
+                        onClick={() => {
+                            handleAds(row.marketplace_id, row.campaign_id, row.status);
+                        }}
+                        className={`rounded px-3 py-1 text-white ${
+                            row.status === 'ongoing'
+                                ? 'bg-red-500'
+                                : 'bg-green-500'
+                        }`}
                     >
-                        {statusIcon[row.status] ?? null}
+                        {statusIcon[row.status]}
                     </button>
                 </div>
             )
@@ -36,8 +42,13 @@ function AdsShopee() {
         paused : <Play size = {15} />
     }
 
-    const handleAds = () => {
-        console.log('first')
+    const handleAds = (marketplaceId, campaignId, status) => {
+        console.log(marketplaceId, campaignId)
+        router.post(route('shopee.ads.edit', marketplaceId), {
+            campaign_id   : campaignId,
+            action        : status === 'ongoing' ? 'pause' : (status === 'paused' ? 'resume' : ''),
+            preserveScroll: false
+        });
     }
 
     return (

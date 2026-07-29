@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function(){
 
     Route::get('/backoffice/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
     Route::get('/backoffice/configuration/{marketplace}/ads-shopee', [ShopeeController::class, 'shopeeAds'])->name('shopee.ads');
+    Route::post('/backoffice/configuration/{marketplace}/ads-shopee', [ShopeeController::class, 'shopeeAdsEdit'])->name('shopee.ads.edit');
 
 });
 
