@@ -11,7 +11,7 @@ class ShopeeAdsController extends Controller
     public function index(Request $request)
     {
         $ads = AdsShopee::getAdsShopeePaginated(
-            10,
+            100,
             $request->query('campaign_name'),
             $request->query('status'),
             $request->query('sort'),
