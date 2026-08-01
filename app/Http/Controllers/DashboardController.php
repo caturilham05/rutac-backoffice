@@ -40,6 +40,14 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        $topVendors = Purchase::whereDate('purchase_date', '>=', $startDate)
+            ->whereDate('purchase_date', '<=', $endDate)
+            ->select('vendor', DB::raw('COUNT(id) as total_invoice'), DB::raw('SUM(price - discount + additional_fee) as total_amount'))
+            ->groupBy('vendor')
+            ->orderByDesc('total_amount')
+            ->limit(5)
+            ->get();
+
         return Inertia::render('Backoffice/Dashboard', [
             'filters' => [
                 'start_date' => $startDate,
@@ -53,6 +61,7 @@ class DashboardController extends Controller
                 'total_qty'            => $totalQty ?? 0,
             ],
             'top_products' => $topProducts,
+            'top_vendors'  => $topVendors,
         ]);
     }
 }

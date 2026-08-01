@@ -3,7 +3,7 @@ import { Head, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/Utils/format';
 
-export default function Dashboard({ filters, stats, top_products }) {
+export default function Dashboard({ filters, stats, top_products, top_vendors }) {
     const { flash } = usePage().props;
     const [dateRange, setDateRange] = useState({
         start_date: filters.start_date,
@@ -56,29 +56,56 @@ export default function Dashboard({ filters, stats, top_products }) {
                     ))}
                 </div>
 
-                <div className="mt-10 rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <div className="mb-6">
-                        <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Products</h3>
-                        <p className="text-sm text-gray-500">Based on quantity purchased</p>
-                    </div>
-                    <table className="w-full text-left">
-                        <thead>
-                            <tr>
-                                <th className="border-b p-2">Product Name</th>
-                                <th className="border-b p-2">Total Qty</th>
-                                <th className="border-b p-2">Total Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {top_products.map((p, idx) => (
-                                <tr key={idx}>
-                                    <td className="border-b p-2">{p.product_name}</td>
-                                    <td className="border-b p-2">{p.total_qty}</td>
-                                    <td className="border-b p-2">{formatCurrency(p.total_price)}</td>
+                <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Products</h3>
+                            <p className="text-sm text-gray-500">Based on quantity purchased</p>
+                        </div>
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th className="border-b p-2">Product Name</th>
+                                    <th className="border-b p-2">Total Qty</th>
+                                    <th className="border-b p-2">Total Price</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {top_products.map((p, idx) => (
+                                    <tr key={idx}>
+                                        <td className="border-b p-2">{p.product_name}</td>
+                                        <td className="border-b p-2">{p.total_qty}</td>
+                                        <td className="border-b p-2">{formatCurrency(p.total_price)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Vendors</h3>
+                            <p className="text-sm text-gray-500">Based on total purchase amount</p>
+                        </div>
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th className="border-b p-2">Vendor Name</th>
+                                    <th className="border-b p-2">Total Invoice</th>
+                                    <th className="border-b p-2">Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {top_vendors.map((v, idx) => (
+                                    <tr key={idx}>
+                                        <td className="border-b p-2">{v.vendor}</td>
+                                        <td className="border-b p-2">{v.total_invoice}</td>
+                                        <td className="border-b p-2">{formatCurrency(v.total_amount)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>

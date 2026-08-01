@@ -15,9 +15,9 @@ class Purchase extends Model
         'purchase_date' => 'date',
     ];
 
-    public function getCreatedAtFormattedAttribute(): string
+    public function getCreatedAtFormattedAttribute(): ?string
     {
-        return $this->created_at->translatedFormat('d F Y');
+        return $this->created_at?->translatedFormat('d F Y');
     }
 
     public function getPurchaseDateFormattedAttribute(): ?string
