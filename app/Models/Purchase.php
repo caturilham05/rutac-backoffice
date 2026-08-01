@@ -28,8 +28,10 @@ class Purchase extends Model
     public static function purchaseInsert(array $data)
     {
         return DB::transaction(function () use ($data) {
-            $prices      = array_column($data['products'], 'price');
-            $price_total = array_sum($prices);
+            $price_total = 0;
+            foreach ($data['products'] as $product) {
+                $price_total += ($product['price'] * $product['qty']);
+            }
 
             $purchase = self::create([
                 'vendor'         => $data['vendor'],
