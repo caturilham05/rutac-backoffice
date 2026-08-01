@@ -10,6 +10,7 @@ use Illuminate\Console\Command;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class ShopeeAdsAction extends Command
 {
@@ -56,10 +57,14 @@ class ShopeeAdsAction extends Command
             $log->info($message);
 
             $request = new ShopeeAdsRequest();
-            $request->merge([
+            $request->replace([
                 'campaign_id' => $ad->campaign_id,
                 'edit_action' => $action,
             ]);
+
+            // Manually set validator to satisfy $request->validated() in controller
+            $validator = Validator::make($request->all(), $request->rules(), $request->message(), $request->attributes());
+            $request->setValidator($validator);
 
             try {
                 $controller->shopeeAdsEdit($request, $marketplace);
