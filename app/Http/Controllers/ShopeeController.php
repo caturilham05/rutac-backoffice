@@ -123,27 +123,56 @@ class ShopeeController extends Controller
         try {
             $shopee_services = new ShopeeServices($this->signature);
             $ads             = $shopee_services->getProductLevelCampaignSettingInfo($access_token, $app_key, $marketplace_id, $shop_id);
+            $campaignIds = array_column($ads, 'campaign_id');
+            $existingAds = AdsShopee::whereIn('campaign_id', $campaignIds)->get()->keyBy('campaign_id');
+
             $data = [];
             foreach ($ads as $item) {
-                $data[] = [
+                $campaignId = $item['campaign_id'];
+                $startTime  = !empty($item['common_info']['campaign_duration']['start_time']) ? date('Y-m-d H:i:s', $item['common_info']['campaign_duration']['start_time']) : null;
+                $endTime    = !empty($item['common_info']['campaign_duration']['end_time']) ? date('Y-m-d H:i:s', $item['common_info']['campaign_duration']['end_time']) : null;
+
+                $newData = [
                     'marketplace_id'     => $marketplace->id,
-                    'campaign_id'        => $item['campaign_id'],
+                    'campaign_id'        => $campaignId,
                     'type'               => $item['common_info']['ad_type'],
                     'name'               => $item['common_info']['ad_name'],
                     'status'             => $item['common_info']['campaign_status'],
                     'bidding_method'     => $item['common_info']['bidding_method'],
                     'campaign_placement' => $item['common_info']['campaign_placement'],
                     'campaign_budget'    => $item['common_info']['campaign_budget'],
-                    'start_time'         => !empty($item['common_info']['campaign_duration']['start_time']) ? date('Y-m-d H:i:s', $item['common_info']['campaign_duration']['start_time']) : null,
-                    'end_time'           => !empty($item['common_info']['campaign_duration']['end_time']) ? date('Y-m-d H:i:s', $item['common_info']['campaign_duration']['end_time']) : null,
+                    'start_time'         => $startTime,
+                    'end_time'           => $endTime,
                     'item_id'            => $item['common_info']['item_id_list'][0],
                     'roas_target'        => $item['auto_bidding_info']['roas_target'],
-                    'created_at'         => now(),
-                    'updated_at'         => now(),
                 ];
+
+                $existing = $existingAds->get($campaignId);
+
+                $isChanged = !$existing ||
+                    $existing->type !== $newData['type'] ||
+                    $existing->name !== $newData['name'] ||
+                    $existing->status !== $newData['status'] ||
+                    $existing->bidding_method !== $newData['bidding_method'] ||
+                    $existing->campaign_placement !== $newData['campaign_placement'] ||
+                    $existing->campaign_budget != $newData['campaign_budget'] ||
+                    $existing->start_time !== $newData['start_time'] ||
+                    $existing->end_time !== $newData['end_time'] ||
+                    $existing->item_id != $newData['item_id'] ||
+                    $existing->roas_target != $newData['roas_target'];
+
+                if ($isChanged) {
+                    $newData['updated_at'] = now();
+                    if (!$existing) {
+                        $newData['created_at'] = now();
+                    }
+                    $data[] = $newData;
+                }
             }
 
-            AdsShopee::adsUpsert($data);
+            if (!empty($data)) {
+                AdsShopee::adsUpsert($data);
+            }
 
             return redirect()->route('shopee.ads.index')->with('success', 'Berhasil menyinkronkan iklan Shopee');
         } catch (\Throwable $th) {
