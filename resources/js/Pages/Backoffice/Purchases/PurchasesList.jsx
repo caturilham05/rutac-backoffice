@@ -23,8 +23,13 @@ function PurchasesList() {
             placeholder: 'Search vendor ...',
         },
         {
-            key: 'purchase_date',
-            label: 'Purchase Date',
+            key: 'start_date',
+            label: 'Start Date',
+            type: 'date',
+        },
+        {
+            key: 'end_date',
+            label: 'End Date',
             type: 'date',
         },
     ]);

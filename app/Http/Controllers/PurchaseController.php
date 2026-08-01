@@ -45,7 +45,7 @@ class PurchaseController extends Controller
     public function index(Request $request): Response
     {
         $per_page    = $request->integer('per_page', $this->set_page);
-        $filter_data = $request->only(['invoice', 'vendor', 'purchase_date']);
+        $filter_data = $request->only(['invoice', 'vendor', 'start_date', 'end_date']);
         $sort        = $request->input('sort');
         $direction   = $request->input('direction', 'asc');
         $purchases   = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);

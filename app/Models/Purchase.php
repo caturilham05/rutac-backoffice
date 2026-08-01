@@ -92,8 +92,12 @@ class Purchase extends Model
             $query->where('vendor', 'like', '%'.$filters['vendor'].'%');
         }
 
-        if (!empty($filters['purchase_date'])) {
-            $query->whereDate('purchase_date', $filters['purchase_date']);
+        if (!empty($filters['start_date'])) {
+            $query->whereDate('purchase_date', '>=', $filters['start_date']);
+        }
+
+        if (!empty($filters['end_date'])) {
+            $query->whereDate('purchase_date', '<=', $filters['end_date']);
         }
 
         if ($sort && in_array($sort, ['invoice', 'purchase_date', 'qty', 'price'])) {
