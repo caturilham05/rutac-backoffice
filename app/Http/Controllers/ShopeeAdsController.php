@@ -23,9 +23,9 @@ class ShopeeAdsController extends Controller
         });
 
         return Inertia::render('Backoffice/Configuration/AdsShopee', [
-            'ads' => $ads,
-            'filters' => $request->only(['campaign_name', 'status']) ?: ['campaign_name' => '', 'status' => ''],
-            'sort' => $request->only(['sort', 'direction']) ?: ['sort' => null, 'direction' => 'asc'],
+            'ads'       => $ads,
+            'filters'   => $request->only(['campaign_name', 'status']) ?: ['campaign_name' => '', 'status' => ''],
+            'sort'      => $request->only(['sort', 'direction']) ?: ['sort' => null, 'direction' => 'asc'],
             'campaigns' => $campaigns,
         ]);
     }
