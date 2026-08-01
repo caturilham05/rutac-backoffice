@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthMarketplaceController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
@@ -28,7 +29,7 @@ Route::get('/', function () {
 });
 
 Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function(){
-    Route::get('/', fn() => Inertia::render('Backoffice/Dashboard'))->name('dashboard');
+    Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/Orders/Order', fn() => Inertia::render('Backoffice/Orders/Order'))->name('order');
 
     Route::controller(AuthMarketplaceController::class)->group(function() {
