@@ -6,15 +6,15 @@ import { Pause, Play } from 'lucide-react';
 
 function AdsShopee() {
     const { ads, flash, filters, sort, campaigns, marketplaces } = usePage().props;
-    const [selectedMarketplace, setSelectedMarketplace] = useState(marketplaces.length > 0 ? marketplaces[0].id : '');
-    console.log(marketplaces)
+    const [selectedMarketplace, setSelectedMarketplace]          = useState(marketplaces.length > 0 ? marketplaces[0].id : '');
+
     const statusConfig = {
-        ongoing: { label: 'Ongoing', icon: <Pause size={15} />, nextAction: 'pause', color: 'bg-red-500' },
+        ongoing  : { label: 'Ongoing', icon: <Pause size={15} />, nextAction: 'pause', color: 'bg-red-500' },
         scheduled: { label: 'Scheduled', color: 'bg-blue-500' },
-        ended: { label: 'Ended', color: 'bg-gray-500' },
-        paused: { label: 'Paused', icon: <Play size={15} />, nextAction: 'resume', color: 'bg-green-500' },
-        deleted: { label: 'Deleted', color: 'bg-red-800' },
-        closed: { label: 'Closed', color: 'bg-gray-800' },
+        ended    : { label: 'Ended', color: 'bg-gray-500' },
+        paused   : { label: 'Paused', icon: <Play size={15} />, nextAction: 'resume', color: 'bg-green-500' },
+        deleted  : { label: 'Deleted', color: 'bg-red-800' },
+        closed   : { label: 'Closed', color: 'bg-gray-800' },
     };
 
     const columns = [
@@ -28,8 +28,8 @@ function AdsShopee() {
         { key: 'end_time', label: 'End Time' },
         { key: 'roas_target', label: 'Roas Target' },
         {
-            key: 'edit',
-            label: 'Action',
+            key   : 'edit',
+            label : 'Action',
             render: (row) => statusConfig[row.status] && statusConfig[row.status].nextAction && (
                 <div className="flex gap-2">
                     <button
@@ -87,7 +87,11 @@ function AdsShopee() {
                     ))}
                 </select>
                 <button
-                    onClick={() => router.get(route('shopee.ads', selectedMarketplace))}
+                    onClick={() => {
+                        if (confirm('Apakah Anda yakin ingin menyinkronkan data iklan?')) {
+                            router.get(route('shopee.ads', selectedMarketplace));
+                        }
+                    }}
                     className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
                 >
                     Sync Ads
