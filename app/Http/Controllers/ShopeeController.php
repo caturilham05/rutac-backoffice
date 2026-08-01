@@ -145,9 +145,9 @@ class ShopeeController extends Controller
 
             AdsShopee::adsUpsert($data);
 
-            return $ads;
+            return redirect()->route('shopee.ads.index')->with('success', 'Berhasil menyinkronkan iklan Shopee');
         } catch (\Throwable $th) {
-            dd($th->getMessage());
+            return redirect()->route('shopee.ads.index')->with('error', 'Gagal menyinkronkan iklan Shopee: ' . $th->getMessage());
         }
     }
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\AdsShopee;
+use App\Models\Marketplace;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -22,11 +23,16 @@ class ShopeeAdsController extends Controller
             return ['value' => $item->name, 'label' => $item->name];
         });
 
+        $marketplaces = Marketplace::where('marketplace', 'Shopee')->get()->map(function ($item) {
+            return ['id' => $item->id, 'store' => $item->store];
+        });
+
         return Inertia::render('Backoffice/Configuration/AdsShopee', [
-            'ads'       => $ads,
-            'filters'   => $request->only(['campaign_name', 'status']) ?: ['campaign_name' => '', 'status' => ''],
-            'sort'      => $request->only(['sort', 'direction']) ?: ['sort' => null, 'direction' => 'asc'],
-            'campaigns' => $campaigns,
+            'ads'          => $ads,
+            'filters'      => $request->only(['campaign_name', 'status']) ?: ['campaign_name' => '', 'status' => ''],
+            'sort'         => $request->only(['sort', 'direction']) ?: ['sort' => null, 'direction' => 'asc'],
+            'campaigns'    => $campaigns,
+            'marketplaces' => $marketplaces,
         ]);
     }
 }

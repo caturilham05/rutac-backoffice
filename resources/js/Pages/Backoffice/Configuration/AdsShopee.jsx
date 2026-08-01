@@ -1,11 +1,13 @@
 import DataTable from '@/Components/DataTable';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import React, { useState } from 'react';
 import { Head, usePage, Link, router } from '@inertiajs/react';
 import { Pause, Play } from 'lucide-react';
 
 function AdsShopee() {
-    const { ads, flash, filters, sort, campaigns } = usePage().props;
-
+    const { ads, flash, filters, sort, campaigns, marketplaces } = usePage().props;
+    const [selectedMarketplace, setSelectedMarketplace] = useState(marketplaces.length > 0 ? marketplaces[0].id : '');
+    console.log(marketplaces)
     const statusConfig = {
         ongoing: { label: 'Ongoing', icon: <Pause size={15} />, nextAction: 'pause', color: 'bg-red-500' },
         scheduled: { label: 'Scheduled', color: 'bg-blue-500' },
@@ -73,6 +75,24 @@ function AdsShopee() {
                     {flash.error}
                 </div>
             )}
+
+            <div className="flex items-center gap-4 p-6 pb-0">
+                <select
+                    value={selectedMarketplace}
+                    onChange={(e) => setSelectedMarketplace(e.target.value)}
+                    className="rounded border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300"
+                >
+                    {marketplaces.map((m) => (
+                        <option key={m.id} value={m.id}>{m.store}</option>
+                    ))}
+                </select>
+                <button
+                    onClick={() => router.get(route('shopee.ads', selectedMarketplace))}
+                    className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+                >
+                    Sync Ads
+                </button>
+            </div>
 
             <div className="p-6">
                 <DataTable

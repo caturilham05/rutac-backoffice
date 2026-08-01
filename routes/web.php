@@ -27,56 +27,67 @@ Route::get('/', function () {
     ]);
 });
 
-Route::middleware(['auth', 'verified'])->group(function(){
-    Route::get('/backoffice', function(){
-        return Inertia::render('Backoffice/Dashboard');
-    })->name('dashboard');
+Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function(){
+    Route::get('/', fn() => Inertia::render('Backoffice/Dashboard'))->name('dashboard');
+    Route::get('/Orders/Order', fn() => Inertia::render('Backoffice/Orders/Order'))->name('order');
 
-    Route::get('/backoffice/Orders/Order', function(){
-        return Inertia::render('Backoffice/Orders/Order');
-    })->name('order');
+    Route::controller(AuthMarketplaceController::class)->group(function() {
+        Route::get('/auth-shopee', 'auth_shopee')->name('shopee.auth');
+        Route::get('/callback-shopee', 'callback')->name('shopee.callback');
+        Route::get('/refresh-shopee', 'refresh_token_shopee')->name('shopee.refresh');
+        Route::get('/{marketplace}/cancel-shopee', 'cancel_shopee')->name('shopee.cancel');
+        Route::get('/{marketplace}/callback-cancel-shopee', 'callback_cancel')->name('shopee.callback_cancel');
+    });
 
-    Route::get('/auth-shopee', [AuthMarketplaceController::class, 'auth_shopee'])->name('shopee.auth');
-    Route::get('/callback-shopee', [AuthMarketplaceController::class, 'callback'])->name('shopee.callback');
-    Route::get('/refresh-shopee', [AuthMarketplaceController::class, 'refresh_token_shopee'])->name('shopee.refresh');
-    Route::get('/backoffice/{marketplace}/cancel-shopee', [AuthMarketplaceController::class, 'cancel_shopee'])->name('shopee.cancel');
-    Route::get('/backoffice/{marketplace}/callback-cancel-shopee', [AuthMarketplaceController::class, 'callback_cancel'])->name('shopee.callback_cancel');
-    Route::get('/backoffice/{marketplace}/shopee-get-products', [ShopeeController::class, 'shopeeGetProducts'])->name('shopee.get_products');
+    Route::controller(ShopeeController::class)->group(function() {
+        Route::get('/{marketplace}/shopee-get-products', 'shopeeGetProducts')->name('shopee.get_products');
+        Route::get('/configuration/{marketplace}/ads-shopee', 'shopeeAds')->name('shopee.ads');
+        Route::post('/configuration/{marketplace}/ads-shopee', 'shopeeAdsEdit')->name('shopee.ads.edit');
+    });
 
-    Route::get('/backoffice/purchases/purchases-list', [PurchaseController::class, 'index'])->name('purchases.list');
-    Route::get('/backoffice/purchases/purchases-create', [PurchaseController::class, 'create'])->name('purchases.create');
-    Route::post('/backoffice/purchases/purchases-list', [PurchaseController::class, 'store'])->name('purchases.store');
-    Route::get('/backoffice/purchases/purchases-products', [PurchaseController::class, 'indexPurchaseProducts'])->name('purchases.products');
+    Route::prefix('purchases')->controller(PurchaseController::class)->group(function() {
+        Route::get('purchases-list', 'index')->name('purchases.list');
+        Route::get('purchases-create', 'create')->name('purchases.create');
+        Route::post('purchases-list', 'store')->name('purchases.store');
+        Route::get('purchases-products', 'indexPurchaseProducts')->name('purchases.products');
+    });
 
-    Route::get('/backoffice/products/product-list', [ProductController::class, 'index'])->name('products');
-    Route::get('/backoffice/products/product-list/create', [ProductController::class, 'create'])->name('products.create');
-    Route::post('/backoffice/products/product-list/create', [ProductController::class, 'store'])->name('products.store');
-    Route::get('/backoffice/products/product-list/edit/{id}', [ProductController::class, 'edit'])->name('products.edit');
-    Route::put('/backoffice/products/product-list/edit/{id}', [ProductController::class, 'put'])->name('products.put');
-    Route::delete('/backoffice/products/product-list/{product}', [ProductController::class, 'delete'])->name('products.delete');
+    Route::prefix('products')->group(function() {
+        Route::controller(ProductController::class)->group(function() {
+            Route::get('product-list', 'index')->name('products');
+            Route::get('product-list/create', 'create')->name('products.create');
+            Route::post('product-list/create', 'store')->name('products.store');
+            Route::get('product-list/edit/{id}', 'edit')->name('products.edit');
+            Route::put('product-list/edit/{id}', 'put')->name('products.put');
+            Route::delete('product-list/{product}', 'delete')->name('products.delete');
+        });
 
-    Route::get('/backoffice/products/product-category', [ProductCategoryController::class, 'index'])->name('product_category');
-    Route::post('/backoffice/products/product-category', [ProductCategoryController::class, 'store'])->name('product_category.store');
-    Route::get('/backoffice/products/product-category/edit/{id}', [ProductCategoryController::class, 'edit'])->name('product_category.edit');
-    Route::put('/backoffice/products/product-category/edit/{id}', [ProductCategoryController::class, 'put'])->name('product_category.put');
-    Route::delete('/backoffice/products/product-category/{categories}', [ProductCategoryController::class, 'delete'])->name('product_category.delete');
+        Route::controller(ProductCategoryController::class)->group(function() {
+            Route::get('product-category', 'index')->name('product_category');
+            Route::post('product-category', 'store')->name('product_category.store');
+            Route::get('product-category/edit/{id}', 'edit')->name('product_category.edit');
+            Route::put('product-category/edit/{id}', 'put')->name('product_category.put');
+            Route::delete('product-category/{categories}', 'delete')->name('product_category.delete');
+        });
+    });
 
-    Route::get('/backoffice/marketplace', [MarketplaceController::class, 'index'])->name('marketplace');
-    Route::post('/backoffice/marketplace', [MarketplaceController::class, 'store'])->name('marketplace.store');
-    Route::match(['get', 'post'], '/backoffice/marketplace/edit/{id}', [MarketplaceController::class, 'edit'])->name('marketplace.edit');
-    Route::put('/backoffice/marketplace/edit/{id}', [MarketplaceController::class, 'put'])->name('marketplace.put');
-    Route::match(['delete', 'post'], '/backoffice/marketplace/{id}', [MarketplaceController::class, 'delete'])->name('marketplace.delete');
+    Route::controller(MarketplaceController::class)->prefix('marketplace')->group(function() {
+        Route::get('/', 'index')->name('marketplace');
+        Route::post('/', 'store')->name('marketplace.store');
+        Route::match(['get', 'post'], 'edit/{id}', 'edit')->name('marketplace.edit');
+        Route::put('edit/{id}', 'put')->name('marketplace.put');
+        Route::match(['delete', 'post'], '{id}', 'delete')->name('marketplace.delete');
+    });
 
-    Route::get('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'index'])->name('ShopeeFee');
-    Route::post('/backoffice/configuration/shopee-fee-create', [ShopeeFeeController::class, 'store'])->name('ShopeeFeePost');
-    Route::get('/backoffice/configuration/shopee-fee-create/edit/{id}', [ShopeeFeeController::class, 'edit'])->name('shopeeFee.edit');
-    Route::put('/backoffice/configuration/shopee-fee-create/edit/{id}', [ShopeeFeeController::class, 'put'])->name('shopeeFee.put');
-    Route::delete('/backoffice/configuration/shopee-fee-create/{configFee}', [ShopeeFeeController::class, 'delete'])->name('shopeeFee.delete');
+    Route::prefix('configuration')->controller(ShopeeFeeController::class)->group(function() {
+        Route::get('shopee-fee-create', 'index')->name('ShopeeFee');
+        Route::post('shopee-fee-create', 'store')->name('ShopeeFeePost');
+        Route::get('shopee-fee-create/edit/{id}', 'edit')->name('shopeeFee.edit');
+        Route::put('shopee-fee-create/edit/{id}', 'put')->name('shopeeFee.put');
+        Route::delete('shopee-fee-create/{configFee}', 'delete')->name('shopeeFee.delete');
+    });
 
-    Route::get('/backoffice/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
-    Route::get('/backoffice/configuration/{marketplace}/ads-shopee', [ShopeeController::class, 'shopeeAds'])->name('shopee.ads');
-    Route::post('/backoffice/configuration/{marketplace}/ads-shopee', [ShopeeController::class, 'shopeeAdsEdit'])->name('shopee.ads.edit');
-
+    Route::get('/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
 });
 
 Route::middleware('auth')->group(function () {
