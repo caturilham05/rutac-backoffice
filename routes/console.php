@@ -8,5 +8,10 @@ Schedule::call(function () {
     Artisan::call('shopee:refresh-tokens');
 })->everyTwoHours();
 
-Schedule::command('app:shopee-ads-action pause')->dailyAt('00:00');
-Schedule::command('app:shopee-ads-action resume')->dailyAt('15:00');
+Schedule::call(function () {
+    Artisan::call('app:shopee-ads-action', ['action' => 'pause']);
+})->dailyAt('00:00');
+
+Schedule::call(function () {
+    Artisan::call('app:shopee-ads-action', ['action' => 'resume']);
+})->dailyAt('15:00');
