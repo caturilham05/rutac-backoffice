@@ -15,10 +15,17 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redis;
 
-Route::get('/redis-test', function () {
-    Redis::set('test', now()->toDateTimeString());
+Route::get('/redis-session', function () {
+    return Redis::scan(0, [
+        'match' => '*',
+        'count' => 100,
+    ]);
+});
 
-    return Redis::get('test');
+Route::get('/redis-flush', function () {
+    Redis::flushdb();
+
+    return 'Redis database cleared.';
 });
 
 Route::get('/', function () {

@@ -2,15 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Http\Controllers\ShopeeController;
-use App\Http\Requests\ShopeeAdsRequest;
+use App\Jobs\ShopeeAdsActionJob;
 use App\Models\AdsShopee;
-use App\Models\Marketplace;
 use Illuminate\Console\Command;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Validator;
 
 class ShopeeAdsAction extends Command
 {
@@ -40,42 +34,12 @@ class ShopeeAdsAction extends Command
             return;
         }
 
-        $log = Log::build([
-            'driver' => 'single',
-            'path'   => storage_path('logs/shopee.log'),
-        ]);
-
-        $ads = AdsShopee::with('marketplace')->get();
-        $controller = App::make(ShopeeController::class);
+        $ads = AdsShopee::all();
 
         foreach ($ads as $ad) {
-            $marketplace = $ad->marketplace;
-            if (!$marketplace) continue;
-
-            $message = "Processing campaign: {$ad->name} ({$ad->campaign_id}) - Action: {$action}";
-            $this->info($message);
-            $log->info($message);
-
-            $request = new ShopeeAdsRequest();
-            $request->replace([
-                'campaign_id' => $ad->campaign_id,
-                'edit_action' => $action,
-            ]);
-
-            // Manually set validator to satisfy $request->validated() in controller
-            $validator = Validator::make($request->all(), $request->rules(), $request->message(), $request->attributes());
-            $request->setValidator($validator);
-
-            try {
-                $controller->shopeeAdsEdit($request, $marketplace);
-                $successMsg = "Successfully {$action}d campaign: {$ad->name}";
-                $this->info($successMsg);
-                $log->info($successMsg);
-            } catch (\Exception $e) {
-                $errorMsg = "Failed to {$action} campaign {$ad->name}: " . $e->getMessage();
-                $this->error($errorMsg);
-                $log->error($errorMsg);
-            }
+            ShopeeAdsActionJob::dispatch($ad, $action);
+            $this->info("Dispatched job for campaign: {$ad->name}");
+            sleep(1);
         }
     }
 }
