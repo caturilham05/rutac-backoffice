@@ -1,0 +1,44 @@
+name: Deploy Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist
+
+      - name: Setup Laravel
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+
+      - name: Run Test
+        run: php artisan test
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{secrets.SSH_HOST}}
+          username: ${{secrets.SSH_USER}}
+          key: ${{secrets.SSH_KEY}}
+          port: ${{secrets.SSH_PORT}}
+          script: |
+            cd /home/chor5665/rutacperfume
+            git checkout .
+            git clean -df
+            git pull
+            composer install --no-dev --optimize-autoloader
+            npm run build
+            php artisan optimize:clear

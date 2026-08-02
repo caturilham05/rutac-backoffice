@@ -10,8 +10,8 @@ Schedule::call(function () {
 
 Schedule::call(function () {
     Artisan::call('app:shopee-ads-action', ['action' => 'pause']);
-})->dailyAt('00:00');
+})->dailyAt('01:00');
 
 Schedule::call(function () {
     Artisan::call('app:shopee-ads-action', ['action' => 'resume']);
-})->dailyAt('15:00');
+})->dailyAt('12:00');
