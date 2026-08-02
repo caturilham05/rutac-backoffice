@@ -37,7 +37,7 @@ class ShopeeAdsAction extends Command
         $ads = AdsShopee::all();
 
         foreach ($ads as $ad) {
-            ShopeeAdsActionJob::dispatch($ad, $action);
+            ShopeeAdsActionJob::dispatch($ad, $action)->onQueue('shopee');
             $this->info("Dispatched job for campaign: {$ad->name}");
             sleep(1);
         }
