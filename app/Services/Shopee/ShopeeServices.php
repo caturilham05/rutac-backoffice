@@ -4,6 +4,7 @@ namespace App\Services\Shopee;
 
 use App\Models\Marketplace;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 Class ShopeeServices
 {
@@ -233,8 +234,11 @@ Class ShopeeServices
         ])->withBody(json_encode($data), 'application/json')->post($url)->json();
 
         if (!empty($response['error'])) {
+            Log::build([
+                'driver' => 'single',
+                'path'   => storage_path('logs/shopee-services.log'),
+            ])->error("Shopee API Error [editManualProductAds]: " . json_encode($response));
             throw new \Exception($response['message']);
-
         }
 
         return $response;
