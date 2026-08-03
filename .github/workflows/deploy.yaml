@@ -12,13 +12,16 @@ jobs:
     steps:
       - name: Deploy Via SSH
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          APP_PATH: ${{ secrets.APP_PATH }}
         with:
           host: ${{secrets.SSH_HOST}}
           username: ${{secrets.SSH_USER}}
           key: ${{secrets.SSH_KEY}}
           port: ${{secrets.SSH_PORT}}
+          envs: APP_PATH
           script: |
-            cd /home/chor5665/rutacperfume
+            cd $APP_PATH
             git checkout .
             git clean -df
             git pull
