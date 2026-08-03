@@ -25,5 +25,6 @@ jobs:
             git checkout .
             git clean -df
             git pull
+            php artisan migrate
             composer install --no-dev --optimize-autoloader
             php artisan optimize:clear

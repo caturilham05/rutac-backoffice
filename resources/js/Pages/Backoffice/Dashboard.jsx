@@ -19,7 +19,7 @@ export default function Dashboard({ filters, stats, top_products, top_vendors })
         <AuthenticatedLayout
             header={
                 <h2 className="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-                    Dashboard Lorem ipsum dolor sit amet consectetur adipisicing elit. Id, nam.
+                    Dashboard
                 </h2>
             }
         >

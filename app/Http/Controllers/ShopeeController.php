@@ -215,4 +215,35 @@ class ShopeeController extends Controller
             return redirect()->route('shopee.ads.index')->with('error', $th->getMessage());
         }
     }
+
+    public function shopeeGetOrder(Marketplace $marketplace, Request $request)
+    {
+        try {
+            $shopee_services = new ShopeeServices($this->signature);
+            $order = $shopee_services->getOrder(
+                $marketplace->access_token,
+                $marketplace->app_key,
+                $marketplace->marketplace_id,
+                $marketplace->shop_id,
+                $request->time_from,
+                $request->time_to,
+                $request->page_size ?? 50,
+                $request->cursor ?? null
+            );
+
+            // $escrow = $shopee_services->getEscrowDetail(
+            //     $marketplace->access_token,
+            //     $marketplace->app_key,
+            //     $marketplace->marketplace_id,
+            //     $marketplace->shop_id,
+            //     '260619GYK8H820',
+            //     // '260802AD375N79'
+
+            // );
+            // dd($escrow);
+            return $order;
+        } catch (\Throwable $th) {
+            dd($th);
+        }
+    }
 }

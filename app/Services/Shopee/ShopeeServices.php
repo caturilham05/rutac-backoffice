@@ -243,4 +243,91 @@ Class ShopeeServices
 
         return $response;
     }
+
+    public function getOrder(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $time_from, string $time_to, $page_size = 100, ?string $cursor = null)
+    {
+        $path       = "/api/v2/order/get_order_list";
+        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&time_range_field=create_time&time_from=%s&time_to=%s&page_size=%s',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shop_id,
+            strtotime($time_from),
+            strtotime($time_to),
+            $page_size
+        );
+
+        if ($cursor) {
+            $url .= "&cursor=" . $cursor;
+        }
+
+        $response_orders = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        if (!empty($response_orders['error'])) {
+            throw new \Exception($response_orders['message']);
+        }
+
+        $order_sn_list = array_column($response_orders['response']['order_list'], 'order_sn');
+        $order_sn_list = implode(',', $order_sn_list);
+
+        $path       = '/api/v2/order/get_order_detail';
+        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn_list=%s&response_optional_fields=buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee ,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper, dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,buyer_username,invoice_data,order_chargeable_weight_gram,return_request_due_date,edt,payment_info',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shop_id,
+            $order_sn_list
+        );
+
+        $response_order_detail = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        if (!empty($response_order_detail['error'])) {
+            throw new \Exception($response_order_detail['message']);
+        }
+
+        return $response_order_detail;
+    }
+
+    public function getEscrowDetail(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $order_sn)
+    {
+        // 5045
+        // commision_fee = biaya admin, seller_order_processing_fee = biaya proses pesanan, service_fee = biaya layanan (gratis ongkir extra + biaya layanan), delivery_seller_protection_fee_premium_amount = premi, voucher_from_seller = voucher penjual
+        $path       = "/api/v2/payment/get_escrow_detail";
+        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
+        $sign       = hash_hmac('sha256', $baseString, $app_key);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s',
+            $this->host,
+            $path,
+            $marketplace_id,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shop_id,
+            $order_sn
+        );
+
+        $response = Http::withHeaders([
+            "Content-Type" => "application/json"
+        ])->get($url)->json();
+
+        if (!empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        return $response;
+    }
 }
