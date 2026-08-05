@@ -3,13 +3,31 @@ import { Head, usePage } from '@inertiajs/react';
 import DataTable from '@/Components/DataTable';
 
 function Order({ orders, filters, sortColumn, sortDirection }) {
+    console.log(orders)
     const columns = [
         { key: 'detail', label: '' },
         { key: 'invoice', label: 'Invoice' },
         { key: 'buyer_username', label: 'Buyer Username' },
         { key: 'courier', label: 'Courier' },
         { key: 'status', label: 'Status' },
-        { key: 'total_price', label: 'Total Price', render: (row) => `Rp ${parseFloat(row.total_price).toLocaleString()}` },
+        {
+            key: 'product_name',
+            label: 'Product Name',
+            renderDetail: (item) => item.product_name,
+            render: () => '-'
+        },
+        {
+            key: 'qty',
+            label: 'Qty',
+            renderDetail: (item) => item.qty,
+            render: (row) => row.products.reduce((acc, item) => acc + parseInt(item.qty), 0)
+        },
+        {
+            key: 'total_price',
+            label: 'Total Price',
+            render: (row) => `Rp ${parseFloat(row.total_price).toLocaleString()}`,
+            renderDetail: (item) => `Rp ${parseFloat(item.price).toLocaleString()}`
+        },
         { key: 'order_time', label: 'Order Time' },
     ];
 
