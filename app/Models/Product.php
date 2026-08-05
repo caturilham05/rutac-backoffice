@@ -10,17 +10,19 @@ use Illuminate\Support\Facades\DB;
 class Product extends Model
 {
     protected $table    = 'products';
-    protected $fillable = ['cat_id', 'cat_name', 'name', 'description', 'has_variant'];
+    protected $fillable = ['cat_id', 'cat_name', 'name', 'description', 'has_variant', 'product_origin_id', 'marketplace_id'];
 
     public static function productUpsert(array $data)
     {
         return DB::transaction(function () use ($data) {
             $productData = [
-                'cat_id'      => $data['cat_id'] ?? 0,
-                'cat_name'    => $data['cat_name'] ?? null,
-                'name'        => $data['name'] ?? null,
-                'description' => $data['description'] ?? null,
-                'has_variant' => $data['has_variant'] ?? 0,
+                'cat_id'            => $data['cat_id'] ?? 0,
+                'cat_name'          => $data['cat_name'] ?? null,
+                'name'              => $data['name'] ?? null,
+                'description'       => $data['description'] ?? null,
+                'has_variant'       => $data['has_variant'] ?? 0,
+                'product_origin_id' => $data['product_origin_id'] ?? 0,
+                'marketplace_id'    => $data['marketplace_id'] ?? 0
             ];
 
             $product = self::updateOrCreate(

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ShopeeAdsRequest;
 use App\Models\AdsShopee;
 use App\Models\Marketplace;
+use App\Models\Orders;
 use App\Models\Product;
 use App\Models\Product_sku;
 use App\Services\Shopee\ShopeeServices;
@@ -27,7 +28,7 @@ class ShopeeController extends Controller
         $this->host      = env('SHOPEE_HOST');
     }
 
-    public function shopeeGetProducts(Marketplace $marketplace)
+    public function shopeeGetProducts(Marketplace $marketplace, Request $request)
     {
         $access_token   = $marketplace->access_token;
         $shop_id        = $marketplace->shop_id;
@@ -43,7 +44,8 @@ class ShopeeController extends Controller
                 $access_token,
                 $app_key,
                 $marketplace_id,
-                $shop_id
+                $shop_id,
+                $request->offset ?? 0
             );
 
             foreach ($responses['response']['item_list'] as $item) {
@@ -59,8 +61,10 @@ class ShopeeController extends Controller
 
                     $model_skus[$sku] = [
                         'model_id'       => $model['model_id'],
+                        'item_id'        => $item['item_id'],
                         'current_price'  => $priceInfo['current_price'] ?? 0,
                         'original_price' => $priceInfo['original_price'] ?? 0,
+                        'description'    => $item['description'],
                     ];
                 }
             }
@@ -80,6 +84,8 @@ class ShopeeController extends Controller
 
             $data = [];
             foreach ($products as $product) {
+                $shopeeItemId = null;
+
                 foreach ($product->skus as $sku) {
                     $shopee = $model_skus[strtolower($sku->name)] ?? null;
 
@@ -87,20 +93,35 @@ class ShopeeController extends Controller
                         continue;
                     }
 
+                    $shopeeItemId = $shopee['item_id'];
+
                     $data[] = [
-                        'id'               => $sku->id,
-                        'product_model_id' => (string)$shopee['model_id'],
-                        'discount_price'   => $shopee['current_price'],
-                        'original_price'   => $shopee['original_price'],
-                        'updated_at'       => now()
+                        'id'                 => $sku->id,
+                        'product_id'         => $sku->product_id,
+                        'product_variant_id' => $sku->product_variant_id,
+                        'name'               => $sku->name,
+                        'product_model_id'   => (string)$shopee['model_id'],
+                        'discount_price'     => $shopee['current_price'],
+                        'original_price'     => $shopee['original_price'],
+                        'updated_at'         => now()
                     ];
                 }
+
+                if ($shopeeItemId) {
+                    $product->update([
+                        'product_origin_id' => (string)$shopeeItemId,
+                        'description'       => $shopee['description'] ?? $product->description
+                    ]);
+                }
             }
-            Product_sku::upsert(
-                $data,
-                ['id'], // kolom unik untuk mencocokkan record
-                ['product_model_id', 'discount_price', 'original_price', 'updated_at'] // kolom yang diupdate
-            );
+
+            if (!empty($data)) {
+                Product_sku::upsert(
+                    $data,
+                    ['id'], // kolom unik untuk mencocokkan record
+                    ['product_model_id', 'discount_price', 'original_price', 'updated_at'] // kolom yang diupdate
+                );
+            }
 
 
         } catch (\Throwable $th) {
@@ -220,28 +241,90 @@ class ShopeeController extends Controller
     {
         try {
             $shopee_services = new ShopeeServices(app(ShopeeSignature::class));
-            $cursor          = $request->cursor ?? null;
-            $page_size       = $request->page_size ?? 100;
+            $startDate       = new \DateTime($request->time_from);
+            $endDate         = new \DateTime($request->time_to);
+            $currentDate     = clone $startDate;
 
-            $response = $shopee_services->getOrder(
-                $marketplace->access_token,
-                $marketplace->app_key,
-                $marketplace->marketplace_id,
-                $marketplace->shop_id,
-                $request->time_from,
-                $request->time_to,
-                $page_size,
-                $cursor
-            );
+            while ($currentDate < $endDate) {
+                $nextDate = (clone $currentDate)->modify('+1 day');
+                if ($nextDate > $endDate) {
+                    $nextDate = $endDate;
+                }
 
-            dd($response);
+                $timeFrom = $currentDate->format('Y-m-d H:i:s');
+                $timeTo   = $nextDate->format('Y-m-d H:i:s');
 
-            // return inertia('Backoffice/Orders/OrderSync', [
-            //     'data' => $all_orders
-            // ]);
+                $cursor = null;
+                do {
+                    $response = $shopee_services->getOrder(
+                        $marketplace->access_token,
+                        $marketplace->app_key,
+                        $marketplace->marketplace_id,
+                        $marketplace->shop_id,
+                        $timeFrom,
+                        $timeTo,
+                        100,
+                        $cursor
+                    );
+
+                    $order_list_response = $response['response'] ?? [];
+                    $order_sn_list       = array_column($order_list_response['order_list'] ?? [], 'order_sn');
+
+                    if (!empty($order_sn_list)) {
+                        $response_detail = $shopee_services->getOrderDetail(
+                            $marketplace->access_token,
+                            $marketplace->app_key,
+                            $marketplace->marketplace_id,
+                            $marketplace->shop_id,
+                            implode(',', $order_sn_list)
+                        );
+
+                        foreach ($response_detail['response']['order_list'] ?? [] as $order_data) {
+                            $preparedOrder = [
+                                'invoice'        => $order_data['order_sn'],
+                                'waybill'        => $order_data['package_list'][0]['package_number'] ?? null,
+                                'marketplace_id' => $marketplace->id,
+                                'buyer_user_id'  => (string) $order_data['buyer_user_id'],
+                                'buyer_username' => $order_data['buyer_username'],
+                                'buyer_phone'    => $order_data['recipient_address']['phone'] ?? '',
+                                'buyer_address'  => $order_data['recipient_address']['full_address'] ?? '',
+                                'courier'        => $order_data['shipping_carrier'] ?? '',
+                                'qty'            => array_sum(array_column($order_data['item_list'], 'model_quantity_purchased')),
+                                'discount'       => 0,
+                                'total_price'    => $order_data['total_amount'],
+                                'status'         => strtolower($order_data['order_status']),
+                                'order_time'     => date('Y-m-d H:i:s', $order_data['create_time']),
+                                'payment_method' => $order_data['payment_method'] ?? null,
+                                'notes'          => $order_data['message_to_seller'] ?? null,
+                            ];
+
+                            $preparedItems = [];
+                            foreach ($order_data['item_list'] as $item) {
+                                $product_sku = Product_sku::where('product_model_id', $item['model_id'])->first();
+                                $preparedItems[] = [
+                                    'product_id'        => $product_sku->product_id ?? 0,
+                                    'product_origin_id' => $item['item_id'],
+                                    'product_model_id'  => $item['model_id'],
+                                    'product_name'      => $item['item_name'],
+                                    'qty'               => $item['model_quantity_purchased'],
+                                    'price'             => $item['model_original_price'],
+                                    'sale'              => $item['model_discounted_price'],
+                                    'discount'          => $item['model_original_price'] - $item['model_discounted_price'],
+                                ];
+                            }
+                            Orders::insertOrderFromShopee($preparedOrder, $preparedItems);
+                        }
+                    }
+
+                    $cursor = ($order_list_response['more'] ?? false) ? $order_list_response['next_cursor'] : null;
+                } while ($cursor);
+
+                $currentDate = $nextDate;
+            }
+
+            return redirect()->route('order.sync')->with('success', 'Berhasil menyinkronkan pesanan Shopee secara bertahap');
         } catch (\Throwable $th) {
             return redirect()->route('order.sync')->with('error', $th->getMessage());
-            // return response()->json(['error' => $th->getMessage()], 400);
         }
     }
 }

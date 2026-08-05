@@ -20,7 +20,7 @@ return new class extends Migration
             $table->bigInteger('marketplace_id')->unsigned();
             $table->index('marketplace_id');
             $table->string('buyer_user_id')->comment('buyer user id shopee');
-            $table->string('buyer_username')->comment('Nama pelanggan');
+            $table->string('buyer_username')->nullable()->comment('Nama pelanggan');
             $table->index('buyer_username');
             $table->string('buyer_phone')->comment('Nomor telepon pelanggan');
             $table->string('buyer_address')->comment('Alamat pelanggan');

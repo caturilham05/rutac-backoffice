@@ -69,7 +69,7 @@ Class ShopeeServices
         return $response->json();
     }
 
-    public function getProducts(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $offset = 0, int $pageSize = 10)
+    public function getProducts(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $offset = 0, int $pageSize = 50)
     {
         $timestamp  = $this->time;
         $path       = "/api/v2/product/get_item_list";
