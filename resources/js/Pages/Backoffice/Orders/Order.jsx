@@ -4,6 +4,7 @@ import DataTable from '@/Components/DataTable';
 
 function Order({ orders, filters, sortColumn, sortDirection }) {
     const columns = [
+        { key: 'detail', label: '' },
         { key: 'invoice', label: 'Invoice' },
         { key: 'buyer_username', label: 'Buyer Username' },
         { key: 'courier', label: 'Courier' },
@@ -44,7 +45,7 @@ function Order({ orders, filters, sortColumn, sortDirection }) {
                         <div className="p-6 text-gray-900 dark:text-gray-100">
                             <DataTable
                                 columns={columns}
-                                data={orders.data}
+                                data={orders.data.map(order => ({ ...order, items: order.products }))}
                                 pagination={orders}
                                 filterConfig={filterConfig}
                                 filterValues={filters}

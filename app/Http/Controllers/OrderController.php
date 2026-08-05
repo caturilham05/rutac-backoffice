@@ -17,7 +17,8 @@ class OrderController extends Controller
         $sort = $request->input('sort', 'order_time');
         $direction = $request->input('direction', 'desc');
 
-        $orders = Orders::filter($request->only(['invoice', 'buyer_username', 'courier', 'status', 'start_date', 'end_date']))
+        $orders = Orders::with('products')
+            ->filter($request->only(['invoice', 'buyer_username', 'courier', 'status', 'start_date', 'end_date']))
             ->orderBy($sort, $direction)
             ->paginate(15)
             ->withQueryString();
