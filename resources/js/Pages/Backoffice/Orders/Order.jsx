@@ -44,6 +44,16 @@ function Order({ orders, filters, sortColumn, sortDirection }) {
             render: (row) => `Rp ${parseFloat(row.total_price).toLocaleString()}`,
             renderDetail: (item) => `Rp ${parseFloat(item.price).toLocaleString()}`
         },
+        {
+            key: 'discount',
+            label: 'Discount',
+            render: (row) => `Rp ${parseFloat(row.discount).toLocaleString()}`
+        },
+        {
+            key: 'income',
+            label: 'Income',
+            render: (row) => `Rp ${parseFloat(row.income).toLocaleString()}`
+        },
         { key: 'order_time', label: 'Order Time' },
     ];
 
