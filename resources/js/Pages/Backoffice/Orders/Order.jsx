@@ -42,7 +42,7 @@ function Order({ orders, filters, sortColumn, sortDirection }) {
             key: 'total_price',
             label: 'Total Price',
             render: (row) => `Rp ${parseFloat(row.total_price).toLocaleString()}`,
-            renderDetail: (item) => `Rp ${parseFloat(item.price).toLocaleString()}`
+            renderDetail: (item) => `Rp ${parseFloat(item.sale).toLocaleString()}`
         },
         {
             key: 'discount',
