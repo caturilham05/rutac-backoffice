@@ -8,6 +8,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShopeeAdsController;
+use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShopeeController;
 use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Foundation\Application;
@@ -37,7 +38,11 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function(){
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/Orders/Order', fn() => Inertia::render('Backoffice/Orders/Order'))->name('order');
+
+    Route::prefix('orders')->controller(OrderController::class)->group(function() {
+        Route::get('/order-list', 'index')->name('order');
+        Route::get('/order-sync', 'orderSync')->name('order.sync');
+    });
 
     Route::controller(AuthMarketplaceController::class)->group(function() {
         Route::get('/auth-shopee', 'auth_shopee')->name('shopee.auth');
@@ -51,7 +56,7 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function(){
         Route::get('/{marketplace}/shopee-get-products', 'shopeeGetProducts')->name('shopee.get_products');
         Route::get('/configuration/{marketplace}/ads-shopee', 'shopeeAds')->name('shopee.ads');
         Route::post('/configuration/{marketplace}/ads-shopee', 'shopeeAdsEdit')->name('shopee.ads.edit');
-        Route::get('/{marketplace}/order', 'shopeeGetOrder')->name('shopee.order.get');
+        Route::get('/{marketplace}/order-sync', 'orderSync')->name('shopee.order.get');
     });
 
     Route::prefix('purchases')->controller(PurchaseController::class)->group(function() {

@@ -216,34 +216,32 @@ class ShopeeController extends Controller
         }
     }
 
-    public function shopeeGetOrder(Marketplace $marketplace, Request $request)
+    public function orderSync(Marketplace $marketplace, Request $request)
     {
         try {
-            $shopee_services = new ShopeeServices($this->signature);
-            $order = $shopee_services->getOrder(
+            $shopee_services = new ShopeeServices(app(ShopeeSignature::class));
+            $cursor          = $request->cursor ?? null;
+            $page_size       = $request->page_size ?? 100;
+
+            $response = $shopee_services->getOrder(
                 $marketplace->access_token,
                 $marketplace->app_key,
                 $marketplace->marketplace_id,
                 $marketplace->shop_id,
                 $request->time_from,
                 $request->time_to,
-                $request->page_size ?? 50,
-                $request->cursor ?? null
+                $page_size,
+                $cursor
             );
 
-            // $escrow = $shopee_services->getEscrowDetail(
-            //     $marketplace->access_token,
-            //     $marketplace->app_key,
-            //     $marketplace->marketplace_id,
-            //     $marketplace->shop_id,
-            //     '260619GYK8H820',
-            //     // '260802AD375N79'
+            dd($response);
 
-            // );
-            // dd($escrow);
-            return $order;
+            // return inertia('Backoffice/Orders/OrderSync', [
+            //     'data' => $all_orders
+            // ]);
         } catch (\Throwable $th) {
-            dd($th);
+            return redirect()->route('order.sync')->with('error', $th->getMessage());
+            // return response()->json(['error' => $th->getMessage()], 400);
         }
     }
 }

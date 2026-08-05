@@ -266,17 +266,19 @@ Class ShopeeServices
             $url .= "&cursor=" . $cursor;
         }
 
-        $response_orders = Http::withHeaders([
+        $response = Http::withHeaders([
             "Content-Type" => "application/json"
         ])->get($url)->json();
 
-        if (!empty($response_orders['error'])) {
-            throw new \Exception($response_orders['message']);
+        if (!empty($response['error'])) {
+            throw new \Exception($response['message']);
         }
 
-        $order_sn_list = array_column($response_orders['response']['order_list'], 'order_sn');
-        $order_sn_list = implode(',', $order_sn_list);
+        return $response;
+    }
 
+    public function getOrderDetail(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $order_sn)
+    {
         $path       = '/api/v2/order/get_order_detail';
         $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
         $sign       = hash_hmac('sha256', $baseString, $app_key);
@@ -288,18 +290,18 @@ Class ShopeeServices
             $sign,
             $accessToken,
             $shop_id,
-            $order_sn_list
+            $order_sn
         );
 
-        $response_order_detail = Http::withHeaders([
+        $response = Http::withHeaders([
             "Content-Type" => "application/json"
         ])->get($url)->json();
 
-        if (!empty($response_order_detail['error'])) {
-            throw new \Exception($response_order_detail['message']);
+        if (!empty($response['error'])) {
+            throw new \Exception($response['message']);
         }
 
-        return $response_order_detail;
+        return $response;
     }
 
     public function getEscrowDetail(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $order_sn)
