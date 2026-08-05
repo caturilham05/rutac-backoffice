@@ -2,8 +2,24 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage } from '@inertiajs/react';
 import DataTable from '@/Components/DataTable';
 
+import { useState } from 'react';
+
+const ProductNameCell = ({ name }) => {
+    const [isFull, setIsFull] = useState(false);
+    const limit = 30;
+
+    return (
+        <span
+            className="cursor-pointer hover:text-blue-500"
+            onClick={() => setIsFull(!isFull)}
+            title={isFull ? 'Click to truncate' : 'Click to see full name'}
+        >
+            {isFull ? name : (name.length > limit ? name.substring(0, limit) + '...' : name)}
+        </span>
+    );
+};
+
 function Order({ orders, filters, sortColumn, sortDirection }) {
-    console.log(orders)
     const columns = [
         { key: 'detail', label: '' },
         { key: 'invoice', label: 'Invoice' },
@@ -13,7 +29,7 @@ function Order({ orders, filters, sortColumn, sortDirection }) {
         {
             key: 'product_name',
             label: 'Product Name',
-            renderDetail: (item) => item.product_name,
+            renderDetail: (item) => <ProductNameCell name={item.product_name} />,
             render: () => '-'
         },
         {
