@@ -3,7 +3,7 @@ import { Head, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/Utils/format';
 
-export default function Dashboard({ filters, stats, top_products, top_vendors }) {
+export default function Dashboard({ filters, stats, top_order_products, top_purchase_products, top_buyers, top_vendors }) {
     const { flash } = usePage().props;
     const [dateRange, setDateRange] = useState({
         start_date: filters.start_date,
@@ -38,16 +38,17 @@ export default function Dashboard({ filters, stats, top_products, top_vendors })
                     <button type="submit" className="rounded bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700 transition-colors">Filter</button>
                 </form>
 
+                {/* Order Statistic */}
                 <div className="mb-4">
-                    <h3 className="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-wider">Purchase Statistics</h3>
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-wider">Order Statistics</h3>
                 </div>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                     {[
-                        { label: 'Total Invoice', value: stats.total_invoice },
-                        { label: 'Total Price', value: formatCurrency(stats.total_price) },
-                        { label: 'Total Qty', value: stats.total_qty },
-                        { label: 'Total Discount', value: formatCurrency(stats.total_discount) },
-                        { label: 'Total Add. Fee', value: formatCurrency(stats.total_additional_fee) },
+                        { label: 'Total Orders', value: stats.order.total_orders },
+                        { label: 'Total Revenue', value: formatCurrency(stats.order.total_revenue) },
+                        { label: 'Total Income', value: formatCurrency(stats.order.total_income) },
+                        { label: 'Total Qty', value: stats.order.total_qty },
+                        { label: 'Total Discount', value: formatCurrency(stats.order.total_discount) },
                     ].map((item, idx) => (
                         <div key={idx} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
                             <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{item.label}</p>
@@ -55,12 +56,10 @@ export default function Dashboard({ filters, stats, top_products, top_vendors })
                         </div>
                     ))}
                 </div>
-
-                <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
+                <div className="mb-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
                     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <div className="mb-6">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Products</h3>
-                            <p className="text-sm text-gray-500">Based on quantity purchased</p>
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Order Product</h3>
                         </div>
                         <table className="w-full text-left">
                             <thead>
@@ -71,7 +70,7 @@ export default function Dashboard({ filters, stats, top_products, top_vendors })
                                 </tr>
                             </thead>
                             <tbody>
-                                {top_products.map((p, idx) => (
+                                {top_order_products.map((p, idx) => (
                                     <tr key={idx}>
                                         <td className="border-b p-2">{p.product_name}</td>
                                         <td className="border-b p-2">{p.total_qty}</td>
@@ -81,11 +80,53 @@ export default function Dashboard({ filters, stats, top_products, top_vendors })
                             </tbody>
                         </table>
                     </div>
-
                     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <div className="mb-6">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Vendors</h3>
-                            <p className="text-sm text-gray-500">Based on total purchase amount</p>
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Buyer</h3>
+                        </div>
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th className="border-b p-2">Buyer Name</th>
+                                    <th className="border-b p-2">Orders</th>
+                                    <th className="border-b p-2">Spent</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {top_buyers.map((b, idx) => (
+                                    <tr key={idx}>
+                                        <td className="border-b p-2">{b.buyer_username}</td>
+                                        <td className="border-b p-2">{b.total_orders}</td>
+                                        <td className="border-b p-2">{formatCurrency(b.total_spent)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {/* Purchase Statistic */}
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-wider">Purchase Statistics</h3>
+                </div>
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                    {[
+                        { label: 'Total Invoice', value: stats.purchase.total_invoice },
+                        { label: 'Total Price', value: formatCurrency(stats.purchase.total_price) },
+                        { label: 'Total Qty', value: stats.purchase.total_qty },
+                        { label: 'Total Discount', value: formatCurrency(stats.purchase.total_discount) },
+                        { label: 'Total Add. Fee', value: formatCurrency(stats.purchase.total_additional_fee) },
+                    ].map((item, idx) => (
+                        <div key={idx} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{item.label}</p>
+                            <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{item.value}</p>
+                        </div>
+                    ))}
+                </div>
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Vendor</h3>
                         </div>
                         <table className="w-full text-left">
                             <thead>
@@ -101,6 +142,29 @@ export default function Dashboard({ filters, stats, top_products, top_vendors })
                                         <td className="border-b p-2">{v.vendor}</td>
                                         <td className="border-b p-2">{v.total_invoice}</td>
                                         <td className="border-b p-2">{formatCurrency(v.total_amount)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Purchase Product</h3>
+                        </div>
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th className="border-b p-2">Product Name</th>
+                                    <th className="border-b p-2">Total Qty</th>
+                                    <th className="border-b p-2">Total Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {top_purchase_products.map((p, idx) => (
+                                    <tr key={idx}>
+                                        <td className="border-b p-2">{p.product_name}</td>
+                                        <td className="border-b p-2">{p.total_qty}</td>
+                                        <td className="border-b p-2">{formatCurrency(p.total_price)}</td>
                                     </tr>
                                 ))}
                             </tbody>
