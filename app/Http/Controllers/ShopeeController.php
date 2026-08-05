@@ -245,9 +245,6 @@ class ShopeeController extends Controller
             $endDate         = new \DateTime($request->time_to);
             $currentDate     = clone $startDate;
 
-            // $escrow = $shopee_services->getEscrowDetail($marketplace->access_token, $marketplace->app_key, $marketplace->marketplace_id, $marketplace->shop_id, '260525C8VE75JH');
-            // dd($escrow);
-
             while ($currentDate < $endDate) {
                 $nextDate = (clone $currentDate)->modify('+1 day');
                 if ($nextDate > $endDate) {
@@ -289,6 +286,9 @@ class ShopeeController extends Controller
                                 $payment_info = $escrow_resp['buyer_payment_info'];
 
                                 $discount   = abs($payment_info['shopee_voucher'] ?? 0) + abs($payment_info['seller_voucher'] ?? 0) + abs($payment_info['shopee_coins_redeemed'] ?? 0) - ($payment_info['shipping_fee'] ?? 0) - ($payment_info['buyer_service_fee'] ?? 0);
+                                if ($discount < 0) {
+                                    $discount = 0;
+                                }
                                 $total_fees = ($income_data['commission_fee'] ?? 0) + ($income_data['seller_order_processing_fee'] ?? 0) + ($income_data['service_fee'] ?? 0) + ($income_data['delivery_seller_protection_fee_premium_amount'] ?? 0);
 
                                 $preparedOrder = [
@@ -334,7 +334,7 @@ class ShopeeController extends Controller
                 $currentDate = $nextDate;
             }
 
-            return redirect()->route('order.sync')->with('success', 'Berhasil menyinkronkan pesanan Shopee secara bertahap');
+            return redirect()->route('order.sync')->with('success', sprintf('Berhasil menyinkronkan pesanan Shopee secara bertahap pada periode %s - %s', $request->time_from, $request->time_to));
         } catch (\Throwable $th) {
             return redirect()->route('order.sync')->with('error', $th->getMessage());
         }

@@ -59,29 +59,6 @@ export default function Dashboard({ filters, stats, top_order_products, top_purc
                 <div className="mb-10 grid grid-cols-1 gap-8 lg:grid-cols-2">
                     <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                         <div className="mb-6">
-                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Order Product</h3>
-                        </div>
-                        <table className="w-full text-left">
-                            <thead>
-                                <tr>
-                                    <th className="border-b p-2">Product Name</th>
-                                    <th className="border-b p-2">Total Qty</th>
-                                    <th className="border-b p-2">Total Price</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {top_order_products.map((p, idx) => (
-                                    <tr key={idx}>
-                                        <td className="border-b p-2">{p.product_name}</td>
-                                        <td className="border-b p-2">{p.total_qty}</td>
-                                        <td className="border-b p-2">{formatCurrency(p.total_price)}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                        <div className="mb-6">
                             <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Buyer</h3>
                         </div>
                         <table className="w-full text-left">
@@ -98,6 +75,30 @@ export default function Dashboard({ filters, stats, top_order_products, top_purc
                                         <td className="border-b p-2">{b.buyer_username}</td>
                                         <td className="border-b p-2">{b.total_orders}</td>
                                         <td className="border-b p-2">{formatCurrency(b.total_spent)}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div className="rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                        <div className="mb-6">
+                            <h3 className="text-lg font-bold text-gray-800 dark:text-white">Top 5 Order Product</h3>
+                        </div>
+                        <table className="w-full text-left">
+                            <thead>
+                                <tr>
+                                    <th className="border-b p-2">Product Name</th>
+                                    <th className="border-b p-2">Total Qty</th>
+                                    <th className="border-b p-2">Total Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {top_order_products.map((p, idx) => (
+                                    <tr key={idx}>
+                                        <td className="border-b p-2">{p.product_name}</td>
+                                        <td className="border-b p-2">{p.total_qty}</td>
+                                        <td className="border-b p-2">{formatCurrency(p.total_price)}</td>
                                     </tr>
                                 ))}
                             </tbody>

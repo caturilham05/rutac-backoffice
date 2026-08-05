@@ -27,6 +27,7 @@ class DashboardController extends Controller
 
         $orderStats = \App\Models\Orders::whereDate('order_time', '>=', $startDate)
             ->whereDate('order_time', '<=', $endDate)
+            ->where('status', 'completed')
             ->select([
                 DB::raw('COUNT(id) as total_orders'),
                 DB::raw('SUM(income) as total_income'),
@@ -43,7 +44,8 @@ class DashboardController extends Controller
 
         $topOrderProducts = \App\Models\OrderProducts::whereHas('order', function ($query) use ($startDate, $endDate) {
             $query->whereDate('order_time', '>=', $startDate)
-                ->whereDate('order_time', '<=', $endDate);
+                ->whereDate('order_time', '<=', $endDate)
+                ->where('status', 'completed');
         })
             ->select('product_name', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(sale * qty) as total_price'))
             ->groupBy('product_name')
@@ -63,6 +65,7 @@ class DashboardController extends Controller
 
         $topBuyers = \App\Models\Orders::whereDate('order_time', '>=', $startDate)
             ->whereDate('order_time', '<=', $endDate)
+            ->where('status', 'completed')
             ->select('buyer_username', DB::raw('COUNT(id) as total_orders'), DB::raw('SUM(total_price) as total_spent'))
             ->groupBy('buyer_username')
             ->orderByDesc('total_orders')
