@@ -17,7 +17,7 @@ function OrderSync() {
         }
 
         setLoading(true);
-        router.get(route('shopee.order.get', marketplaceId), {
+        router.post(route('shopee.order.get', marketplaceId), {
             time_from: timeFrom,
             time_to  : timeTo
         }, {
