@@ -245,6 +245,9 @@ class ShopeeController extends Controller
             $endDate         = new \DateTime($request->time_to);
             $currentDate     = clone $startDate;
 
+            // $escrow = $shopee_services->getEscrowDetail($marketplace->access_token, $marketplace->app_key, $marketplace->marketplace_id, $marketplace->shop_id, '260525C8VE75JH');
+            // dd($escrow);
+
             while ($currentDate < $endDate) {
                 $nextDate = (clone $currentDate)->modify('+1 day');
                 if ($nextDate > $endDate) {
@@ -280,23 +283,32 @@ class ShopeeController extends Controller
                         );
 
                         foreach ($response_detail['response']['order_list'] ?? [] as $order_data) {
-                            $preparedOrder = [
-                                'invoice'        => $order_data['order_sn'],
-                                'waybill'        => $order_data['package_list'][0]['package_number'] ?? null,
-                                'marketplace_id' => $marketplace->id,
-                                'buyer_user_id'  => (string) $order_data['buyer_user_id'],
-                                'buyer_username' => $order_data['buyer_username'],
-                                'buyer_phone'    => $order_data['recipient_address']['phone'] ?? '',
-                                'buyer_address'  => $order_data['recipient_address']['full_address'] ?? '',
-                                'courier'        => $order_data['shipping_carrier'] ?? '',
-                                'qty'            => array_sum(array_column($order_data['item_list'], 'model_quantity_purchased')),
-                                'discount'       => 0,
-                                'total_price'    => $order_data['total_amount'],
-                                'status'         => strtolower($order_data['order_status']),
-                                'order_time'     => date('Y-m-d H:i:s', $order_data['create_time']),
-                                'payment_method' => $order_data['payment_method'] ?? null,
-                                'notes'          => $order_data['message_to_seller'] ?? null,
-                            ];
+                                $escrow = $shopee_services->getEscrowDetail($marketplace->access_token, $marketplace->app_key, $marketplace->marketplace_id, $marketplace->shop_id, $order_data['order_sn']);
+                                $escrow_resp = $escrow['response'];
+                                $income_data = $escrow_resp['order_income'];
+                                $payment_info = $escrow_resp['buyer_payment_info'];
+
+                                $discount   = abs($payment_info['shopee_voucher'] ?? 0) + abs($payment_info['seller_voucher'] ?? 0) + abs($payment_info['shopee_coins_redeemed'] ?? 0) - ($payment_info['shipping_fee'] ?? 0) - ($payment_info['buyer_service_fee'] ?? 0);
+                                $total_fees = ($income_data['commission_fee'] ?? 0) + ($income_data['seller_order_processing_fee'] ?? 0) + ($income_data['service_fee'] ?? 0) + ($income_data['delivery_seller_protection_fee_premium_amount'] ?? 0);
+
+                                $preparedOrder = [
+                                    'invoice'        => $order_data['order_sn'],
+                                    'waybill'        => $order_data['package_list'][0]['package_number'] ?? null,
+                                    'marketplace_id' => $marketplace->id,
+                                    'buyer_user_id'  => (string) $order_data['buyer_user_id'],
+                                    'buyer_username' => $order_data['buyer_username'],
+                                    'buyer_phone'    => $order_data['recipient_address']['phone'] ?? '',
+                                    'buyer_address'  => $order_data['recipient_address']['full_address'] ?? '',
+                                    'courier'        => $order_data['shipping_carrier'] ?? '',
+                                    'qty'            => array_sum(array_column($order_data['item_list'], 'model_quantity_purchased')),
+                                    'discount'       => $discount,
+                                    'total_price'    => $order_data['total_amount'],
+                                    'status'         => strtolower($order_data['order_status']),
+                                    'order_time'     => date('Y-m-d H:i:s', $order_data['create_time']),
+                                    'payment_method' => $order_data['payment_method'] ?? null,
+                                    'notes'          => $order_data['message_to_seller'] ?? null,
+                                    'income'         => ($income_data['cost_of_goods_sold'] ?? 0) - $total_fees,
+                                ];
 
                             $preparedItems = [];
                             foreach ($order_data['item_list'] as $item) {

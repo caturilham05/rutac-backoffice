@@ -23,6 +23,7 @@ class Orders extends Model
         'order_time',
         'payment_method',
         'notes',
+        'income',
     ];
 
     public function products()

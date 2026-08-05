@@ -306,8 +306,8 @@ Class ShopeeServices
 
     public function getEscrowDetail(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $order_sn)
     {
-        // 5045
-        // commision_fee = biaya admin, seller_order_processing_fee = biaya proses pesanan, service_fee = biaya layanan (gratis ongkir extra + biaya layanan), delivery_seller_protection_fee_premium_amount = premi, voucher_from_seller = voucher penjual
+        // diskon pembeli -> shopee_voucher + seller_voucher - shipping_fee - buyer_service_fee
+        // biaya penjual -> commision_fee = biaya admin + seller_order_processing_fee = biaya proses pesanan + service_fee = biaya layanan (gratis ongkir extra + biaya layanan) + delivery_seller_protection_fee_premium_amount = premi + voucher_from_seller = voucher penjual
         $path       = "/api/v2/payment/get_escrow_detail";
         $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
         $sign       = hash_hmac('sha256', $baseString, $app_key);
