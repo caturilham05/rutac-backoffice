@@ -93,12 +93,33 @@ test('product discounts can be synchronized from every Shopee marketplace', func
             'response' => [
                 'discount_list' => [[
                     'discount_id' => 789,
-                    'discount_name' => 'Promo Shopee',
-                    'start_time' => 1788220800,
-                    'end_time' => 1790812800,
-                    'status' => 'ongoing',
                 ]],
                 'more' => true,
+            ],
+        ]);
+    $shopee->shouldReceive('getDiscount')
+        ->once()
+        ->with('access-token', 'app-key', 123, 456, 789)
+        ->andReturn([
+            'response' => [
+                'discount_id' => 789,
+                'discount_name' => 'Promo Shopee',
+                'start_time' => 1788220800,
+                'end_time' => 1790812800,
+                'status' => 'ongoing',
+                'item_list' => [[
+                    'item_id' => 1001,
+                    'item_name' => 'Parfum A',
+                    'purchase_limit' => 2,
+                    'model_list' => [[
+                        'model_id' => 2001,
+                        'model_name' => '50 ml',
+                        'model_original_price' => 150000,
+                        'model_promotion_price' => 120000,
+                        'model_normal_stock' => 10,
+                        'model_promotion_stock' => 5,
+                    ]],
+                ]],
             ],
         ]);
     $shopee->shouldReceive('getDiscountList')
@@ -108,12 +129,21 @@ test('product discounts can be synchronized from every Shopee marketplace', func
             'response' => [
                 'discount_list' => [[
                     'discount_id' => 790,
-                    'discount_name' => 'Promo Berikutnya',
-                    'start_time' => 1788220800,
-                    'end_time' => 1790812800,
-                    'status' => 'upcoming',
                 ]],
                 'more' => false,
+            ],
+        ]);
+    $shopee->shouldReceive('getDiscount')
+        ->once()
+        ->with('access-token', 'app-key', 123, 456, 790)
+        ->andReturn([
+            'response' => [
+                'discount_id' => 790,
+                'discount_name' => 'Promo Berikutnya',
+                'start_time' => 1788220800,
+                'end_time' => 1790812800,
+                'status' => 'upcoming',
+                'item_list' => [],
             ],
         ]);
     $this->app->instance(ShopeeServices::class, $shopee);
@@ -135,6 +165,43 @@ test('product discounts can be synchronized from every Shopee marketplace', func
         'discount_name' => 'Promo Berikutnya',
         'status' => 'upcoming',
     ]);
+    $this->assertDatabaseHas('product_discount_items', [
+        'discount_id' => 789,
+        'product_origin_id' => 1001,
+        'product_model_id' => 2001,
+        'model_promotion_price' => 120000,
+    ]);
+});
+
+test('product discount detail is shown by discount id', function () {
+    $marketplaceId = DB::table('marketplaces')->insertGetId([
+        'marketplace' => 'Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    DB::table('product_discounts')->insert([
+        'marketplace_id' => $marketplaceId,
+        'discount_id' => 789,
+        'discount_name' => 'Promo Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    DB::table('product_discount_items')->insert([
+        'discount_id' => 789,
+        'product_origin_id' => 1001,
+        'product_model_id' => 2001,
+        'item_name' => 'Parfum A',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('product_discounts.show', 789))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Backoffice/Products/ProductDiscountDetail')
+            ->where('discount.discount_id', 789)
+            ->where('discount.items.0.item_name', 'Parfum A'));
 });
 
 test('product discount synchronization reports Shopee errors without changing data', function () {

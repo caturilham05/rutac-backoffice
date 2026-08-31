@@ -100,6 +100,7 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
     Route::prefix('products')->group(function () {
         Route::get('product-discounts', [ProductDiscountController::class, 'index'])->name('product_discounts');
         Route::post('product-discounts/sync', [ProductDiscountController::class, 'sync'])->name('product_discounts.sync');
+        Route::get('product-discounts/{productDiscount:discount_id}', [ProductDiscountController::class, 'show'])->name('product_discounts.show');
 
         Route::controller(ProductController::class)->group(function () {
             Route::get('product-list', 'index')->name('products');

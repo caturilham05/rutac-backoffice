@@ -2,7 +2,7 @@ import DataTable from '@/Components/DataTable';
 import FlashMessage from '@/Components/FlashMessage';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 export default function ProductDiscount({
     discounts,
@@ -21,7 +21,18 @@ export default function ProductDiscount({
     };
 
     const columns = [
-        { key: 'discount_id', label: 'Discount ID' },
+        {
+            key: 'discount_id',
+            label: 'Discount ID',
+            render: (row) => (
+                <Link
+                    href={route('product_discounts.show', row.discount_id)}
+                    className="text-blue-600 hover:underline dark:text-blue-400"
+                >
+                    {row.discount_id}
+                </Link>
+            ),
+        },
         { key: 'discount_name', label: 'Discount Name' },
         { key: 'status', label: 'Status', render: (row) => row.status || '-' },
         {

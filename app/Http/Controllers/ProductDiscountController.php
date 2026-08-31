@@ -13,14 +13,14 @@ class ProductDiscountController extends Controller
 {
     public function index(ProductDiscountRequest $request): Response
     {
-        $filters   = $request->validated();
-        $sort      = $filters['sort'] ?? 'discount_name';
+        $filters = $request->validated();
+        $sort = $filters['sort'] ?? 'discount_name';
         $direction = $filters['direction'] ?? 'desc';
 
         return Inertia::render('Backoffice/Products/ProductDiscount', [
-            'discounts'     => ProductDiscount::pagination($filters, $sort, $direction),
-            'filters'       => collect($filters)->only(['discount_name', 'status', 'start_date', 'end_date']),
-            'sortColumn'    => $sort,
+            'discounts' => ProductDiscount::pagination($filters, $sort, $direction),
+            'filters' => collect($filters)->only(['discount_name', 'status', 'start_date', 'end_date']),
+            'sortColumn' => $sort,
             'sortDirection' => $direction,
         ]);
     }
@@ -36,5 +36,12 @@ class ProductDiscountController extends Controller
 
             return back()->with('error', 'Gagal menyinkronkan product discount Shopee: '.$exception->getMessage());
         }
+    }
+
+    public function show(ProductDiscount $productDiscount): Response
+    {
+        return Inertia::render('Backoffice/Products/ProductDiscountDetail', [
+            'discount' => $productDiscount->load('items'),
+        ]);
     }
 }
