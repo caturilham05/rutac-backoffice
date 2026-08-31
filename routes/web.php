@@ -11,7 +11,10 @@ use App\Http\Controllers\ShopeeAdsController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ShopeeController;
 use App\Http\Controllers\ShopeeFeeController;
+use App\Models\Marketplace;
+use App\Services\Shopee\ShopeeServices;
 use Illuminate\Foundation\Application;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Redis;
@@ -58,6 +61,24 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function(){
         Route::post('/configuration/{marketplace}/ads-shopee', 'shopeeAdsEdit')->name('shopee.ads.edit');
         Route::post('/{marketplace}/order-sync', 'orderSync')->name('shopee.order.get');
     });
+
+    Route::get('/{marketplace}/shopee-discounts', function (Marketplace $marketplace, Request $request, ShopeeServices $shopee) {
+        $filters = $request->validate([
+            'discount_status' => ['sometimes', 'in:upcoming,ongoing,expired'],
+            'page_no' => ['sometimes', 'integer', 'min:1'],
+            'page_size' => ['sometimes', 'integer', 'between:1,100'],
+        ]);
+
+        return $shopee->getDiscountList(
+            $marketplace->access_token,
+            $marketplace->app_key,
+            $marketplace->marketplace_id,
+            $marketplace->shop_id,
+            $filters['discount_status'] ?? 'ongoing',
+            $filters['page_no'] ?? 1,
+            $filters['page_size'] ?? 100,
+        );
+    })->name('shopee.discounts');
 
     Route::prefix('purchases')->controller(PurchaseController::class)->group(function() {
         Route::get('purchases-list', 'index')->name('purchases.list');

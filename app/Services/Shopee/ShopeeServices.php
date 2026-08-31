@@ -69,6 +69,29 @@ Class ShopeeServices
         return $response->json();
     }
 
+    public function getDiscountList(string $accessToken, string $app_key, int $marketplace_id, int $shopId, string $discountStatus = 'ongoing', int $pageNo = 1, int $pageSize = 100)
+    {
+        $path = '/api/v2/discount/get_discount_list';
+        $sign = hash_hmac('sha256', $marketplace_id.$path.$this->time.$accessToken.$shopId, $app_key);
+
+        $response = Http::get($this->host.$path, [
+            'partner_id'     => $marketplace_id,
+            'timestamp'      => $this->time,
+            'sign'           => $sign,
+            'access_token'   => $accessToken,
+            'shop_id'        => $shopId,
+            'discount_status' => $discountStatus,
+            'page_no'        => $pageNo,
+            'page_size'      => $pageSize,
+        ])->json();
+
+        if (!empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        return $response;
+    }
+
     public function getProducts(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $offset = 0, int $pageSize = 50)
     {
         $timestamp  = $this->time;
