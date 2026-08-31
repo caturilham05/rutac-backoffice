@@ -1,10 +1,49 @@
+import DataTable from '@/Components/DataTable';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 
 const formatDate = (date) => date?.replace('T', ' ').slice(0, 16) || '-';
 const value = (data) => data ?? '-';
 
-export default function ProductDiscountDetail({ discount }) {
+export default function ProductDiscountDetail({ discount, items }) {
+    const columns = [
+        { key: 'product_origin_id', label: 'Item ID' },
+        {
+            key: 'item_name',
+            label: 'Item',
+            render: (item) => value(item.item_name),
+        },
+        { key: 'product_model_id', label: 'Model ID' },
+        {
+            key: 'model_name',
+            label: 'Model',
+            render: (item) => value(item.model_name),
+        },
+        {
+            key: 'original_price',
+            label: 'Harga Normal',
+            render: (item) =>
+                value(item.model_original_price ?? item.item_original_price),
+        },
+        {
+            key: 'promotion_price',
+            label: 'Harga Promo',
+            render: (item) =>
+                value(item.model_promotion_price ?? item.item_promotion_price),
+        },
+        {
+            key: 'promotion_stock',
+            label: 'Stok Promo',
+            render: (item) =>
+                value(item.model_promotion_stock ?? item.item_promotion_stock),
+        },
+        {
+            key: 'purchase_limit',
+            label: 'Batas Beli',
+            render: (item) => value(item.purchase_limit),
+        },
+    ];
+
     return (
         <AuthenticatedLayout
             header={
@@ -63,71 +102,12 @@ export default function ProductDiscountDetail({ discount }) {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto rounded-lg bg-white shadow-sm dark:bg-gray-800">
-                        <table className="w-full text-left text-sm dark:text-gray-100">
-                            <thead className="bg-gray-50 text-xs uppercase text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-                                <tr>
-                                    <th className="px-4 py-3">Item ID</th>
-                                    <th className="px-4 py-3">Item</th>
-                                    <th className="px-4 py-3">Model ID</th>
-                                    <th className="px-4 py-3">Model</th>
-                                    <th className="px-4 py-3">Harga Normal</th>
-                                    <th className="px-4 py-3">Harga Promo</th>
-                                    <th className="px-4 py-3">Stok Promo</th>
-                                    <th className="px-4 py-3">Batas Beli</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                                {discount.items.length ? (
-                                    discount.items.map((item) => (
-                                        <tr key={item.id}>
-                                            <td className="px-4 py-3">
-                                                {item.product_origin_id}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {value(item.item_name)}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {item.product_model_id}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {value(item.model_name)}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {value(
-                                                    item.model_original_price ??
-                                                        item.item_original_price,
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {value(
-                                                    item.model_promotion_price ??
-                                                        item.item_promotion_price,
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {value(
-                                                    item.model_promotion_stock ??
-                                                        item.item_promotion_stock,
-                                                )}
-                                            </td>
-                                            <td className="px-4 py-3">
-                                                {value(item.purchase_limit)}
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
-                                    <tr>
-                                        <td
-                                            colSpan="8"
-                                            className="px-4 py-6 text-center text-gray-400"
-                                        >
-                                            Tidak ada item
-                                        </td>
-                                    </tr>
-                                )}
-                            </tbody>
-                        </table>
+                    <div className="rounded-lg bg-white shadow-sm dark:bg-gray-800">
+                        <DataTable
+                            columns={columns}
+                            data={items.data}
+                            pagination={items}
+                        />
                     </div>
                 </div>
             </div>

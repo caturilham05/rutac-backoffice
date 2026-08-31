@@ -201,7 +201,41 @@ test('product discount detail is shown by discount id', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Backoffice/Products/ProductDiscountDetail')
             ->where('discount.discount_id', 789)
-            ->where('discount.items.0.item_name', 'Parfum A'));
+            ->where('items.data.0.item_name', 'Parfum A')
+            ->where('items.per_page', 15));
+});
+
+test('product discount items are paginated', function () {
+    $marketplaceId = DB::table('marketplaces')->insertGetId([
+        'marketplace' => 'Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    DB::table('product_discounts')->insert([
+        'marketplace_id' => $marketplaceId,
+        'discount_id' => 789,
+        'discount_name' => 'Promo Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    foreach (range(1, 16) as $itemId) {
+        DB::table('product_discount_items')->insert([
+            'discount_id' => 789,
+            'product_origin_id' => $itemId,
+            'product_model_id' => $itemId,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('product_discounts.show', ['productDiscount' => 789, 'page' => 2]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('items.current_page', 2)
+            ->has('items.data', 1));
 });
 
 test('product discount synchronization reports Shopee errors without changing data', function () {

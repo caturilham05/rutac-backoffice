@@ -41,7 +41,8 @@ class ProductDiscountController extends Controller
     public function show(ProductDiscount $productDiscount): Response
     {
         return Inertia::render('Backoffice/Products/ProductDiscountDetail', [
-            'discount' => $productDiscount->load('items'),
+            'discount' => $productDiscount,
+            'items' => $productDiscount->items()->paginate(15),
         ]);
     }
 }
