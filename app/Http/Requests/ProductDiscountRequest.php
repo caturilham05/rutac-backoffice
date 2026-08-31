@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class ProductDiscountRequest extends FormRequest
 {
@@ -11,18 +13,23 @@ class ProductDiscountRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            //
+            'discount_name' => ['nullable', 'string', 'max:255'],
+            'status'        => ['nullable', 'string', 'max:255'],
+            'start_date'    => ['nullable', 'date'],
+            'end_date'      => ['nullable', 'date', 'after_or_equal:start_date'],
+            'sort'          => ['nullable', Rule::in(['discount_name', 'status', 'start_date'])],
+            'direction'     => ['nullable', Rule::in(['asc', 'desc'])],
         ];
     }
 }

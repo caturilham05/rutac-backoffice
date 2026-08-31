@@ -44,6 +44,12 @@ test('product discounts can be filtered and sorted descending', function () {
             ->where('sortDirection', 'desc'));
 });
 
+test('product discount filters reject invalid sorting', function () {
+    $this->actingAs(User::factory()->create())
+        ->get(route('product_discounts', ['sort' => 'invalid']))
+        ->assertSessionHasErrors('sort');
+});
+
 test('product discounts can be synchronized from every Shopee marketplace', function () {
     $marketplaceId = DB::table('marketplaces')->insertGetId([
         'marketplace' => 'Shopee',
