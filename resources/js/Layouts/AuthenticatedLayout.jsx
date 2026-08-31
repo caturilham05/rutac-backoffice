@@ -13,7 +13,9 @@ export default function AuthenticatedLayout({ header, children }) {
         useState(false);
 
     const isProductsActive =
-        route().current('products') || route().current('product_category');
+        route().current('products') ||
+        route().current('product_category') ||
+        route().current('product_discounts');
     const isOrdersActive = route().current('order');
     const isPurchaseActive = route().current('purchases.list');
     const isConfigurationActive =
@@ -67,6 +69,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 href={route('product_category')}
                                             >
                                                 Product Category
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={route('product_discounts')}
+                                            >
+                                                Product Discount
                                             </Dropdown.Link>
                                         </Dropdown.Content>
                                     </Dropdown>
@@ -318,6 +325,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={route().current('product_category')}
                                 >
                                     Product Category
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('product_discounts')}
+                                    active={route().current(
+                                        'product_discounts',
+                                    )}
+                                >
+                                    Product Discount
                                 </ResponsiveNavLink>
                             </div>
                         </details>

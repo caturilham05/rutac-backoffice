@@ -5,6 +5,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarketplaceController;
 use App\Http\Controllers\ProductCategoryController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductDiscountController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShopeeAdsController;
@@ -88,6 +89,8 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function(){
     });
 
     Route::prefix('products')->group(function() {
+        Route::get('product-discounts', [ProductDiscountController::class, 'index'])->name('product_discounts');
+
         Route::controller(ProductController::class)->group(function() {
             Route::get('product-list', 'index')->name('products');
             Route::get('product-list/create', 'create')->name('products.create');
