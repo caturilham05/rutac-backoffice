@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Marketplace;
 use App\Models\ProductDiscount;
+use App\Services\Shopee\ShopeeServices;
+use Carbon\Carbon;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -39,5 +43,55 @@ class ProductDiscountController extends Controller
             'sortColumn' => $sort,
             'sortDirection' => $direction,
         ]);
+    }
+
+    public function sync(ShopeeServices $shopee): RedirectResponse
+    {
+        try {
+            $synced = 0;
+
+            Marketplace::query()
+                ->where('marketplace', 'Shopee')
+                ->whereNotNull(['marketplace_id', 'shop_id', 'access_token', 'app_key'])
+                ->each(function (Marketplace $marketplace) use ($shopee, &$synced): void {
+                    $page = 1;
+
+                    do {
+                        $response = $shopee->getDiscountList(
+                            $marketplace->access_token,
+                            $marketplace->app_key,
+                            $marketplace->marketplace_id,
+                            $marketplace->shop_id,
+                            'all',
+                            $page,
+                        );
+
+                        foreach ($response['response']['discount_list'] ?? [] as $discount) {
+                            ProductDiscount::query()->updateOrCreate(
+                                [
+                                    'marketplace_id' => $marketplace->id,
+                                    'discount_id' => $discount['discount_id'],
+                                ],
+                                [
+                                    'discount_name' => $discount['discount_name'],
+                                    'start_date' => Carbon::createFromTimestamp($discount['start_time']),
+                                    'end_date' => Carbon::createFromTimestamp($discount['end_time']),
+                                    'status' => $discount['status'],
+                                ],
+                            );
+
+                            $synced++;
+                        }
+
+                        $page++;
+                    } while ($response['response']['more'] ?? false);
+                });
+
+            return back()->with('success', "Berhasil menyinkronkan {$synced} product discount Shopee.");
+        } catch (\Throwable $exception) {
+            report($exception);
+
+            return back()->with('error', 'Gagal menyinkronkan product discount Shopee: '.$exception->getMessage());
+        }
     }
 }

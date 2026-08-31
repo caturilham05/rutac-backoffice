@@ -1,6 +1,8 @@
 import DataTable from '@/Components/DataTable';
+import FlashMessage from '@/Components/FlashMessage';
+import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, useForm, usePage } from '@inertiajs/react';
 
 export default function ProductDiscount({
     discounts,
@@ -8,9 +10,18 @@ export default function ProductDiscount({
     sortColumn,
     sortDirection,
 }) {
+    const { flash } = usePage().props;
+    const { post, processing } = useForm({});
     const formatDate = (date) => date?.replace('T', ' ').slice(0, 16) || '-';
 
+    const syncDiscounts = () => {
+        if (confirm('Sinkronkan seluruh product discount dari Shopee?')) {
+            post(route('product_discounts.sync'), { preserveScroll: true });
+        }
+    };
+
     const columns = [
+        { key: 'discount_id', label: 'Discount ID' },
         { key: 'discount_name', label: 'Discount Name' },
         { key: 'status', label: 'Status', render: (row) => row.status || '-' },
         {
@@ -44,8 +55,23 @@ export default function ProductDiscount({
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                    <div className="overflow-hidden bg-white shadow-sm sm:rounded-lg dark:bg-gray-800">
+                    <FlashMessage message={flash.success} />
+                    <FlashMessage message={flash.error} type="error" />
+
+                    <div className="overflow-hidden bg-white shadow-sm dark:bg-gray-800 sm:rounded-lg">
                         <div className="p-6 text-gray-900 dark:text-gray-100">
+                            <div className="mb-6 flex justify-end">
+                                <PrimaryButton
+                                    type="button"
+                                    disabled={processing}
+                                    onClick={syncDiscounts}
+                                >
+                                    {processing
+                                        ? 'Menyinkronkan...'
+                                        : 'Sinkron Product Discount'}
+                                </PrimaryButton>
+                            </div>
+
                             <DataTable
                                 columns={columns}
                                 data={discounts.data}
