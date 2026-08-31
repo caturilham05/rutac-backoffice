@@ -50,6 +50,30 @@ test('product discount filters reject invalid sorting', function () {
         ->assertSessionHasErrors('sort');
 });
 
+test('Shopee discount endpoint fetches the configured discount', function () {
+    $marketplaceId = DB::table('marketplaces')->insertGetId([
+        'marketplace' => 'Shopee',
+        'marketplace_id' => 123,
+        'shop_id' => 456,
+        'access_token' => 'access-token',
+        'app_key' => 'app-key',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $shopee = Mockery::mock(ShopeeServices::class);
+    $shopee->shouldReceive('getDiscount')
+        ->once()
+        ->with('access-token', 'app-key', 123, 456, 493849005015225)
+        ->andReturn(['response' => ['discount_id' => 493849005015225]]);
+    $this->app->instance(ShopeeServices::class, $shopee);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('shopee.discount', $marketplaceId))
+        ->assertOk()
+        ->assertJsonPath('response.discount_id', 493849005015225);
+});
+
 test('product discounts can be synchronized from every Shopee marketplace', function () {
     $marketplaceId = DB::table('marketplaces')->insertGetId([
         'marketplace' => 'Shopee',
