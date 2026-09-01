@@ -14,7 +14,7 @@ class ProductDiscountController extends Controller
     public function index(ProductDiscountRequest $request): Response
     {
         $filters = $request->validated();
-        $sort = $filters['sort'] ?? 'discount_name';
+        $sort = $filters['sort'] ?? 'start_date';
         $direction = $filters['direction'] ?? 'desc';
 
         return Inertia::render('Backoffice/Products/ProductDiscount', [

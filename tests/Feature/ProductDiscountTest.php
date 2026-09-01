@@ -32,8 +32,6 @@ test('product discounts can be filtered and sorted descending', function () {
             'discount_name' => 'Promo',
             'status' => 'ongoing',
             'start_date' => '2026-09-01',
-            'sort' => 'start_date',
-            'direction' => 'desc',
         ]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
