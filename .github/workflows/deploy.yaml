@@ -40,7 +40,9 @@ jobs:
             composer install \
               --no-dev \
               --optimize-autoloader \
-              --no-interaction
+              --no-interaction \
+              --no-scripts
+
             php artisan optimize:clear
             php artisan migrate --force
             php artisan optimize
