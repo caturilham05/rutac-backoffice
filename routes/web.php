@@ -62,34 +62,6 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
         Route::post('/{marketplace}/order-sync', 'orderSync')->name('shopee.order.get');
     });
 
-    Route::get('/{marketplace}/shopee-discounts', function (Marketplace $marketplace, Request $request, ShopeeServices $shopee) {
-        $filters = $request->validate([
-            'discount_status' => ['sometimes', 'in:upcoming,ongoing,expired'],
-            'page_no' => ['sometimes', 'integer', 'min:1'],
-            'page_size' => ['sometimes', 'integer', 'between:1,100'],
-        ]);
-
-        return $shopee->getDiscountList(
-            $marketplace->access_token,
-            $marketplace->app_key,
-            $marketplace->marketplace_id,
-            $marketplace->shop_id,
-            $filters['discount_status'] ?? 'ongoing',
-            $filters['page_no'] ?? 1,
-            $filters['page_size'] ?? 100,
-        );
-    })->name('shopee.discounts');
-
-    Route::get('/{marketplace}/shopee-discount', function (Marketplace $marketplace, ShopeeServices $shopee) {
-        return $shopee->getDiscount(
-            $marketplace->access_token,
-            $marketplace->app_key,
-            $marketplace->marketplace_id,
-            $marketplace->shop_id,
-            493849005015225,
-        );
-    })->name('shopee.discount');
-
     Route::prefix('purchases')->controller(PurchaseController::class)->group(function () {
         Route::get('purchases-list', 'index')->name('purchases.list');
         Route::get('purchases-create', 'create')->name('purchases.create');
