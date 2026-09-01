@@ -383,9 +383,7 @@ export default function DataTable({
 
             {pagination && (
                 <div className="flex items-center justify-between border-t border-gray-200 bg-gray-50 p-3 text-sm dark:border-gray-700 dark:bg-gray-800/50">
-                    <div className="text-gray-500">
-                        Total {data.length}
-                    </div>
+                    <div className="text-gray-500">Total {data.length}</div>
 
                     <div className="text-gray-500">
                         Page {pagination.current_page} of {pagination.last_page}
@@ -420,6 +418,7 @@ export default function DataTable({
 
                             return (
                                 <button
+                                    type="button"
                                     key={i}
                                     onClick={() =>
                                         router.visit(link.url, {

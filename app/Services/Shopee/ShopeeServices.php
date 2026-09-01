@@ -116,6 +116,34 @@ class ShopeeServices
         return $response;
     }
 
+    public function updateDiscountItems(string $accessToken, int $shopId, int $discountId, array $items): array
+    {
+        $path = '/api/v2/discount/update_discount_item';
+        $sign = hash_hmac('sha256', $this->partnerId.$path.$this->time.$accessToken.$shopId, $this->partnerKey);
+        $url = $this->host.$path.'?'.http_build_query([
+            'partner_id' => $this->partnerId,
+            'timestamp' => $this->time,
+            'sign' => $sign,
+            'access_token' => $accessToken,
+            'shop_id' => $shopId,
+        ]);
+
+        $response = Http::connectTimeout(3)->timeout(10)->post($url, [
+            'discount_id' => $discountId,
+            'item_list' => $items,
+        ])->throw()->json();
+
+        if (! empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        if (! empty($response['response']['error_list'])) {
+            throw new \Exception(collect($response['response']['error_list'])->pluck('fail_message')->implode(', '));
+        }
+
+        return $response;
+    }
+
     public function getProducts(string $accessToken, int $shopId, int $offset = 0, int $pageSize = 50)
     {
         $timestamp = $this->time;

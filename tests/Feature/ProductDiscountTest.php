@@ -232,6 +232,109 @@ test('product discount items are paginated', function () {
             ->has('items.data', 1));
 });
 
+test('product discount items can be edited', function () {
+    $marketplaceId = DB::table('marketplaces')->insertGetId([
+        'marketplace' => 'Shopee',
+        'shop_id' => 456,
+        'access_token' => 'access-token',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    DB::table('product_discounts')->insert([
+        'marketplace_id' => $marketplaceId,
+        'discount_id' => 789,
+        'discount_name' => 'Promo Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    $itemId = DB::table('product_discount_items')->insertGetId([
+        'discount_id' => 789,
+        'product_origin_id' => 1001,
+        'product_model_id' => 0,
+        'item_name' => 'Parfum A',
+        'item_original_price' => 150000,
+        'item_promotion_price' => 120000,
+        'purchase_limit' => 2,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->get(route('product_discounts.edit', 789))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Backoffice/Products/ProductDiscountDetail')
+            ->where('editing', true)
+            ->where('items.data.0.id', $itemId));
+
+    $shopee = Mockery::mock(ShopeeServices::class);
+    $shopee->shouldReceive('updateDiscountItems')
+        ->once()
+        ->with('access-token', 456, 789, [[
+            'item_id' => 1001,
+            'purchase_limit' => 3,
+            'item_promotion_price' => 110000.0,
+        ]])
+        ->andReturn(['response' => ['count' => 1, 'error_list' => []]]);
+    $this->app->instance(ShopeeServices::class, $shopee);
+
+    $this->put(route('product_discounts.update', 789), [
+        'items' => [[
+            'id' => $itemId,
+            'promotion_price' => 110000,
+            'purchase_limit' => 3,
+        ]],
+    ])->assertRedirect(route('product_discounts.show', 789))
+        ->assertSessionHas('success', 'Discount item berhasil diperbarui.');
+
+    $this->assertDatabaseHas('product_discount_items', [
+        'id' => $itemId,
+        'item_promotion_price' => 110000,
+        'purchase_limit' => 3,
+    ]);
+});
+
+test('product discount item price cannot exceed its normal price', function () {
+    $marketplaceId = DB::table('marketplaces')->insertGetId([
+        'marketplace' => 'Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    DB::table('product_discounts')->insert([
+        'marketplace_id' => $marketplaceId,
+        'discount_id' => 789,
+        'discount_name' => 'Promo Shopee',
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+    $itemId = DB::table('product_discount_items')->insertGetId([
+        'discount_id' => 789,
+        'product_origin_id' => 1001,
+        'product_model_id' => 0,
+        'item_original_price' => 150000,
+        'item_promotion_price' => 120000,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    $this->actingAs(User::factory()->create())
+        ->put(route('product_discounts.update', 789), [
+            'items' => [[
+                'id' => $itemId,
+                'promotion_price' => 160000,
+                'purchase_limit' => 0,
+            ]],
+        ])
+        ->assertSessionHasErrors([
+            'items.0.promotion_price' => 'Harga promo tidak boleh melebihi harga normal.',
+        ]);
+
+    $this->assertDatabaseHas('product_discount_items', [
+        'id' => $itemId,
+        'item_promotion_price' => 120000,
+    ]);
+});
+
 test('product discount synchronization reports Shopee errors without changing data', function () {
     DB::table('marketplaces')->insert([
         'marketplace' => 'Shopee',
