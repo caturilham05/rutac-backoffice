@@ -53,10 +53,8 @@ test('product discount filters reject invalid sorting', function () {
 test('Shopee discount endpoint fetches the configured discount', function () {
     $marketplaceId = DB::table('marketplaces')->insertGetId([
         'marketplace' => 'Shopee',
-        'marketplace_id' => 123,
         'shop_id' => 456,
         'access_token' => 'access-token',
-        'app_key' => 'app-key',
         'created_at' => now(),
         'updated_at' => now(),
     ]);
@@ -64,7 +62,7 @@ test('Shopee discount endpoint fetches the configured discount', function () {
     $shopee = Mockery::mock(ShopeeServices::class);
     $shopee->shouldReceive('getDiscount')
         ->once()
-        ->with('access-token', 'app-key', 123, 456, 493849005015225)
+        ->with('access-token', 456, 493849005015225)
         ->andReturn(['response' => ['discount_id' => 493849005015225]]);
     $this->app->instance(ShopeeServices::class, $shopee);
 
@@ -77,10 +75,8 @@ test('Shopee discount endpoint fetches the configured discount', function () {
 test('product discounts can be synchronized from every Shopee marketplace', function () {
     $marketplaceId = DB::table('marketplaces')->insertGetId([
         'marketplace' => 'Shopee',
-        'marketplace_id' => 123,
         'shop_id' => 456,
         'access_token' => 'access-token',
-        'app_key' => 'app-key',
         'created_at' => now(),
         'updated_at' => now(),
     ]);
@@ -88,7 +84,7 @@ test('product discounts can be synchronized from every Shopee marketplace', func
     $shopee = Mockery::mock(ShopeeServices::class);
     $shopee->shouldReceive('getDiscountList')
         ->once()
-        ->with('access-token', 'app-key', 123, 456, 'all', 1)
+        ->with('access-token', 456, 'all', 1)
         ->andReturn([
             'response' => [
                 'discount_list' => [[
@@ -99,7 +95,7 @@ test('product discounts can be synchronized from every Shopee marketplace', func
         ]);
     $shopee->shouldReceive('getDiscount')
         ->once()
-        ->with('access-token', 'app-key', 123, 456, 789)
+        ->with('access-token', 456, 789)
         ->andReturn([
             'response' => [
                 'discount_id' => 789,
@@ -124,7 +120,7 @@ test('product discounts can be synchronized from every Shopee marketplace', func
         ]);
     $shopee->shouldReceive('getDiscountList')
         ->once()
-        ->with('access-token', 'app-key', 123, 456, 'all', 2)
+        ->with('access-token', 456, 'all', 2)
         ->andReturn([
             'response' => [
                 'discount_list' => [[
@@ -135,7 +131,7 @@ test('product discounts can be synchronized from every Shopee marketplace', func
         ]);
     $shopee->shouldReceive('getDiscount')
         ->once()
-        ->with('access-token', 'app-key', 123, 456, 790)
+        ->with('access-token', 456, 790)
         ->andReturn([
             'response' => [
                 'discount_id' => 790,
@@ -241,10 +237,8 @@ test('product discount items are paginated', function () {
 test('product discount synchronization reports Shopee errors without changing data', function () {
     DB::table('marketplaces')->insert([
         'marketplace' => 'Shopee',
-        'marketplace_id' => 123,
         'shop_id' => 456,
         'access_token' => 'access-token',
-        'app_key' => 'app-key',
         'created_at' => now(),
         'updated_at' => now(),
     ]);

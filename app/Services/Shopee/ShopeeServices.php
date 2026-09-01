@@ -2,7 +2,6 @@
 
 namespace App\Services\Shopee;
 
-use App\Models\Marketplace;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -10,35 +9,37 @@ class ShopeeServices
 {
     protected $signature;
 
-    // protected $partnerId;
-    // protected $partnerKey;
     protected $host;
+
+    protected $partnerId;
+
+    protected $partnerKey;
 
     protected $time;
 
     public function __construct(ShopeeSignature $signature)
     {
         $this->signature = $signature;
-        $this->host = env('SHOPEE_HOST');
+        $this->host = config('services.shopee.host');
+        $this->partnerId = config('services.shopee.partner_id');
+        $this->partnerKey = config('services.shopee.partner_key');
         $this->time = time();
     }
 
-    public function getTokenShopLevel(?string $code, int $shopId, int $id)
+    public function getTokenShopLevel(?string $code, int $shopId)
     {
         try {
             $timestamp = $this->time;
             $path = '/api/v2/auth/token/get';
-            $marketplace = Marketplace::findOrFail($id);
-
             $bodyArr = [
                 'code' => $code,
                 'shop_id' => intval($shopId),
-                'partner_id' => intval($marketplace->marketplace_id),
+                'partner_id' => intval($this->partnerId),
             ];
 
             $bodyJson = json_encode($bodyArr);
-            $sign = $this->signature->make($marketplace->marketplace_id, $marketplace->app_key, $path, $timestamp);
-            $url = "{$this->host}{$path}"."?partner_id={$marketplace->marketplace_id}&timestamp={$timestamp}&sign={$sign}";
+            $sign = $this->signature->make($this->partnerId, $this->partnerKey, $path, $timestamp);
+            $url = "{$this->host}{$path}"."?partner_id={$this->partnerId}&timestamp={$timestamp}&sign={$sign}";
 
             $response = Http::withHeaders([
                 'Content-Type' => 'application/json',
@@ -50,15 +51,15 @@ class ShopeeServices
         }
     }
 
-    public function getAccessTokenShopLevel(int $marketplace_id, int $shop_id, string $app_key, string $refres_token)
+    public function getAccessTokenShopLevel(int $shop_id, string $refres_token)
     {
         $path = '/api/v2/auth/access_token/get';
         $timestamp = $this->time;
-        $sign = $this->signature->make($marketplace_id, $app_key, $path, $timestamp);
-        $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s', $this->host, $path, $marketplace_id, $timestamp, $sign);
+        $sign = $this->signature->make($this->partnerId, $this->partnerKey, $path, $timestamp);
+        $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s', $this->host, $path, $this->partnerId, $timestamp, $sign);
         $body = [
             'shop_id' => $shop_id,
-            'partner_id' => $marketplace_id,
+            'partner_id' => $this->partnerId,
             'refresh_token' => $refres_token,
         ];
 
@@ -71,13 +72,13 @@ class ShopeeServices
         return $response->json();
     }
 
-    public function getDiscountList(string $accessToken, string $app_key, int $marketplace_id, int $shopId, string $discountStatus = 'ongoing', int $pageNo = 1, int $pageSize = 100)
+    public function getDiscountList(string $accessToken, int $shopId, string $discountStatus = 'ongoing', int $pageNo = 1, int $pageSize = 100)
     {
         $path = '/api/v2/discount/get_discount_list';
-        $sign = hash_hmac('sha256', $marketplace_id.$path.$this->time.$accessToken.$shopId, $app_key);
+        $sign = hash_hmac('sha256', $this->partnerId.$path.$this->time.$accessToken.$shopId, $this->partnerKey);
 
         $response = Http::get($this->host.$path, [
-            'partner_id' => $marketplace_id,
+            'partner_id' => $this->partnerId,
             'timestamp' => $this->time,
             'sign' => $sign,
             'access_token' => $accessToken,
@@ -94,18 +95,18 @@ class ShopeeServices
         return $response;
     }
 
-    public function getDiscount(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $discountId): array
+    public function getDiscount(string $accessToken, int $shopId, int $discountId): array
     {
         $path = '/api/v2/discount/get_discount';
-        $sign = hash_hmac('sha256', $marketplace_id.$path.$this->time.$accessToken.$shopId, $app_key);
+        $sign = hash_hmac('sha256', $this->partnerId.$path.$this->time.$accessToken.$shopId, $this->partnerKey);
 
         $response = Http::connectTimeout(3)->timeout(10)->get($this->host.$path, [
-            'partner_id'   => $marketplace_id,
-            'timestamp'    => $this->time,
-            'sign'         => $sign,
+            'partner_id' => $this->partnerId,
+            'timestamp' => $this->time,
+            'sign' => $sign,
             'access_token' => $accessToken,
-            'shop_id'      => $shopId,
-            'discount_id'  => $discountId,
+            'shop_id' => $shopId,
+            'discount_id' => $discountId,
         ])->throw()->json();
 
         if (! empty($response['error'])) {
@@ -115,16 +116,16 @@ class ShopeeServices
         return $response;
     }
 
-    public function getProducts(string $accessToken, string $app_key, int $marketplace_id, int $shopId, int $offset = 0, int $pageSize = 50)
+    public function getProducts(string $accessToken, int $shopId, int $offset = 0, int $pageSize = 50)
     {
         $timestamp = $this->time;
         $path = '/api/v2/product/get_item_list';
-        $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$timestamp.$accessToken.$shopId;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_status=NORMAL&page_size=%s&offset=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $timestamp,
             $sign,
             $accessToken,
@@ -150,12 +151,12 @@ class ShopeeServices
         $item_id_list_encode = urlencode('['.$item_id_list.']');
 
         $path = '/api/v2/product/get_item_base_info';
-        $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$timestamp.$accessToken.$shopId;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id_list=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $timestamp,
             $sign,
             $accessToken,
@@ -172,15 +173,15 @@ class ShopeeServices
         }
 
         $pathModel = '/api/v2/product/get_model_list';
-        $baseStringModel = $marketplace_id.$pathModel.$timestamp.$accessToken.$shopId;
-        $signModel = hash_hmac('sha256', $baseStringModel, $app_key);
+        $baseStringModel = $this->partnerId.$pathModel.$timestamp.$accessToken.$shopId;
+        $signModel = hash_hmac('sha256', $baseStringModel, $this->partnerKey);
 
         $http = Http::withHeaders(['Content-Type' => 'application/json']);
         foreach ($response_item_info['response']['item_list'] as &$value) {
             $urlModel = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&item_id=%s',
                 $this->host,
                 $pathModel,
-                $marketplace_id,
+                $this->partnerId,
                 $timestamp,
                 $signModel,
                 $accessToken,
@@ -199,16 +200,16 @@ class ShopeeServices
         return $response_item_info;
     }
 
-    private function getProductLevelCampaignIdList(string $accessToken, string $app_key, int $marketplace_id, int $shopId)
+    private function getProductLevelCampaignIdList(string $accessToken, int $shopId)
     {
         $timestamp = $this->time;
         $path = '/api/v2/ads/get_product_level_campaign_id_list';
-        $baseString = $marketplace_id.$path.$timestamp.$accessToken.$shopId;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$timestamp.$accessToken.$shopId;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $timestamp,
             $sign,
             $accessToken,
@@ -222,21 +223,21 @@ class ShopeeServices
         return $response;
     }
 
-    public function getProductLevelCampaignSettingInfo(string $accessToken, string $app_key, int $marketplace_id, int $shopId)
+    public function getProductLevelCampaignSettingInfo(string $accessToken, int $shopId)
     {
-        $ads_list = $this->getProductLevelCampaignIdList($accessToken, $app_key, $marketplace_id, $shopId);
+        $ads_list = $this->getProductLevelCampaignIdList($accessToken, $shopId);
         if (! empty($ads_list['error'])) {
             throw new \Exception($ads_list['message']);
         }
         $campaign_ids = array_column($ads_list['response']['campaign_list'], 'campaign_id');
 
         $path = '/api/v2/ads/get_product_level_campaign_setting_info';
-        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shopId;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shopId;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&info_type_list=1,2,3,4&campaign_id_list=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $this->time,
             $sign,
             $accessToken,
@@ -260,15 +261,15 @@ class ShopeeServices
         return $campaign_ongoing;
     }
 
-    public function editManualProductAds(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, array $data)
+    public function editManualProductAds(string $accessToken, int $shop_id, array $data)
     {
         $path = '/api/v2/ads/edit_manual_product_ads';
-        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $this->time,
             $sign,
             $accessToken,
@@ -290,15 +291,15 @@ class ShopeeServices
         return $response;
     }
 
-    public function getOrder(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $time_from, string $time_to, $page_size = 100, ?string $cursor = null)
+    public function getOrder(string $accessToken, int $shop_id, string $time_from, string $time_to, $page_size = 100, ?string $cursor = null)
     {
         $path = '/api/v2/order/get_order_list';
-        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&time_range_field=create_time&time_from=%s&time_to=%s&page_size=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $this->time,
             $sign,
             $accessToken,
@@ -323,15 +324,15 @@ class ShopeeServices
         return $response;
     }
 
-    public function getOrderDetail(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $order_sn)
+    public function getOrderDetail(string $accessToken, int $shop_id, string $order_sn)
     {
         $path = '/api/v2/order/get_order_detail';
-        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn_list=%s&response_optional_fields=buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee ,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper, dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,buyer_username,invoice_data,order_chargeable_weight_gram,return_request_due_date,edt,payment_info',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $this->time,
             $sign,
             $accessToken,
@@ -350,17 +351,17 @@ class ShopeeServices
         return $response;
     }
 
-    public function getEscrowDetail(string $accessToken, string $app_key, int $marketplace_id, int $shop_id, string $order_sn)
+    public function getEscrowDetail(string $accessToken, int $shop_id, string $order_sn)
     {
         // diskon pembeli -> shopee_voucher + seller_voucher - shipping_fee - buyer_service_fee
         // biaya penjual -> commision_fee = biaya admin + seller_order_processing_fee = biaya proses pesanan + service_fee = biaya layanan (gratis ongkir extra + biaya layanan) + delivery_seller_protection_fee_premium_amount = premi + voucher_from_seller = voucher penjual
         $path = '/api/v2/payment/get_escrow_detail';
-        $baseString = $marketplace_id.$path.$this->time.$accessToken.$shop_id;
-        $sign = hash_hmac('sha256', $baseString, $app_key);
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
         $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s',
             $this->host,
             $path,
-            $marketplace_id,
+            $this->partnerId,
             $this->time,
             $sign,
             $accessToken,

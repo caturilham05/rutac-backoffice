@@ -43,15 +43,13 @@ class ProductDiscount extends Model
 
         Marketplace::query()
             ->where('marketplace', 'Shopee')
-            ->whereNotNull(['marketplace_id', 'shop_id', 'access_token', 'app_key'])
+            ->whereNotNull(['shop_id', 'access_token'])
             ->each(function (Marketplace $marketplace) use ($shopee, &$synced): void {
                 $page = 1;
 
                 do {
                     $response = $shopee->getDiscountList(
                         $marketplace->access_token,
-                        $marketplace->app_key,
-                        $marketplace->marketplace_id,
                         $marketplace->shop_id,
                         'all',
                         $page,
@@ -60,8 +58,6 @@ class ProductDiscount extends Model
                     foreach ($response['response']['discount_list'] ?? [] as $discount) {
                         $detail = $shopee->getDiscount(
                             $marketplace->access_token,
-                            $marketplace->app_key,
-                            $marketplace->marketplace_id,
                             $marketplace->shop_id,
                             $discount['discount_id'],
                         );

@@ -97,12 +97,6 @@ function Marketplace() {
 
     const columns = [
         {
-            key   : 'marketplace_id',
-            label : 'Marketplace Id Origin',
-            // render: (row) => {showAllData[row.id] ? `${row.marketplace_id}` : '*********'},
-            render: (row) => displayValue(row.id, row.marketplace_id),
-        },
-        {
             key   : 'shop_id',
             label : 'Shop Id',
             render: (row) => displayValue(row.id, row.shop_id),
@@ -141,11 +135,6 @@ function Marketplace() {
             key   : 'refresh_token_expires_at',
             label : 'Refresh Token Expired At',
             render: (row) => `${row.refresh_token_expires_at ?? ''}`,
-        },
-        {
-            key   : 'app_key',
-            label : 'App Key',
-            render: (row) => displayValue(row.id, row.app_key),
         },
         {
             key   : 'app_secret',

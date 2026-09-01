@@ -6,24 +6,23 @@ use Illuminate\Database\Eloquent\Model;
 
 class Marketplace extends Model
 {
-    protected $table    = 'marketplaces';
+    protected $table = 'marketplaces';
+
     protected $fillable = [
         'marketplace',
         'store',
-        'marketplace_id',
         'shop_id',
         'access_token',
         'refresh_token',
         'chiper',
         'token_expires_at',
         'refresh_token_expires_at',
-        'app_key',
         'app_secret',
     ];
 
     public static function marketplaceUpsert($data = [])
     {
-        if (!empty($data['id'])) {
+        if (! empty($data['id'])) {
             $condition = [
                 'id' => $data['id'],
             ];
@@ -38,13 +37,24 @@ class Marketplace extends Model
 
     public static function marketplacePagination(int $per_page = 15, array $filters = [], ?string $sort = null, string $direction = 'asc')
     {
-        $query = self::query();
+        $query = self::query()->select([
+            'id',
+            'marketplace',
+            'store',
+            'shop_id',
+            'access_token',
+            'refresh_token',
+            'chiper',
+            'token_expires_at',
+            'refresh_token_expires_at',
+            'app_secret',
+        ]);
 
-        if (!empty($filters['marketplace'])) {
+        if (! empty($filters['marketplace'])) {
             $query->where('marketplace', $filters['marketplace']);
         }
 
-        if (!empty($filters['store'])) {
+        if (! empty($filters['store'])) {
             $query->where('store', $filters['store']);
         }
 
@@ -59,7 +69,7 @@ class Marketplace extends Model
 
     public static function marketplaceOptions(string $column): array
     {
-        if (!in_array($column, ['marketplace', 'store'])) {
+        if (! in_array($column, ['marketplace', 'store'])) {
             return [];
         }
 
