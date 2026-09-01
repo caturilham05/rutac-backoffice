@@ -32,7 +32,6 @@ jobs:
               echo "File .env.production.encrypted tidak ditemukan"
               exit 1
             }
-
             php artisan env:decrypt --env=production --force
             mv -f .env.production .env
 
