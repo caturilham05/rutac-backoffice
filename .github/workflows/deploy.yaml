@@ -27,7 +27,15 @@ jobs:
             git checkout .
             git clean -df
             git pull
-            php artisan env:decrypt --force
+
+            test -f .env.production.encrypted || {
+              echo "File .env.production.encrypted tidak ditemukan"
+              exit 1
+            }
+
+            php artisan env:decrypt --env=production --force
+            mv -f .env.production .env
+
             chmod 600 .env
             composer install \
               --no-dev \
