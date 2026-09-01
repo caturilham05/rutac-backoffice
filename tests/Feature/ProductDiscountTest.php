@@ -272,7 +272,7 @@ test('product discount items can be edited', function () {
         ->once()
         ->with('access-token', 456, 789, [[
             'item_id' => 1001,
-            'purchase_limit' => 3,
+            'purchase_limit' => 2,
             'item_promotion_price' => 110000.0,
         ]])
         ->andReturn(['response' => ['count' => 1, 'error_list' => []]]);
@@ -282,7 +282,6 @@ test('product discount items can be edited', function () {
         'items' => [[
             'id' => $itemId,
             'promotion_price' => 110000,
-            'purchase_limit' => 3,
         ]],
     ])->assertRedirect(route('product_discounts.show', 789))
         ->assertSessionHas('success', 'Discount item berhasil diperbarui.');
@@ -290,7 +289,7 @@ test('product discount items can be edited', function () {
     $this->assertDatabaseHas('product_discount_items', [
         'id' => $itemId,
         'item_promotion_price' => 110000,
-        'purchase_limit' => 3,
+        'purchase_limit' => 2,
     ]);
 });
 
@@ -322,7 +321,6 @@ test('product discount item price cannot exceed its normal price', function () {
             'items' => [[
                 'id' => $itemId,
                 'promotion_price' => 160000,
-                'purchase_limit' => 0,
             ]],
         ])
         ->assertSessionHasErrors([

@@ -17,44 +17,36 @@ export default function ProductDiscountDetail({
             id: item.id,
             promotion_price:
                 item.model_promotion_price ?? item.item_promotion_price ?? '',
-            purchase_limit: item.purchase_limit ?? 0,
         })),
     });
 
-    const updateItem = (id, field, value, productOriginId = null) => {
+    const updateItem = (id, value) => {
         setData(
             'items',
-            data.items.map((item, index) =>
-                item.id === id ||
-                (field === 'purchase_limit' &&
-                    items.data[index].product_origin_id === productOriginId)
-                    ? { ...item, [field]: value }
-                    : item,
+            data.items.map((item) =>
+                item.id === id ? { ...item, promotion_price: value } : item,
             ),
         );
     };
 
-    const input = (item, field, productOriginId = null) => {
+    const promotionPriceInput = (item) => {
         const index = data.items.findIndex((row) => row.id === item.id);
 
         return (
             <div className="min-w-32">
                 <input
                     type="number"
-                    min={field === 'purchase_limit' ? 0 : 0.01}
-                    step={field === 'purchase_limit' ? 1 : 0.01}
-                    value={data.items[index][field]}
+                    min="0.01"
+                    step="0.01"
+                    value={data.items[index].promotion_price}
                     onChange={(event) =>
-                        updateItem(
-                            item.id,
-                            field,
-                            event.target.value,
-                            productOriginId,
-                        )
+                        updateItem(item.id, event.target.value)
                     }
                     className="w-full rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
                 />
-                <InputError message={errors[`items.${index}.${field}`]} />
+                <InputError
+                    message={errors[`items.${index}.promotion_price`]}
+                />
             </div>
         );
     };
@@ -83,7 +75,7 @@ export default function ProductDiscountDetail({
             label: 'Harga Promo',
             render: (item) =>
                 editing
-                    ? input(item, 'promotion_price')
+                    ? promotionPriceInput(item)
                     : value(
                           item.model_promotion_price ??
                               item.item_promotion_price,
@@ -98,10 +90,7 @@ export default function ProductDiscountDetail({
         {
             key: 'purchase_limit',
             label: 'Batas Beli',
-            render: (item) =>
-                editing
-                    ? input(item, 'purchase_limit', item.product_origin_id)
-                    : value(item.purchase_limit),
+            render: (item) => value(item.purchase_limit),
         },
     ];
 

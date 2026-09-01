@@ -75,7 +75,7 @@ class ProductDiscountController extends Controller
                 $firstDiscountItem = $discountItems[$first['id']];
                 $item = [
                     'item_id' => $firstDiscountItem->product_origin_id,
-                    'purchase_limit' => (int) $first['purchase_limit'],
+                    'purchase_limit' => (int) ($firstDiscountItem->purchase_limit ?? 0),
                 ];
 
                 if ($firstDiscountItem->product_model_id === 0) {
@@ -98,7 +98,6 @@ class ProductDiscountController extends Controller
                 $discountItem = $discountItems[$item['id']];
                 $discountItem->update([
                     $discountItem->product_model_id === 0 ? 'item_promotion_price' : 'model_promotion_price' => $item['promotion_price'],
-                    'purchase_limit' => $item['purchase_limit'],
                 ]);
             }
 

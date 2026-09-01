@@ -27,7 +27,6 @@ class UpdateProductDiscountItemsRequest extends FormRequest
                 Rule::exists('product_discount_items', 'id')->where('discount_id', $discountId),
             ],
             'items.*.promotion_price' => ['required', 'numeric', 'gt:0'],
-            'items.*.purchase_limit' => ['required', 'integer', 'min:0'],
         ];
     }
 
