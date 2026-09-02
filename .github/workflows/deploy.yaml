@@ -5,9 +5,17 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
+concurrency:
+  group: erp-production-deployment
+  cancel-in-progress: false
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Deploy Via SSH
@@ -21,9 +29,34 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT }}
           envs: APP_PATH,LARAVEL_ENV_ENCRYPTION_KEY
+          command_timeout: 30m
           script: |
             set -e
             cd "$APP_PATH"
+
+            if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+              echo "Deployment dibatalkan: terdapat perubahan tracked di server"
+              git status --short
+              exit 1
+            fi
+
+            if [ ! -f vendor/autoload.php ]; then
+              composer install \
+                --no-dev \
+                --prefer-dist \
+                --optimize-autoloader \
+                --no-interaction \
+                --no-scripts
+            fi
+
+            php artisan down --retry=60 || true
+
+            restore_application() {
+              php artisan up || true
+            }
+
+            trap restore_application EXIT
+
             git checkout .
             git clean -df
             git pull
@@ -36,12 +69,33 @@ jobs:
             php artisan env:decrypt --env=production --force
             mv -f .env.production .env
 
-            chmod 600 .env
+            chmod 640 .env
+
+            unset LARAVEL_ENV_ENCRYPTION_KEY
+
+            php artisan config:clear
+
             composer install \
               --no-dev \
               --optimize-autoloader \
               --no-interaction
 
+            npm ci --no-audit --no-fund
+            npm run build
+
+            test -f public/build/manifest.json || {
+              echo "Frontend build gagal: manifest.json tidak ditemukan"
+              exit 1
+            }
+
+            chmod -R a+rX public/build
+
             php artisan optimize:clear
             php artisan migrate --force
+            php artisan storage:link
             php artisan optimize
+            php artisan horizon:terminate
+            php artisan up
+            trap - EXIT
+
+            echo "Deployment ERP berhasil"
