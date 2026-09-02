@@ -20,8 +20,10 @@ class RefreshShopeeTokens extends Command
 
         foreach ($marketplaces as $m) {
             $response = $shopee->getAccessTokenShopLevel($m->shop_id, $m->refresh_token);
-            if (! empty($response['error'])) {
-                $this->error(sprintf('Failed to refresh token for shop: %s', $response['message']));
+            if (! empty($response['error']) || ! isset($response['expire_in'], $response['access_token'], $response['refresh_token'])) {
+                $this->error(sprintf('Failed to refresh token for shop: %s', $response['message'] ?? $response['error'] ?? 'Invalid response from Shopee'));
+
+                continue;
             }
 
             $response['expire_in_datetime'] = date('Y-m-d H:i:s', time() + $response['expire_in']);

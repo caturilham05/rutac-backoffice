@@ -21,7 +21,7 @@ class ShopeeServices
     {
         $this->signature = $signature;
         $this->host = config('services.shopee.host');
-        $this->partnerId = config('services.shopee.partner_id');
+        $this->partnerId = (int) config('services.shopee.partner_id');
         $this->partnerKey = config('services.shopee.partner_key');
         $this->time = time();
     }
