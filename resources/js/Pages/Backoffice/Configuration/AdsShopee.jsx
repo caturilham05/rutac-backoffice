@@ -3,73 +3,16 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatCurrency } from '@/Utils/format';
 import { Head, router, useForm, usePage } from '@inertiajs/react';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { Pause, Play } from 'lucide-react';
+import { CircleHelp, Pause, Play } from 'lucide-react';
 import { useState } from 'react';
 
-const metricGroups = {
-    traffic: {
-        label: 'Traffic',
-        series: [
-            ['impressions', 'Impressions'],
-            ['clicks', 'Clicks'],
-        ],
-        format: (value) => Number(value).toLocaleString('id-ID'),
-    },
-    orders: {
-        label: 'Orders',
-        series: [
-            ['direct_orders', 'Direct Orders'],
-            ['broad_orders', 'Broad Orders'],
-        ],
-        format: (value) => Number(value).toLocaleString('id-ID'),
-    },
-    items: {
-        label: 'Items Sold',
-        series: [
-            ['direct_items_sold', 'Direct Items'],
-            ['broad_items_sold', 'Broad Items'],
-        ],
-        format: (value) => Number(value).toLocaleString('id-ID'),
-    },
-    value: {
-        label: 'GMV and Expense',
-        series: [
-            ['direct_gmv', 'Direct GMV'],
-            ['broad_gmv', 'Broad GMV'],
-            ['expense', 'Expense'],
-        ],
-        format: formatCurrency,
-    },
-    conversion: {
-        label: 'Conversion Rate',
-        series: [
-            ['direct_conversion_rate', 'Direct Rate'],
-            ['broad_conversion_rate', 'Broad Rate'],
-        ],
-        format: (value) =>
-            `${(Number(value) * 100).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`,
-    },
-    roas: {
-        label: 'ROAS',
-        series: [
-            ['direct_roas', 'Direct ROAS'],
-            ['broad_roas', 'Broad ROAS'],
-        ],
-        format: (value) =>
-            `${Number(value).toLocaleString('id-ID', { maximumFractionDigits: 2 })}x`,
-    },
-    ctr: {
-        label: 'CTR',
-        series: [['ctr', 'CTR']],
-        format: (value) =>
-            `${(Number(value) * 100).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`,
-    },
-    cost: {
-        label: 'Cost per Conversion',
-        series: [['cost_per_conversion', 'Cost per Conversion']],
-        format: formatCurrency,
-    },
-};
+const formatCompactCurrency = (value) =>
+    Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        notation: 'compact',
+        maximumFractionDigits: 1,
+    }).format(value);
 
 function AdsShopee() {
     const { ads, daily, flash, filters, sort, campaigns, marketplaces } =
@@ -77,7 +20,6 @@ function AdsShopee() {
     const [selectedMarketplace, setSelectedMarketplace] = useState(
         daily.marketplace_id ?? '',
     );
-    const [metricGroup, setMetricGroup] = useState('traffic');
     const { data, setData, post, processing, errors } = useForm({
         start_date: daily.start_date,
         end_date: daily.end_date,
@@ -85,7 +27,65 @@ function AdsShopee() {
     const selectedStore = marketplaces.find(
         (marketplace) => marketplace.id === Number(selectedMarketplace),
     );
-    const chart = metricGroups[metricGroup];
+    const totals = daily.metrics.reduce(
+        (result, metric) => {
+            for (const key of Object.keys(result)) {
+                result[key] += Number(metric[key]);
+            }
+
+            return result;
+        },
+        {
+            impressions: 0,
+            clicks: 0,
+            broad_orders: 0,
+            broad_items_sold: 0,
+            broad_gmv: 0,
+            expense: 0,
+        },
+    );
+    const summaryCards = [
+        {
+            label: 'Iklan Dilihat',
+            value: Intl.NumberFormat('en-US', {
+                notation: 'compact',
+                maximumFractionDigits: 1,
+            }).format(totals.impressions),
+        },
+        {
+            label: 'Jumlah Klik',
+            value: totals.clicks.toLocaleString('id-ID'),
+        },
+        {
+            label: 'Persentase Klik',
+            value: `${(totals.impressions ? (totals.clicks / totals.impressions) * 100 : 0).toLocaleString('id-ID', { maximumFractionDigits: 2 })}%`,
+        },
+        {
+            label: 'Pesanan',
+            value: totals.broad_orders.toLocaleString('id-ID'),
+        },
+        {
+            label: 'Produk Terjual',
+            value: totals.broad_items_sold.toLocaleString('id-ID'),
+        },
+        {
+            label: 'Penjualan',
+            value: formatCurrency(totals.broad_gmv),
+            color: 'border-t-blue-500 shadow-md',
+        },
+        {
+            label: 'Biaya Iklan',
+            value: formatCurrency(totals.expense),
+            color: 'border-t-orange-500 shadow-md',
+        },
+        {
+            label: 'ROAS',
+            value: (totals.expense
+                ? totals.broad_gmv / totals.expense
+                : 0
+            ).toLocaleString('id-ID', { maximumFractionDigits: 2 }),
+        },
+    ];
     const latestSyncedAt = daily.metrics.reduce(
         (latest, metric) =>
             metric.synced_at > latest ? metric.synced_at : latest,
@@ -274,68 +274,86 @@ function AdsShopee() {
 
                         <form
                             onSubmit={syncDaily}
-                            className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto] lg:items-end"
+                            className="flex flex-col gap-4 lg:flex-row lg:items-end"
                         >
-                            <div>
-                                <label
-                                    htmlFor="daily-start-date"
-                                    className="mb-1 block text-sm font-medium"
-                                >
-                                    Tanggal Mulai
-                                </label>
-                                <input
-                                    id="daily-start-date"
-                                    type="date"
-                                    value={data.start_date}
-                                    onChange={(event) =>
-                                        setData(
-                                            'start_date',
-                                            event.target.value,
-                                        )
-                                    }
-                                    onBlur={() =>
-                                        reloadDaily({
-                                            start_date: data.start_date,
-                                            end_date: data.end_date,
-                                        })
-                                    }
-                                    className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900"
-                                />
+                            <fieldset className="grid flex-1 gap-3 rounded-lg border border-gray-300 p-3 dark:border-gray-600 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                                <legend className="px-1 text-sm font-medium">
+                                    Rentang Tanggal
+                                </legend>
+                                <div>
+                                    <label
+                                        htmlFor="daily-start-date"
+                                        className="sr-only"
+                                    >
+                                        Tanggal Mulai
+                                    </label>
+                                    <input
+                                        id="daily-start-date"
+                                        type="date"
+                                        value={data.start_date}
+                                        max={data.end_date}
+                                        onChange={(event) =>
+                                            setData(
+                                                'start_date',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900"
+                                    />
+                                </div>
+                                <span className="hidden text-gray-400 sm:block">
+                                    —
+                                </span>
+                                <div>
+                                    <label
+                                        htmlFor="daily-end-date"
+                                        className="sr-only"
+                                    >
+                                        Tanggal Selesai
+                                    </label>
+                                    <input
+                                        id="daily-end-date"
+                                        type="date"
+                                        value={data.end_date}
+                                        min={data.start_date}
+                                        onChange={(event) =>
+                                            setData(
+                                                'end_date',
+                                                event.target.value,
+                                            )
+                                        }
+                                        className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900"
+                                    />
+                                </div>
                                 {errors.start_date && (
-                                    <p className="mt-1 text-sm text-red-600">
+                                    <p className="text-sm text-red-600 sm:col-span-3">
                                         {errors.start_date}
                                     </p>
                                 )}
-                            </div>
-                            <div>
-                                <label
-                                    htmlFor="daily-end-date"
-                                    className="mb-1 block text-sm font-medium"
-                                >
-                                    Tanggal Selesai
-                                </label>
-                                <input
-                                    id="daily-end-date"
-                                    type="date"
-                                    value={data.end_date}
-                                    min={data.start_date}
-                                    onChange={(event) =>
-                                        setData('end_date', event.target.value)
-                                    }
-                                    onBlur={() =>
-                                        reloadDaily({
-                                            start_date: data.start_date,
-                                            end_date: data.end_date,
-                                        })
-                                    }
-                                    className="w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900"
-                                />
                                 {errors.end_date && (
-                                    <p className="mt-1 text-sm text-red-600">
+                                    <p className="text-sm text-red-600 sm:col-span-3">
                                         {errors.end_date}
                                     </p>
                                 )}
-                            </div>
+                            </fieldset>
+                            <button
+                                type="button"
+                                disabled={
+                                    !selectedMarketplace ||
+                                    !data.start_date ||
+                                    !data.end_date ||
+                                    data.start_date > data.end_date
+                                }
+                                onClick={() =>
+                                    reloadDaily({
+                                        start_date: data.start_date,
+                                        end_date: data.end_date,
+                                    })
+                                }
+                                className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                Terapkan
+                            </button>
                             <button
                                 type="submit"
                                 disabled={!selectedMarketplace || processing}
@@ -353,38 +371,37 @@ function AdsShopee() {
                         </form>
 
                         {daily.metrics.length > 0 ? (
-                            <div className="flex flex-col gap-3">
-                                <label className="text-sm font-medium">
-                                    Grup Metrik
-                                    <select
-                                        value={metricGroup}
-                                        onChange={(event) =>
-                                            setMetricGroup(event.target.value)
-                                        }
-                                        className="mt-1 block w-full rounded border-gray-300 dark:border-gray-600 dark:bg-gray-900 sm:w-auto"
-                                    >
-                                        {Object.entries(metricGroups).map(
-                                            ([value, group]) => (
-                                                <option
-                                                    key={value}
-                                                    value={value}
-                                                >
-                                                    {group.label}
-                                                </option>
-                                            ),
-                                        )}
-                                    </select>
-                                </label>
+                            <div className="flex flex-col gap-6">
+                                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                                    {summaryCards.map((card) => (
+                                        <div
+                                            key={card.label}
+                                            className={`min-h-32 rounded-lg border border-gray-200 bg-white p-5 dark:border-gray-700 dark:bg-gray-800 ${card.color ?? ''}`}
+                                        >
+                                            <div className="flex items-center gap-2 text-base font-semibold">
+                                                {card.label}
+                                                <CircleHelp
+                                                    size={18}
+                                                    aria-hidden="true"
+                                                    className="text-gray-400"
+                                                />
+                                            </div>
+                                            <p className="mt-3 text-3xl font-semibold tracking-tight">
+                                                {card.value}
+                                            </p>
+                                        </div>
+                                    ))}
+                                </div>
                                 <div className="min-h-80 w-full overflow-hidden">
                                     <LineChart
-                                        height={320}
+                                        height={380}
                                         xAxis={[
                                             {
                                                 scaleType: 'point',
                                                 data: daily.metrics.map(
                                                     (metric) =>
                                                         new Date(
-                                                            `${metric.metric_date}T00:00:00`,
+                                                            `${String(metric.metric_date).slice(0, 10)}T00:00:00`,
                                                         ).toLocaleDateString(
                                                             'id-ID',
                                                             {
@@ -396,21 +413,36 @@ function AdsShopee() {
                                             },
                                         ]}
                                         yAxis={[
-                                            { valueFormatter: chart.format },
+                                            {
+                                                valueFormatter:
+                                                    formatCompactCurrency,
+                                            },
                                         ]}
-                                        series={chart.series.map(
-                                            ([key, label]) => ({
+                                        series={[
+                                            {
                                                 data: daily.metrics.map(
                                                     (metric) =>
-                                                        Number(metric[key]),
+                                                        Number(metric.broad_gmv),
                                                 ),
-                                                label,
-                                                valueFormatter: chart.format,
-                                                showMark:
-                                                    daily.metrics.length < 32,
-                                            }),
-                                        )}
-                                        margin={{ left: 80, right: 20 }}
+                                                label: 'Penjualan',
+                                                color: '#3b82f6',
+                                                curve: 'catmullRom',
+                                                showMark: false,
+                                                valueFormatter: formatCurrency,
+                                            },
+                                            {
+                                                data: daily.metrics.map(
+                                                    (metric) =>
+                                                        Number(metric.expense),
+                                                ),
+                                                label: 'Biaya Iklan',
+                                                color: '#f97316',
+                                                curve: 'catmullRom',
+                                                showMark: false,
+                                                valueFormatter: formatCurrency,
+                                            },
+                                        ]}
+                                        margin={{ left: 90, right: 20 }}
                                     />
                                 </div>
                             </div>
