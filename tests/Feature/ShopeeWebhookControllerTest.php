@@ -1,45 +1,30 @@
 <?php
 
-use App\Models\Marketplace;
-use App\Models\Orders;
+use App\Jobs\ProcessShopeeWebhook;
+use Illuminate\Support\Facades\Queue;
 
-test('order status push updates only the order from the matching shop', function () {
-    $marketplace = Marketplace::create(['marketplace' => 'Shopee', 'shop_id' => 727720655]);
-    $otherMarketplace = Marketplace::create(['marketplace' => 'Shopee', 'shop_id' => 123]);
-    $order = Orders::create(orderAttributes($marketplace->id));
-    $otherOrder = Orders::create(orderAttributes($otherMarketplace->id));
+test('code 3 push is dispatched to the Shopee Horizon queue', function () {
+    Queue::fake([ProcessShopeeWebhook::class]);
+    $payload = orderStatusPush();
 
-    $this->postJson(route('shopee.webhook'), orderStatusPush())
+    $this->postJson(route('shopee.webhook'), $payload)
         ->assertOk()
-        ->assertExactJson(['message' => 'success']);
+        ->assertExactJson(['status' => 'success']);
 
-    expect($order->fresh()->status)->toBe('processed')
-        ->and($otherOrder->fresh()->status)->toBe('pending');
+    Queue::assertPushedOn('shopee', ProcessShopeeWebhook::class, function (ProcessShopeeWebhook $job) use ($payload): bool {
+        return $job->connection === 'redis' && $job->payload == $payload;
+    });
 });
 
-test('invalid push code is rejected without changing the order', function () {
-    $marketplace = Marketplace::create(['marketplace' => 'Shopee', 'shop_id' => 727720655]);
-    $order = Orders::create(orderAttributes($marketplace->id));
+test('non-order-status push returns 422 without dispatching a job', function () {
+    Queue::fake([ProcessShopeeWebhook::class]);
 
     $this->postJson(route('shopee.webhook'), orderStatusPush(['code' => 4]))
         ->assertUnprocessable()
         ->assertJsonValidationErrors('code');
 
-    expect($order->fresh()->status)->toBe('pending');
+    Queue::assertNothingPushed();
 });
-
-function orderAttributes(int $marketplaceId): array
-{
-    return [
-        'invoice' => '220810QSK8S7BX',
-        'marketplace_id' => $marketplaceId,
-        'buyer_user_id' => '1',
-        'buyer_phone' => '',
-        'buyer_address' => '',
-        'courier' => '',
-        'status' => 'pending',
-    ];
-}
 
 function orderStatusPush(array $attributes = []): array
 {
@@ -48,7 +33,7 @@ function orderStatusPush(array $attributes = []): array
             'items' => [],
             'ordersn' => '220810QSK8S7BX',
             'status' => 'PROCESSED',
-            'completed_scenario' => '',
+            'completed_scenario' => null,
             'update_time' => 1660123127,
         ],
         'shop_id' => 727720655,
