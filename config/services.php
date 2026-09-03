@@ -36,9 +36,10 @@ return [
     ],
 
     'shopee' => [
-        'host' => env('SHOPEE_HOST'),
-        'partner_id' => env('SHOPEE_PARTNER_ID'),
+        'host'        => env('SHOPEE_HOST'),
+        'partner_id'  => env('SHOPEE_PARTNER_ID'),
         'partner_key' => env('SHOPEE_PARTNER_KEY'),
+        'push_key'    => env('SHOPEE_PUSH_PARTNER_KEY'),
     ],
 
 ];
