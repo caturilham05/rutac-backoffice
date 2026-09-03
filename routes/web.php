@@ -62,6 +62,20 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
         Route::post('/{marketplace}/order-sync', 'orderSync')->name('shopee.order.get');
     });
 
+    Route::get('/{marketplace}/shopee-ads-daily-performance', function (Request $request, Marketplace $marketplace, ShopeeServices $shopee) {
+        $dates = $request->validate([
+            'start_date' => ['required', 'date_format:d-m-Y'],
+            'end_date' => ['required', 'date_format:d-m-Y', 'after_or_equal:start_date'],
+        ]);
+
+        return $shopee->getAllCpcAdsDailyPerformance(
+            $marketplace->access_token,
+            $marketplace->shop_id,
+            $dates['start_date'],
+            $dates['end_date'],
+        );
+    })->name('shopee.ads.daily-performance');
+
     Route::prefix('purchases')->controller(PurchaseController::class)->group(function () {
         Route::get('purchases-list', 'index')->name('purchases.list');
         Route::get('purchases-create', 'create')->name('purchases.create');

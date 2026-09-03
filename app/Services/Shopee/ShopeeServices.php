@@ -289,6 +289,28 @@ class ShopeeServices
         return $campaign_ongoing;
     }
 
+    public function getAllCpcAdsDailyPerformance(string $accessToken, int $shopId, string $startDate, string $endDate): array
+    {
+        $path = '/api/v2/ads/get_all_cpc_ads_daily_performance';
+        $sign = hash_hmac('sha256', $this->partnerId.$path.$this->time.$accessToken.$shopId, $this->partnerKey);
+
+        $response = Http::connectTimeout(3)->timeout(10)->get($this->host.$path, [
+            'partner_id'   => $this->partnerId,
+            'timestamp'    => $this->time,
+            'sign'         => $sign,
+            'access_token' => $accessToken,
+            'shop_id'      => $shopId,
+            'start_date'   => $startDate,
+            'end_date'     => $endDate,
+        ])->throw()->json();
+
+        if (! empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        return $response;
+    }
+
     public function editManualProductAds(string $accessToken, int $shop_id, array $data)
     {
         $path = '/api/v2/ads/edit_manual_product_ads';
