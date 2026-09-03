@@ -45,8 +45,7 @@ jobs:
                 --no-dev \
                 --prefer-dist \
                 --optimize-autoloader \
-                --no-interaction \
-                --no-scripts
+                --no-interaction
             fi
 
             php artisan down --retry=60 || true
