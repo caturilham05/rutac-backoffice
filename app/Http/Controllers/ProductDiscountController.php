@@ -9,6 +9,7 @@ use App\Models\ProductDiscount;
 use App\Models\ProductDiscountItem;
 use App\Services\Shopee\ShopeeServices;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -35,7 +36,12 @@ class ProductDiscountController extends Controller
 
             return back()->with('success', "Berhasil menyinkronkan {$synced} product discount Shopee.");
         } catch (\Throwable $exception) {
-            report($exception);
+            $log = Log::build([
+                'driver' => 'single',
+                'path'   => storage_path('logs/shopee.log'),
+            ]);
+            $log->info($exception->getMessage());
+
 
             return back()->with('error', 'Gagal menyinkronkan product discount Shopee: '.$exception->getMessage());
         }
@@ -103,7 +109,12 @@ class ProductDiscountController extends Controller
 
             return redirect()->route('product_discounts.show', $productDiscount->discount_id)->with('success', 'Discount item berhasil diperbarui.');
         } catch (\Throwable $exception) {
-            report($exception);
+            $log = Log::build([
+                'driver' => 'single',
+                'path'   => storage_path('logs/shopee.log'),
+            ]);
+            $log->info($exception->getMessage());
+
 
             return back()->with('error', 'Gagal memperbarui discount item Shopee: '.$exception->getMessage());
         }

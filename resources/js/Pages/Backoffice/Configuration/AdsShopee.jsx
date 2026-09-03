@@ -395,6 +395,7 @@ function AdsShopee() {
                                 <div className="min-h-80 w-full overflow-hidden">
                                     <LineChart
                                         height={380}
+                                        grid={{ horizontal: true }}
                                         xAxis={[
                                             {
                                                 scaleType: 'point',

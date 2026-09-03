@@ -10,6 +10,8 @@ use App\Models\MarketplaceAdDailyMetric;
 use App\Services\Shopee\ShopeeServices;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -82,12 +84,16 @@ class ShopeeAdsController extends Controller
 
             MarketplaceAdDailyMetric::syncFromShopee($marketplace, $response['response'] ?? []);
         } catch (Throwable $exception) {
-            report($exception);
+            $log = Log::build([
+                'driver' => 'single',
+                'path'   => storage_path('logs/shopee.log'),
+            ]);
+            $log->info($exception->getMessage());
 
             return redirect()->route('shopee.ads.index', [
                 'marketplace_id' => $marketplace->getKey(),
                 ...$dates,
-            ])->with('error', 'Sinkronisasi Ads Daily gagal. Silakan coba lagi.');
+            ])->with('error', $exception->getMessage());
         }
 
         return redirect()->route('shopee.ads.index', [
