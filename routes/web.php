@@ -12,9 +12,6 @@ use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShopeeAdsController;
 use App\Http\Controllers\ShopeeController;
 use App\Http\Controllers\ShopeeFeeController;
-use App\Models\Marketplace;
-use App\Services\Shopee\ShopeeServices;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -61,20 +58,6 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
         Route::post('/configuration/{marketplace}/ads-shopee', 'shopeeAdsEdit')->name('shopee.ads.edit');
         Route::post('/{marketplace}/order-sync', 'orderSync')->name('shopee.order.get');
     });
-
-    Route::get('/{marketplace}/shopee-ads-daily-performance', function (Request $request, Marketplace $marketplace, ShopeeServices $shopee) {
-        $dates = $request->validate([
-            'start_date' => ['required', 'date_format:d-m-Y'],
-            'end_date' => ['required', 'date_format:d-m-Y', 'after_or_equal:start_date'],
-        ]);
-
-        return $shopee->getAllCpcAdsDailyPerformance(
-            $marketplace->access_token,
-            $marketplace->shop_id,
-            $dates['start_date'],
-            $dates['end_date'],
-        );
-    })->name('shopee.ads.daily-performance');
 
     Route::prefix('purchases')->controller(PurchaseController::class)->group(function () {
         Route::get('purchases-list', 'index')->name('purchases.list');
@@ -125,6 +108,8 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
     });
 
     Route::get('/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
+    Route::post('/configuration/ads-shopee/{marketplace}/daily-metrics', [ShopeeAdsController::class, 'syncDailyMetrics'])
+        ->name('shopee.ads.daily-metrics.sync');
 });
 
 Route::middleware('auth')->group(function () {

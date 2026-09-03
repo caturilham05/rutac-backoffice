@@ -2,21 +2,32 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ShopeeAdsIndexRequest;
+use App\Http\Requests\SyncShopeeAdsDailyMetricsRequest;
 use App\Models\AdsShopee;
 use App\Models\Marketplace;
-use Illuminate\Http\Request;
+use App\Models\MarketplaceAdDailyMetric;
+use App\Services\Shopee\ShopeeServices;
+use Carbon\CarbonImmutable;
+use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
+use Inertia\Response;
+use Throwable;
 
 class ShopeeAdsController extends Controller
 {
-    public function index(Request $request)
+    public function index(ShopeeAdsIndexRequest $request): Response
     {
+        $validated = $request->validated();
+        $endDate = $validated['end_date'] ?? now()->toDateString();
+        $startDate = $validated['start_date'] ?? now()->subDays(6)->toDateString();
+
         $ads = AdsShopee::getAdsShopeePaginated(
             100,
-            $request->query('campaign_name'),
-            $request->query('status'),
-            $request->query('sort'),
-            $request->query('direction', 'asc')
+            $validated['campaign_name'] ?? null,
+            $validated['status'] ?? null,
+            $validated['sort'] ?? null,
+            $validated['direction'] ?? 'asc'
         );
 
         $campaigns = AdsShopee::select('name')->distinct()->get()->map(function ($item) {
@@ -27,12 +38,61 @@ class ShopeeAdsController extends Controller
             return ['id' => $item->id, 'store' => $item->store];
         });
 
+        $selectedMarketplace = $marketplaces->firstWhere('id', (int) ($validated['marketplace_id'] ?? 0))
+            ?? $marketplaces->first();
+        $marketplace = $selectedMarketplace ? Marketplace::find($selectedMarketplace['id']) : null;
+
         return Inertia::render('Backoffice/Configuration/AdsShopee', [
-            'ads'          => $ads,
-            'filters'      => $request->only(['campaign_name', 'status']) ?: ['campaign_name' => '', 'status' => ''],
-            'sort'         => $request->only(['sort', 'direction']) ?: ['sort' => null, 'direction' => 'asc'],
-            'campaigns'    => $campaigns,
+            'ads' => $ads,
+            'filters' => [
+                'campaign_name' => $validated['campaign_name'] ?? '',
+                'status' => $validated['status'] ?? '',
+                'marketplace_id' => $marketplace?->getKey(),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+            ],
+            'sort' => ['sort' => $validated['sort'] ?? null, 'direction' => $validated['direction'] ?? 'asc'],
+            'campaigns' => $campaigns,
             'marketplaces' => $marketplaces,
+            'daily' => [
+                'marketplace_id' => $marketplace?->getKey(),
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'metrics' => $marketplace
+                    ? MarketplaceAdDailyMetric::chartData($marketplace, $startDate, $endDate)
+                    : [],
+            ],
         ]);
+    }
+
+    public function syncDailyMetrics(
+        SyncShopeeAdsDailyMetricsRequest $request,
+        Marketplace $marketplace,
+        ShopeeServices $shopee,
+    ): RedirectResponse {
+        $dates = $request->validated();
+
+        try {
+            $response = $shopee->getAllCpcAdsDailyPerformance(
+                $marketplace->access_token,
+                (int) $marketplace->shop_id,
+                CarbonImmutable::parse($dates['start_date'])->format('d-m-Y'),
+                CarbonImmutable::parse($dates['end_date'])->format('d-m-Y'),
+            );
+
+            MarketplaceAdDailyMetric::syncFromShopee($marketplace, $response['response'] ?? []);
+        } catch (Throwable $exception) {
+            report($exception);
+
+            return redirect()->route('shopee.ads.index', [
+                'marketplace_id' => $marketplace->getKey(),
+                ...$dates,
+            ])->with('error', 'Sinkronisasi Ads Daily gagal. Silakan coba lagi.');
+        }
+
+        return redirect()->route('shopee.ads.index', [
+            'marketplace_id' => $marketplace->getKey(),
+            ...$dates,
+        ])->with('success', 'Ads Daily Performance berhasil disinkronkan.');
     }
 }

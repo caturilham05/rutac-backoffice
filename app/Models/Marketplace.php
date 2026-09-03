@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Marketplace extends Model
 {
@@ -85,5 +86,10 @@ class Marketplace extends Model
                 'label' => $value,
             ])
             ->all();
+    }
+
+    public function adDailyMetrics(): HasMany
+    {
+        return $this->hasMany(MarketplaceAdDailyMetric::class);
     }
 }
