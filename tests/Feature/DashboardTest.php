@@ -4,6 +4,7 @@ use App\Models\Marketplace;
 use App\Models\MarketplaceAdDailyMetric;
 use App\Models\Orders;
 use App\Models\Purchase;
+use App\Models\Purchase_product;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -31,6 +32,28 @@ test('dashboard charts aggregate daily amounts within the inclusive range', func
                 ['date' => '2026-09-02', 'order_revenue' => 0, 'purchase_total' => 0, 'ad_expense' => null],
                 ['date' => '2026-09-03', 'order_revenue' => 400, 'purchase_total' => 50, 'ad_expense' => 0],
             ]));
+});
+
+test('dashboard top purchase products filters by parfum category id regardless of category name', function () {
+    $purchase = Purchase::create(['purchase_date' => '2026-09-01', 'price' => 10300, 'discount' => 0, 'additional_fee' => 0]);
+    foreach ([['parfum', 3], ['bottle', 100]] as $index => [$category, $qty]) {
+        Purchase_product::create([
+            'purchase_id' => $purchase->id,
+            'product_id' => $index + 1,
+            'product_name' => $category,
+            'cat_id' => $index + 1,
+            'cat_name' => 'parfum',
+            'price' => 100,
+            'qty' => $qty,
+        ]);
+    }
+
+    $this->actingAs(User::factory()->create())->get(route('dashboard', ['start_date' => '2026-09-01', 'end_date' => '2026-09-01']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('top_purchase_products', 1)
+            ->where('top_purchase_products.0.product_name', 'parfum')
+            ->where('top_purchase_products.0.total_qty', 3)
+            ->where('top_purchase_products.0.total_price', 300));
 });
 
 test('dashboard defaults to today with no transactions', function () {

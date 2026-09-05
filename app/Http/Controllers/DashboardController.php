@@ -100,6 +100,7 @@ class DashboardController extends Controller
             $query->whereDate('purchase_date', '>=', $startDate)
                 ->whereDate('purchase_date', '<=', $endDate);
         })
+            ->where('cat_id', 1)
             ->select('product_name', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(price * qty) as total_price'))
             ->groupBy('product_id', 'product_name')
             ->orderByDesc('total_qty')
