@@ -2,9 +2,15 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, usePage, router } from '@inertiajs/react';
 import { useState } from 'react';
 import { formatCurrency } from '@/Utils/format';
+import { LineChart } from '@mui/x-charts/LineChart';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import { useTheme } from '@/Hooks/useTheme';
+import { useMemo } from 'react';
 
-export default function Dashboard({ filters, stats, top_order_products, top_purchase_products, top_buyers, top_vendors }) {
-    const { flash } = usePage().props;
+export default function Dashboard({ filters, stats, daily_chart, top_order_products, top_purchase_products, top_buyers, top_vendors }) {
+    const { errors } = usePage().props;
+    const { theme } = useTheme();
+    const chartTheme = useMemo(() => createTheme({ palette: { mode: theme } }), [theme]);
     const [dateRange, setDateRange] = useState({
         start_date: filters.start_date,
         end_date  : filters.end_date,
@@ -36,7 +42,31 @@ export default function Dashboard({ filters, stats, top_order_products, top_purc
                         <input type="date" value={dateRange.end_date} onChange={(e) => setDateRange({...dateRange, end_date: e.target.value})} className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                     <button type="submit" className="rounded bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700 transition-colors">Filter</button>
+                    {(errors.start_date || errors.end_date) && (
+                        <p role="alert" className="w-full text-sm text-red-600 dark:text-red-400">{errors.start_date || errors.end_date}</p>
+                    )}
                 </form>
+
+                <section aria-labelledby="daily-chart-title" className="mb-8 rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+                    <h3 id="daily-chart-title" className="text-lg font-bold text-gray-800 dark:text-white">Daily Performance</h3>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Revenue order completed, total purchase, dan biaya iklan seluruh marketplace (Rp). Order berdasarkan tanggal order; tanggal tanpa data iklan ditampilkan sebagai celah.</p>
+                    <div className="mt-4 min-w-0">
+                        <ThemeProvider theme={chartTheme}>
+                            <LineChart
+                                dataset={daily_chart}
+                                height={360}
+                                grid={{ horizontal: true }}
+                                xAxis={[{ scaleType: 'point', dataKey: 'date', valueFormatter: (value) => new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }]}
+                                yAxis={[{ width: 80, valueFormatter: (value) => new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(value) }]}
+                                series={[
+                                    { dataKey: 'order_revenue', label: 'Order Completed', color: '#3b82f6' },
+                                    { dataKey: 'purchase_total', label: 'Purchase', color: '#10b981' },
+                                    { dataKey: 'ad_expense', label: 'Biaya Iklan', color: '#f97316' },
+                                ].map((series) => ({ ...series, curve: 'linear', valueFormatter: (value) => value === null ? 'Belum ada data' : formatCurrency(value) }))}
+                            />
+                        </ThemeProvider>
+                    </div>
+                </section>
 
                 {/* Order Statistic */}
                 <div className="mb-4">

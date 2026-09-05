@@ -2,19 +2,61 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\MarketplaceAdDailyMetric;
+use App\Models\OrderProducts;
+use App\Models\Orders;
 use App\Models\Purchase;
 use App\Models\Purchase_product;
+use Carbon\CarbonPeriod;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): Response
     {
-        //
+        $request->mergeIfMissing([
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->toDateString(),
+        ]);
+        $request->validate([
+            'start_date' => ['required', 'date_format:Y-m-d'],
+            'end_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:start_date'],
+        ]);
         $startDate = $request->input('start_date', now()->toDateString());
-        $endDate   = $request->input('end_date', now()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $dailyOrders = Orders::whereDate('order_time', '>=', $startDate)
+            ->whereDate('order_time', '<=', $endDate)
+            ->where('status', 'completed')
+            ->selectRaw('DATE(order_time) as date, SUM(total_price) as amount')
+            ->groupByRaw('DATE(order_time)')
+            ->pluck('amount', 'date');
+
+        $dailyPurchases = Purchase::whereDate('purchase_date', '>=', $startDate)
+            ->whereDate('purchase_date', '<=', $endDate)
+            ->selectRaw('DATE(purchase_date) as date, SUM(price - discount + additional_fee) as amount')
+            ->groupByRaw('DATE(purchase_date)')
+            ->pluck('amount', 'date');
+
+        $dailyAds = MarketplaceAdDailyMetric::whereDate('metric_date', '>=', $startDate)
+            ->whereDate('metric_date', '<=', $endDate)
+            ->selectRaw('DATE(metric_date) as date, SUM(expense) as amount')
+            ->groupByRaw('DATE(metric_date)')
+            ->pluck('amount', 'date');
+
+        $dailyChart = [];
+        foreach (CarbonPeriod::create($startDate, $endDate) as $date) {
+            $day = $date->toDateString();
+            $dailyChart[] = [
+                'date' => $day,
+                'order_revenue' => (float) ($dailyOrders[$day] ?? 0),
+                'purchase_total' => (float) ($dailyPurchases[$day] ?? 0),
+                'ad_expense' => $dailyAds->has($day) ? (float) $dailyAds[$day] : null,
+            ];
+        }
 
         $purchaseStats = Purchase::whereDate('purchase_date', '>=', $startDate)
             ->whereDate('purchase_date', '<=', $endDate)
@@ -26,7 +68,7 @@ class DashboardController extends Controller
             ])
             ->first();
 
-        $orderStats = \App\Models\Orders::whereDate('order_time', '>=', $startDate)
+        $orderStats = Orders::whereDate('order_time', '>=', $startDate)
             ->whereDate('order_time', '<=', $endDate)
             ->where('status', 'completed')
             ->select([
@@ -43,7 +85,7 @@ class DashboardController extends Controller
                 ->whereDate('purchase_date', '<=', $endDate);
         })->sum('qty');
 
-        $topOrderProducts = \App\Models\OrderProducts::whereHas('order', function ($query) use ($startDate, $endDate) {
+        $topOrderProducts = OrderProducts::whereHas('order', function ($query) use ($startDate, $endDate) {
             $query->whereDate('order_time', '>=', $startDate)
                 ->whereDate('order_time', '<=', $endDate)
                 ->where('status', 'completed');
@@ -64,7 +106,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        $topBuyers = \App\Models\Orders::whereDate('order_time', '>=', $startDate)
+        $topBuyers = Orders::whereDate('order_time', '>=', $startDate)
             ->whereDate('order_time', '<=', $endDate)
             ->where('status', 'completed')
             ->select('buyer_username', DB::raw('COUNT(id) as total_orders'), DB::raw('SUM(total_price) as total_spent'))
@@ -90,30 +132,31 @@ class DashboardController extends Controller
             ->get();
 
         return Inertia::render('Backoffice/Dashboard', [
+            'daily_chart' => $dailyChart,
             'filters' => [
                 'start_date' => $startDate,
-                'end_date'   => $endDate,
+                'end_date' => $endDate,
             ],
             'stats' => [
                 'order' => [
-                    'total_orders'   => $orderStats->total_orders ?? 0,
-                    'total_income'   => $orderStats->total_income ?? 0,
-                    'total_revenue'  => $orderStats->total_revenue ?? 0,
-                    'total_qty'      => $orderStats->total_qty ?? 0,
+                    'total_orders' => $orderStats->total_orders ?? 0,
+                    'total_income' => $orderStats->total_income ?? 0,
+                    'total_revenue' => $orderStats->total_revenue ?? 0,
+                    'total_qty' => $orderStats->total_qty ?? 0,
                     'total_discount' => $orderStats->total_discount ?? 0,
                 ],
                 'purchase' => [
-                    'total_invoice'        => $purchaseStats->total_invoice ?? 0,
-                    'total_price'          => $purchaseStats->total_price ?? 0,
-                    'total_discount'       => $purchaseStats->total_discount ?? 0,
+                    'total_invoice' => $purchaseStats->total_invoice ?? 0,
+                    'total_price' => $purchaseStats->total_price ?? 0,
+                    'total_discount' => $purchaseStats->total_discount ?? 0,
                     'total_additional_fee' => $purchaseStats->total_additional_fee ?? 0,
-                    'total_qty'            => $totalQty ?? 0,
+                    'total_qty' => $totalQty ?? 0,
                 ],
             ],
-            'top_order_products'    => $topOrderProducts,
+            'top_order_products' => $topOrderProducts,
             'top_purchase_products' => $topPurchaseProducts,
-            'top_buyers'            => $topBuyers,
-            'top_vendors'           => $topVendors,
+            'top_buyers' => $topBuyers,
+            'top_vendors' => $topVendors,
         ]);
     }
 }

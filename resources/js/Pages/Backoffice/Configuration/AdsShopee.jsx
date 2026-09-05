@@ -415,6 +415,7 @@ function AdsShopee() {
                                         ]}
                                         yAxis={[
                                             {
+                                                width: 'auto',
                                                 valueFormatter:
                                                     formatCompactCurrency,
                                             },
@@ -443,7 +444,7 @@ function AdsShopee() {
                                                 valueFormatter: formatCurrency,
                                             },
                                         ]}
-                                        margin={{ left: 90, right: 20 }}
+                                        margin={{ left: 10, right: 20 }}
                                     />
                                 </div>
                             </div>
