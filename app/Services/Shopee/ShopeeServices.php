@@ -19,11 +19,11 @@ class ShopeeServices
 
     public function __construct(ShopeeSignature $signature)
     {
-        $this->signature  = $signature;
-        $this->host       = config('services.shopee.host');
-        $this->partnerId  = (int) config('services.shopee.partner_id');
+        $this->signature = $signature;
+        $this->host = config('services.shopee.host');
+        $this->partnerId = (int) config('services.shopee.partner_id');
         $this->partnerKey = config('services.shopee.partner_key');
-        $this->time       = time();
+        $this->time = time();
     }
 
     public function getTokenShopLevel(?string $code, int $shopId)
@@ -295,13 +295,13 @@ class ShopeeServices
         $sign = hash_hmac('sha256', $this->partnerId.$path.$this->time.$accessToken.$shopId, $this->partnerKey);
 
         $response = Http::connectTimeout(3)->timeout(10)->get($this->host.$path, [
-            'partner_id'   => $this->partnerId,
-            'timestamp'    => $this->time,
-            'sign'         => $sign,
+            'partner_id' => $this->partnerId,
+            'timestamp' => $this->time,
+            'sign' => $sign,
             'access_token' => $accessToken,
-            'shop_id'      => $shopId,
-            'start_date'   => $startDate,
-            'end_date'     => $endDate,
+            'shop_id' => $shopId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
         ])->throw()->json();
 
         if (! empty($response['error'])) {
@@ -379,7 +379,7 @@ class ShopeeServices
         $path = '/api/v2/order/get_order_detail';
         $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
         $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
-        $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn_list=%s&response_optional_fields=buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee ,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper, dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,buyer_username,invoice_data,order_chargeable_weight_gram,return_request_due_date,edt,payment_info',
+        $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn_list=%s&response_optional_fields=buyer_user_id,buyer_username,estimated_shipping_fee,recipient_address,actual_shipping_fee,goods_to_declare,note,note_update_time,item_list,pay_time,dropshipper,dropshipper_phone,split_up,buyer_cancel_reason,cancel_by,cancel_reason,actual_shipping_fee_confirmed,buyer_cpf_id,fulfillment_flag,pickup_done_time,package_list,shipping_carrier,payment_method,total_amount,buyer_username,invoice_data,order_chargeable_weight_gram,return_request_due_date,edt,payment_info',
             $this->host,
             $path,
             $this->partnerId,
@@ -392,7 +392,7 @@ class ShopeeServices
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->get($url)->json();
+        ])->connectTimeout(3)->timeout(15)->get($url)->throw()->json();
 
         if (! empty($response['error'])) {
             throw new \Exception($response['message']);
@@ -421,7 +421,7 @@ class ShopeeServices
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->get($url)->json();
+        ])->connectTimeout(3)->timeout(15)->get($url)->throw()->json();
 
         if (! empty($response['error'])) {
             throw new \Exception($response['message']);

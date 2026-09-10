@@ -34,11 +34,11 @@ class Orders extends Model
     public function scopeFilter($query, array $filters)
     {
         $query->when($filters['invoice'] ?? null, function ($query, $invoice) {
-            $query->where('invoice', 'like', '%' . $invoice . '%');
+            $query->where('invoice', 'like', '%'.$invoice.'%');
         })->when($filters['buyer_username'] ?? null, function ($query, $buyer_username) {
-            $query->where('buyer_username', 'like', '%' . $buyer_username . '%');
+            $query->where('buyer_username', 'like', '%'.$buyer_username.'%');
         })->when($filters['courier'] ?? null, function ($query, $courier) {
-            $query->where('courier', 'like', '%' . $courier . '%');
+            $query->where('courier', 'like', '%'.$courier.'%');
         })->when($filters['status'] ?? null, function ($query, $status) {
             $query->where('status', $status);
         })->when($filters['start_date'] ?? null, function ($query, $start_date) {
@@ -48,19 +48,22 @@ class Orders extends Model
         });
     }
 
-    public static function insertOrderFromShopee($data, $items)
+    public static function insertOrderFromShopee(array $data, array $items): self
     {
         return DB::transaction(function () use ($data, $items) {
+            Marketplace::whereKey($data['marketplace_id'])->lockForUpdate()->firstOrFail();
+
             $order = self::updateOrCreate(
-                ['invoice' => $data['invoice']],
+                ['invoice' => $data['invoice'], 'marketplace_id' => $data['marketplace_id']],
                 $data
             );
 
             foreach ($items as $item) {
                 OrderProducts::updateOrCreate(
                     [
-                        'order_id'         => $order->id,
-                        'product_model_id' => $item['product_model_id'],
+                        'order_id'          => $order->id,
+                        'product_origin_id' => $item['product_origin_id'],
+                        'product_model_id'  => $item['product_model_id'],
                     ],
                     $item
                 );

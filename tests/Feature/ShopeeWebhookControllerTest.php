@@ -16,10 +16,10 @@ test('code 3 push is dispatched to the Shopee Horizon queue', function () {
     });
 });
 
-test('non-order-status push returns 422 without dispatching a job', function () {
+test('unsupported push returns 422 without dispatching a job', function () {
     Queue::fake([ProcessShopeeWebhook::class]);
 
-    $this->postJson(route('shopee.webhook'), orderStatusPush(['code' => 4]))
+    $this->postJson(route('shopee.webhook'), orderStatusPush(['code' => 99]))
         ->assertUnprocessable()
         ->assertJsonValidationErrors('code');
 
@@ -41,3 +41,22 @@ function orderStatusPush(array $attributes = []): array
         'timestamp' => 1660123127,
     ], $attributes);
 }
+
+test('tracking push is queued without status or update time', function () {
+    Queue::fake([ProcessShopeeWebhook::class]);
+    $payload = ['code' => 4, 'shop_id' => 123, 'timestamp' => 1660123127,
+        'data' => ['ordersn' => 'ORDER123', 'tracking_no' => 'RESI123', 'package_number' => 'PACKAGE123']];
+
+    $this->postJson(route('shopee.webhook'), $payload)->assertOk();
+
+    Queue::assertPushedOn('shopee', ProcessShopeeWebhook::class, fn ($job) => $job->payload === $payload);
+});
+
+test('tracking push without tracking number is rejected', function () {
+    Queue::fake([ProcessShopeeWebhook::class]);
+
+    $this->postJson(route('shopee.webhook'), orderStatusPush(['code' => 4]))
+        ->assertUnprocessable()->assertJsonValidationErrors('data.tracking_no');
+
+    Queue::assertNothingPushed();
+});
