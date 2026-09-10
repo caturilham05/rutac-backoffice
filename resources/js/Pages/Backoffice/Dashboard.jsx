@@ -49,7 +49,7 @@ export default function Dashboard({ filters, stats, daily_chart, top_order_produ
 
                 <section aria-labelledby="daily-chart-title" className="mb-8 rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
                     <h3 id="daily-chart-title" className="text-lg font-bold text-gray-800 dark:text-white">Daily Performance</h3>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Revenue order completed, total purchase, dan biaya iklan seluruh marketplace (Rp). Order berdasarkan tanggal order; tanggal tanpa data iklan ditampilkan sebagai celah.</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Total income order completed, total purchase, dan biaya iklan seluruh marketplace (Rp). Order berdasarkan tanggal order; tanggal tanpa data iklan ditampilkan sebagai celah.</p>
                     <div className="mt-4 min-w-0">
                         <ThemeProvider theme={chartTheme}>
                             <LineChart
@@ -59,7 +59,7 @@ export default function Dashboard({ filters, stats, daily_chart, top_order_produ
                                 xAxis={[{ scaleType: 'point', dataKey: 'date', valueFormatter: (value) => new Date(`${value}T00:00:00`).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) }]}
                                 yAxis={[{ width: 80, valueFormatter: (value) => new Intl.NumberFormat('id-ID', { notation: 'compact' }).format(value) }]}
                                 series={[
-                                    { dataKey: 'order_revenue', label: 'Order Completed', color: '#3b82f6' },
+                                    { dataKey: 'order_income', label: 'Order Completed', color: '#3b82f6' },
                                     { dataKey: 'purchase_total', label: 'Purchase', color: '#10b981' },
                                     { dataKey: 'ad_expense', label: 'Biaya Iklan', color: '#f97316' },
                                 ].map((series) => ({ ...series, curve: 'linear', valueFormatter: (value) => value === null ? 'Belum ada data' : formatCurrency(value) }))}

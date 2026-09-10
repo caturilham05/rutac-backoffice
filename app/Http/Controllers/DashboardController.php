@@ -31,7 +31,7 @@ class DashboardController extends Controller
         $dailyOrders = Orders::whereDate('order_time', '>=', $startDate)
             ->whereDate('order_time', '<=', $endDate)
             ->where('status', 'completed')
-            ->selectRaw('DATE(order_time) as date, SUM(total_price) as amount')
+            ->selectRaw('DATE(order_time) as date, SUM(income) as amount')
             ->groupByRaw('DATE(order_time)')
             ->pluck('amount', 'date');
 
@@ -52,7 +52,7 @@ class DashboardController extends Controller
             $day = $date->toDateString();
             $dailyChart[] = [
                 'date' => $day,
-                'order_revenue' => (float) ($dailyOrders[$day] ?? 0),
+                'order_income' => (float) ($dailyOrders[$day] ?? 0),
                 'purchase_total' => (float) ($dailyPurchases[$day] ?? 0),
                 'ad_expense' => $dailyAds->has($day) ? (float) $dailyAds[$day] : null,
             ];
