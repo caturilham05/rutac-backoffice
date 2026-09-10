@@ -75,16 +75,14 @@ class ProcessShopeeWebhook implements ShouldQueue
             $data['waybill'] = $this->payload['data']['tracking_no'];
         }
 
-        if ($detail['order_status'] === 'COMPLETED') {
-            $escrow  = $shopee->getEscrowDetail($marketplace->access_token, (int) $marketplace->shop_id, $invoice);
-            $income  = $escrow['response']['order_income'] ?? null;
-            $payment = $escrow['response']['buyer_payment_info'] ?? null;
-            if (! is_array($income) || ! is_array($payment)) {
-                throw new RuntimeException('Shopee returned incomplete escrow details for '.$invoice);
-            }
-            $data['discount'] = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0));
-            $data['income']   = ($income['cost_of_goods_sold'] ?? 0) - ($income['commission_fee'] ?? 0) - ($income['seller_order_processing_fee'] ?? 0) - ($income['service_fee'] ?? 0) - ($income['delivery_seller_protection_fee_premium_amount'] ?? 0);
+        $escrow  = $shopee->getEscrowDetail($marketplace->access_token, (int) $marketplace->shop_id, $invoice);
+        $income  = $escrow['response']['order_income'] ?? null;
+        $payment = $escrow['response']['buyer_payment_info'] ?? null;
+        if (! is_array($income) || ! is_array($payment)) {
+            throw new RuntimeException('Shopee returned incomplete escrow details for '.$invoice);
         }
+        $data['discount'] = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0));
+        $data['income'] = ($income['cost_of_goods_sold'] ?? 0) - ($income['commission_fee'] ?? 0) - ($income['seller_order_processing_fee'] ?? 0) - ($income['service_fee'] ?? 0) - ($income['delivery_seller_protection_fee_premium_amount'] ?? 0);
 
         Orders::insertOrderFromShopee($data, $items);
     }

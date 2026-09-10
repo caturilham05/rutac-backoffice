@@ -23,7 +23,9 @@ test('both pushes persist order details without duplicate products or losing tra
     $marketplace = Marketplace::create(['marketplace' => 'shopee', 'shop_id' => 123, 'access_token' => 'token']);
     Http::fake(['partner.test/api/v2/order/get_order_detail*' => Http::response([
         'response' => ['order_list' => [shopeeWebhookOrderDetail()]],
-    ])]);
+    ]), 'partner.test/api/v2/payment/get_escrow_detail*' => Http::response(['response' => [
+        'order_income' => ['cost_of_goods_sold' => 27000], 'buyer_payment_info' => [],
+    ]])]);
     $payload = ['code' => $code, 'shop_id' => 123, 'data' => ['ordersn' => 'ORDER123', 'tracking_no' => 'RESI123']];
 
     (new ProcessShopeeWebhook($payload))->handle(app(ShopeeServices::class));
@@ -62,15 +64,16 @@ test('failed or incomplete order detail leaves no partial order and can be retri
     'missing order' => [['response' => ['order_list' => []]], 200],
 ]);
 
-test('completed order stores escrow discount and net income', function () {
+test('order stores escrow discount and net income for every status', function (string $status) {
     Http::preventStrayRequests();
     Marketplace::create(['marketplace' => 'shopee', 'shop_id' => 123, 'access_token' => 'token']);
     Http::fake([
         'partner.test/api/v2/order/get_order_detail*' => Http::response([
-            'response' => ['order_list' => [array_replace(shopeeWebhookOrderDetail(), ['order_status' => 'COMPLETED'])]],
+            'response' => ['order_list' => [array_replace(shopeeWebhookOrderDetail(), ['order_status' => $status])]],
         ]),
         'partner.test/api/v2/payment/get_escrow_detail*' => Http::response(['response' => [
-            'order_income' => ['cost_of_goods_sold' => 27000, 'commission_fee' => 1000, 'service_fee' => 500],
+            'order_income' => ['cost_of_goods_sold' => 27000, 'commission_fee' => 1000, 'service_fee' => 500,
+                'seller_order_processing_fee' => 200, 'delivery_seller_protection_fee_premium_amount' => 100],
             'buyer_payment_info' => ['shopee_voucher' => 2000, 'seller_voucher' => 1000, 'shipping_fee' => 1000],
         ]]),
     ]);
@@ -78,8 +81,8 @@ test('completed order stores escrow discount and net income', function () {
     (new ProcessShopeeWebhook(['code' => 3, 'shop_id' => 123, 'data' => ['ordersn' => 'ORDER123']]))
         ->handle(app(ShopeeServices::class));
 
-    $this->assertDatabaseHas('orders', ['invoice' => 'ORDER123', 'status' => 'completed', 'discount' => 2000, 'income' => 25500]);
-});
+    $this->assertDatabaseHas('orders', ['invoice' => 'ORDER123', 'status' => strtolower($status), 'discount' => 2000, 'income' => 25200]);
+})->with(['UNPAID', 'READY_TO_SHIP', 'PROCESSED', 'SHIPPED', 'COMPLETED', 'CANCELLED']);
 
 function shopeeWebhookOrderDetail(): array
 {
@@ -110,12 +113,12 @@ test('unknown shop does not fetch or persist orders', function () {
     $this->assertDatabaseCount('orders', 0);
 });
 
-test('missing escrow does not save a partially completed order', function () {
+test('missing escrow does not save a partial order for any status', function (string $status) {
     Http::preventStrayRequests();
     Marketplace::create(['marketplace' => 'shopee', 'shop_id' => 123, 'access_token' => 'token']);
     Http::fake([
         'partner.test/api/v2/order/get_order_detail*' => Http::response([
-            'response' => ['order_list' => [array_replace(shopeeWebhookOrderDetail(), ['order_status' => 'COMPLETED'])]],
+            'response' => ['order_list' => [array_replace(shopeeWebhookOrderDetail(), ['order_status' => $status])]],
         ]),
         'partner.test/api/v2/payment/get_escrow_detail*' => Http::response(['response' => []]),
     ]);
@@ -125,7 +128,7 @@ test('missing escrow does not save a partially completed order', function () {
 
     $this->assertDatabaseCount('orders', 0);
     $this->assertDatabaseCount('order_products', 0);
-});
+})->with(['SHIPPED', 'COMPLETED']);
 
 test('products are matched by item and model and orders are isolated per shop', function () {
     Http::preventStrayRequests();
@@ -137,7 +140,9 @@ test('products are matched by item and model and orders are isolated per shop', 
     Product_sku::create(['product_id' => $product->id, 'product_model_id' => 0]);
     Http::fake(['partner.test/api/v2/order/get_order_detail*' => Http::response([
         'response' => ['order_list' => [shopeeWebhookOrderDetail()]],
-    ])]);
+    ]), 'partner.test/api/v2/payment/get_escrow_detail*' => Http::response(['response' => [
+        'order_income' => ['cost_of_goods_sold' => 27000], 'buyer_payment_info' => [],
+    ]])]);
 
     foreach ([123, 456] as $shopId) {
         (new ProcessShopeeWebhook(['code' => 3, 'shop_id' => $shopId, 'data' => ['ordersn' => 'ORDER123']]))
