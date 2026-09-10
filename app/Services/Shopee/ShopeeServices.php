@@ -19,11 +19,11 @@ class ShopeeServices
 
     public function __construct(ShopeeSignature $signature)
     {
-        $this->signature = $signature;
-        $this->host = config('services.shopee.host');
-        $this->partnerId = (int) config('services.shopee.partner_id');
+        $this->signature  = $signature;
+        $this->host       = config('services.shopee.host');
+        $this->partnerId  = (int) config('services.shopee.partner_id');
         $this->partnerKey = config('services.shopee.partner_key');
-        $this->time = time();
+        $this->time       = time();
     }
 
     public function getTokenShopLevel(?string $code, int $shopId)
@@ -328,7 +328,7 @@ class ShopeeServices
 
         $response = Http::withHeaders([
             'Content-Type' => 'application/json',
-        ])->withBody(json_encode($data), 'application/json')->post($url)->json();
+        ])->withBody(json_encode($data), 'application/json')->post($url)->throw()->json();
 
         if (! empty($response['error'])) {
             Log::build([

@@ -107,6 +107,8 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
         Route::delete('shopee-fee-create/{configFee}', 'delete')->name('shopeeFee.delete');
     });
 
+    Route::post('/configuration/ads-shopee/bulk/{action}', [ShopeeAdsController::class, 'bulkAction'])
+        ->whereIn('action', ['pause', 'resume'])->name('shopee.ads.bulk');
     Route::get('/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
     Route::post('/configuration/ads-shopee/{marketplace}/daily-metrics', [ShopeeAdsController::class, 'syncDailyMetrics'])
         ->name('shopee.ads.daily-metrics.sync');

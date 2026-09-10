@@ -15,8 +15,8 @@ const formatCompactCurrency = (value) =>
     }).format(value);
 
 function AdsShopee() {
-    const { ads, daily, flash, filters, sort, campaigns, marketplaces } =
-        usePage().props;
+    const { ads, daily, flash, filters, sort, campaigns, marketplaces } = usePage().props;
+    const [bulkProcessing, setBulkProcessing] = useState(false);
     const [selectedMarketplace, setSelectedMarketplace] = useState(
         daily.marketplace_id ?? '',
     );
@@ -180,6 +180,18 @@ function AdsShopee() {
         });
     };
 
+    const handleBulkAds = (action) => {
+        router.post(
+            route('shopee.ads.bulk', action),
+            {},
+            {
+                preserveScroll: true,
+                onStart: () => setBulkProcessing(true),
+                onFinish: () => setBulkProcessing(false),
+            },
+        );
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -201,6 +213,33 @@ function AdsShopee() {
                     {flash.error}
                 </div>
             )}
+
+            <div className="flex flex-wrap items-center gap-3 p-6 pb-0">
+                <button
+                    type="button"
+                    onClick={() => handleBulkAds('pause')}
+                    disabled={bulkProcessing}
+                    className="flex items-center gap-2 rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 disabled:opacity-50"
+                >
+                    <Pause size={16} aria-hidden="true" /> Pause Semua
+                </button>
+                <button
+                    type="button"
+                    onClick={() => handleBulkAds('resume')}
+                    disabled={bulkProcessing}
+                    className="flex items-center gap-2 rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 disabled:opacity-50"
+                >
+                    <Play size={16} aria-hidden="true" /> Resume Semua
+                </button>
+                <p
+                    className="text-sm text-gray-600 dark:text-gray-400"
+                    role="status"
+                >
+                    {bulkProcessing
+                        ? 'Mengirim permintaan...'
+                        : 'Berlaku untuk semua toko, tanpa mengikuti filter tabel. Iklan ended, deleted, closed, dan scheduled tidak diubah.'}
+                </p>
+            </div>
 
             <div className="flex items-center gap-4 p-6 pb-0">
                 <select
@@ -424,7 +463,9 @@ function AdsShopee() {
                                             {
                                                 data: daily.metrics.map(
                                                     (metric) =>
-                                                        Number(metric.broad_gmv),
+                                                        Number(
+                                                            metric.broad_gmv,
+                                                        ),
                                                 ),
                                                 label: 'Penjualan',
                                                 color: '#3b82f6',

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ShopeeAdsIndexRequest;
 use App\Http\Requests\SyncShopeeAdsDailyMetricsRequest;
+use App\Jobs\ShopeeAdsActionJob;
 use App\Models\AdsShopee;
 use App\Models\Marketplace;
 use App\Models\MarketplaceAdDailyMetric;
@@ -11,7 +12,6 @@ use App\Services\Shopee\ShopeeServices;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 use Throwable;
@@ -67,6 +67,22 @@ class ShopeeAdsController extends Controller
         ]);
     }
 
+    public function bulkAction(string $action): RedirectResponse
+    {
+        $count = 0;
+
+        foreach (AdsShopee::whereIn('status', ['ongoing', 'paused'])
+            ->whereHas('marketplace', fn ($query) => $query->where('marketplace', 'Shopee'))
+            ->lazyById() as $ad) {
+            ShopeeAdsActionJob::dispatch($ad, $action)->onQueue('shopee')->delay(now()->addSeconds($count));
+            $count++;
+        }
+
+        return back()->with('success', $count === 0
+            ? 'Tidak ada iklan yang dapat diproses.'
+            : "Permintaan {$action} untuk {$count} iklan di semua toko telah masuk antrean. Muat ulang halaman setelah proses selesai.");
+    }
+
     public function syncDailyMetrics(
         SyncShopeeAdsDailyMetricsRequest $request,
         Marketplace $marketplace,
@@ -86,7 +102,7 @@ class ShopeeAdsController extends Controller
         } catch (Throwable $exception) {
             $log = Log::build([
                 'driver' => 'single',
-                'path'   => storage_path('logs/shopee.log'),
+                'path' => storage_path('logs/shopee.log'),
             ]);
             $log->info($exception->getMessage());
 
