@@ -4,10 +4,11 @@ import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, usePage } from '@inertiajs/react';
 
 function ProductsAction() {
-    const { products, categories } = usePage().props;
+    const { products, categories, marketplaces } = usePage().props;
     const { data, setData, put, post, processing, errors, reset } = useForm({
         id: products.id ?? '',
         cat_id: products.cat_id ?? '',
+        marketplace_id: products.marketplace_id || '',
         cat_name: products.cat_name ?? '',
         name: products.name ?? '',
         description: products.description ?? '',
@@ -143,6 +144,44 @@ function ProductsAction() {
                                     ))}
                                 </select>
                                 <InputError message={errors.cat_id} />
+                            </div>
+
+                            <div>
+                                <InputLabel
+                                    htmlFor="marketplace_id"
+                                    value="Marketplace"
+                                />
+                                <select
+                                    id="marketplace_id"
+                                    name="marketplace_id"
+                                    className="mt-1 block w-full rounded-md border-gray-300"
+                                    value={data.marketplace_id}
+                                    onChange={(e) =>
+                                        setData(
+                                            'marketplace_id',
+                                            e.target.value,
+                                        )
+                                    }
+                                >
+                                    <option value="">Tanpa marketplace</option>
+                                    {marketplaces.map((marketplace) => (
+                                        <option
+                                            key={marketplace.id}
+                                            value={marketplace.id}
+                                        >
+                                            {marketplace.marketplace}
+                                            {marketplace.store
+                                                ? ` - ${marketplace.store}`
+                                                : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                {marketplaces.length === 0 && (
+                                    <p className="mt-1 text-sm text-gray-500">
+                                        Belum ada marketplace tersedia.
+                                    </p>
+                                )}
+                                <InputError message={errors.marketplace_id} />
                             </div>
 
                             <div>

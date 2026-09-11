@@ -10,6 +10,7 @@ use App\Http\Controllers\ProductDiscountController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ShopeeAdsController;
+use App\Http\Controllers\ShopeeCalculatorController;
 use App\Http\Controllers\ShopeeController;
 use App\Http\Controllers\ShopeeFeeController;
 use Illuminate\Support\Facades\Redis;
@@ -38,6 +39,9 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('configuration/shopee-calculator', [ShopeeCalculatorController::class, 'index'])->name('shopee.calculator.index');
+    Route::get('configuration/shopee-calculator/products', [ShopeeCalculatorController::class, 'products'])->name('shopee.calculator.products');
 
     Route::prefix('orders')->controller(OrderController::class)->group(function () {
         Route::get('/order-list', 'index')->name('order');

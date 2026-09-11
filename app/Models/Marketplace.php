@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -91,5 +92,21 @@ class Marketplace extends Model
     public function adDailyMetrics(): HasMany
     {
         return $this->hasMany(MarketplaceAdDailyMetric::class);
+    }
+
+    public function configFees(): HasMany
+    {
+        return $this->hasMany(ConfigFee::class);
+    }
+
+    /** @return Collection<int, self> */
+    public static function shopeeCalculatorOptions(): Collection
+    {
+        return self::query()->select('id', 'store')
+            ->where('marketplace', 'Shopee')
+            ->with(['configFees' => fn (HasMany $query): HasMany => $query
+                ->select('id', 'marketplace_id', 'admin_fee', 'free_shipping', 'extra_promo', 'processing_fee', 'affiliate', 'live', 'premi_fee', 'operational')
+                ->orderBy('id')])
+            ->orderBy('store')->orderBy('id')->get();
     }
 }

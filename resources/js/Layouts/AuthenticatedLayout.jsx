@@ -19,7 +19,9 @@ export default function AuthenticatedLayout({ header, children }) {
     const isOrdersActive = route().current('order');
     const isPurchaseActive = route().current('purchases.list');
     const isConfigurationActive =
-        route().current('ShopeeFee') || route().current('shopee.ads.index');
+        route().current('ShopeeFee') ||
+        route().current('shopee.ads.index') ||
+        route().current('shopee.calculator.*');
 
     return (
         <div className="min-h-screen bg-gray-100 dark:bg-gray-900">
@@ -185,6 +187,13 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 href={route('shopee.ads.index')}
                                             >
                                                 Ads Shopee
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={route(
+                                                    'shopee.calculator.index',
+                                                )}
+                                            >
+                                                Kalkulator Shopee
                                             </Dropdown.Link>
                                         </Dropdown.Content>
                                     </Dropdown>
@@ -448,6 +457,14 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={route().current('shopee.ads.index')}
                                 >
                                     Ads Shopee
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('shopee.calculator.index')}
+                                    active={route().current(
+                                        'shopee.calculator.*',
+                                    )}
+                                >
+                                    Kalkulator Shopee
                                 </ResponsiveNavLink>
                             </div>
                         </details>

@@ -94,7 +94,6 @@ class ShopeeController extends Controller
                         'name' => $sku->name,
                         'product_model_id' => (string) $shopee['model_id'],
                         'discount_price' => $shopee['current_price'],
-                        'original_price' => $shopee['original_price'],
                         'updated_at' => now(),
                     ];
                 }
@@ -111,7 +110,7 @@ class ShopeeController extends Controller
                 Product_sku::upsert(
                     $data,
                     ['id'], // kolom unik untuk mencocokkan record
-                    ['product_model_id', 'discount_price', 'original_price', 'updated_at'] // kolom yang diupdate
+                    ['product_model_id', 'discount_price', 'updated_at'] // kolom yang diupdate
                 );
             }
 

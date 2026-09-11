@@ -53,7 +53,7 @@ function Products() {
         },
         {
             key: 'price',
-            label: 'Price',
+            label: 'Modal',
             render: (row) => {
                 if (!row.has_variant) {
                     const minPrice = Math.min(
