@@ -1,8 +1,9 @@
 import DataTable from '@/Components/DataTable';
+import FlashMessage from '@/Components/FlashMessage';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 
 const formatDate = (date) => date?.replace('T', ' ').slice(0, 16) || '-';
 const value = (data) => data ?? '-';
@@ -12,6 +13,7 @@ export default function ProductDiscountDetail({
     items,
     editing = false,
 }) {
+    const { flash } = usePage().props;
     const { data, setData, put, processing, errors } = useForm({
         items: items.data.map((item) => ({
             id: item.id,
@@ -113,6 +115,9 @@ export default function ProductDiscountDetail({
 
             <div className="py-12">
                 <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:px-6 lg:px-8">
+                    <FlashMessage message={flash.success} role="status" />
+                    <FlashMessage message={flash.error} type="error" role="alert" />
+
                     <div className="flex items-center justify-between gap-4">
                         <Link
                             href={
