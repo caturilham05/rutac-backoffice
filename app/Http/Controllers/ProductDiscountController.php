@@ -5,10 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProductDiscountRequest;
 use App\Http\Requests\UpdateProductDiscountItemsRequest;
 use App\Models\Marketplace;
+use App\Models\Product;
+use App\Models\Product_sku;
 use App\Models\ProductDiscount;
 use App\Models\ProductDiscountItem;
 use App\Services\Shopee\ShopeeServices;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -38,10 +41,9 @@ class ProductDiscountController extends Controller
         } catch (\Throwable $exception) {
             $log = Log::build([
                 'driver' => 'single',
-                'path'   => storage_path('logs/shopee.log'),
+                'path' => storage_path('logs/shopee.log'),
             ]);
             $log->info($exception->getMessage());
-
 
             return back()->with('error', 'Gagal menyinkronkan product discount Shopee: '.$exception->getMessage());
         }
@@ -100,21 +102,30 @@ class ProductDiscountController extends Controller
             $marketplace = Marketplace::query()->findOrFail($productDiscount->marketplace_id);
             $shopee->updateDiscountItems($marketplace->access_token, $marketplace->shop_id, $productDiscount->discount_id, $items);
 
-            foreach ($request->validated('items') as $item) {
-                $discountItem = $discountItems[$item['id']];
-                $discountItem->update([
-                    $discountItem->product_model_id === 0 ? 'item_promotion_price' : 'model_promotion_price' => $item['promotion_price'],
-                ]);
-            }
+            DB::transaction(function () use ($request, $discountItems, $productDiscount): void {
+                foreach ($request->validated('items') as $item) {
+                    $discountItem = $discountItems[$item['id']];
+                    $discountItem->update([
+                        $discountItem->product_model_id === 0 ? 'item_promotion_price' : 'model_promotion_price' => $item['promotion_price'],
+                    ]);
+
+                    Product_sku::query()
+                        ->whereIn('product_id', Product::query()
+                            ->select('id')
+                            ->where('marketplace_id', $productDiscount->marketplace_id)
+                            ->where('product_origin_id', $discountItem->product_origin_id))
+                        ->where('product_model_id', $discountItem->product_model_id)
+                        ->update(['discount_price' => $item['promotion_price']]);
+                }
+            });
 
             return redirect()->route('product_discounts.show', $productDiscount->discount_id)->with('success', 'Discount item berhasil diperbarui.');
         } catch (\Throwable $exception) {
             $log = Log::build([
                 'driver' => 'single',
-                'path'   => storage_path('logs/shopee.log'),
+                'path' => storage_path('logs/shopee.log'),
             ]);
             $log->info($exception->getMessage());
-
 
             return back()->with('error', 'Gagal memperbarui discount item Shopee: '.$exception->getMessage());
         }

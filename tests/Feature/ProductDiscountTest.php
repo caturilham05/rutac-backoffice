@@ -353,3 +353,56 @@ test('product discount synchronization reports Shopee errors without changing da
 
     $this->assertDatabaseCount('product_discounts', 0);
 });
+
+test('editing promo prices updates only matching SKUs after Shopee succeeds', function (int $modelId, bool $shopeeFails) {
+    $marketplaceId = DB::table('marketplaces')->insertGetId([
+        'marketplace' => 'Shopee', 'shop_id' => 456, 'access_token' => 'access-token',
+    ]);
+    $otherMarketplaceId = DB::table('marketplaces')->insertGetId(['marketplace' => 'Shopee']);
+    DB::table('product_discounts')->insert([
+        'marketplace_id' => $marketplaceId, 'discount_id' => 789, 'discount_name' => 'Promo',
+    ]);
+    $priceColumn = $modelId === 0 ? 'item_promotion_price' : 'model_promotion_price';
+    $itemId = DB::table('product_discount_items')->insertGetId([
+        'discount_id' => 789, 'product_origin_id' => 1001, 'product_model_id' => $modelId,
+        $priceColumn => 120000,
+    ]);
+    $skuIds = [];
+    foreach ([[$marketplaceId, 1001, $modelId], [$marketplaceId, 1001, 2002], [$marketplaceId, 1002, $modelId], [$otherMarketplaceId, 1001, $modelId]] as [$shop, $origin, $model]) {
+        $productId = DB::table('products')->insertGetId([
+            'marketplace_id' => $shop, 'product_origin_id' => $origin,
+            'cat_id' => 0, 'cat_name' => 'Parfum', 'name' => 'Parfum A',
+        ]);
+        $skuIds[] = DB::table('product_skus')->insertGetId([
+            'product_id' => $productId, 'product_model_id' => $model,
+            'original_price' => 150000, 'discount_price' => 120000,
+        ]);
+    }
+    $shopee = Mockery::mock(ShopeeServices::class);
+    $expectation = $shopee->shouldReceive('updateDiscountItems')->once();
+    if ($shopeeFails) {
+        $expectation->andThrow(new RuntimeException('API unavailable'));
+    } else {
+        $expectation->andReturn(['response' => ['error_list' => []]]);
+    }
+    $this->app->instance(ShopeeServices::class, $shopee);
+
+    $this->actingAs(User::factory()->create())
+        ->put(route('product_discounts.update', 789), [
+            'items' => [['id' => $itemId, 'promotion_price' => 110000]],
+        ])->assertRedirect()->assertSessionHas($shopeeFails ? 'error' : 'success');
+
+    $this->assertDatabaseHas('product_discount_items', [
+        'id' => $itemId, $priceColumn => $shopeeFails ? 120000 : 110000,
+    ]);
+    $this->assertDatabaseHas('product_skus', [
+        'id' => $skuIds[0], 'discount_price' => $shopeeFails ? 120000 : 110000,
+    ]);
+    foreach (array_slice($skuIds, 1) as $skuId) {
+        $this->assertDatabaseHas('product_skus', ['id' => $skuId, 'discount_price' => 120000]);
+    }
+})->with([
+    'without variants' => [0, false],
+    'with variants' => [2001, false],
+    'Shopee failure' => [2001, true],
+]);
