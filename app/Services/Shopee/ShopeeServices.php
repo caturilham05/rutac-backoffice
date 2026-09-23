@@ -2,8 +2,8 @@
 
 namespace App\Services\Shopee;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class ShopeeServices
 {
@@ -228,7 +228,7 @@ class ShopeeServices
         return $response_item_info;
     }
 
-    private function getProductLevelCampaignIdList(string $accessToken, int $shopId)
+    private function getProductLevelCampaignIdList(string $accessToken, int $shopId): array
     {
         $timestamp = $this->time;
         $path = '/api/v2/ads/get_product_level_campaign_id_list';
@@ -244,20 +244,27 @@ class ShopeeServices
             $shopId
         );
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->get($url)->json();
+        $httpResponse = Http::connectTimeout(3)->timeout(10)->get($url);
+        $response = $httpResponse->json();
+        if (! $httpResponse->successful() || ! is_array($response)
+            || ! empty($response['error']) || ! is_array($response['response']['campaign_list'] ?? null)) {
+            throw new \RuntimeException('Daftar iklan Shopee belum dapat dibaca.');
+        }
 
         return $response;
     }
 
-    public function getProductLevelCampaignSettingInfo(string $accessToken, int $shopId)
+    public function getProductLevelCampaignSettingInfo(string $accessToken, int $shopId, ?int $campaignId = null): array
     {
-        $ads_list = $this->getProductLevelCampaignIdList($accessToken, $shopId);
-        if (! empty($ads_list['error'])) {
-            throw new \Exception($ads_list['message']);
+        if ($campaignId !== null) {
+            $campaign_ids = [$campaignId];
+        } else {
+            $ads_list = $this->getProductLevelCampaignIdList($accessToken, $shopId);
+            $campaign_ids = array_column($ads_list['response']['campaign_list'], 'campaign_id');
         }
-        $campaign_ids = array_column($ads_list['response']['campaign_list'], 'campaign_id');
+        if ($campaign_ids === []) {
+            return [];
+        }
 
         $path = '/api/v2/ads/get_product_level_campaign_setting_info';
         $baseString = $this->partnerId.$path.$this->time.$accessToken.$shopId;
@@ -273,17 +280,18 @@ class ShopeeServices
             implode(',', $campaign_ids)
         );
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->get($url)->json();
-
-        if (! empty($response['error'])) {
-            throw new \Exception($response['message']);
+        $httpResponse = Http::connectTimeout(3)->timeout(10)->get($url);
+        $response = $httpResponse->json();
+        if (! $httpResponse->successful() || ! is_array($response)
+            || ! empty($response['error']) || ! is_array($response['response']['campaign_list'] ?? null)) {
+            throw new \RuntimeException('Pengaturan Shopee belum dapat dibaca. Silakan coba lagi.');
         }
 
         $campaign_list = $response['response']['campaign_list'];
-        $campaign_ongoing = array_values(array_filter($campaign_list, function ($value) {
-            return $value['common_info']['campaign_status'] === 'ongoing';
+        $campaign_ongoing = array_values(array_filter($campaign_list, function ($value) use ($campaignId) {
+            return $campaignId !== null
+                ? (string) ($value['campaign_id'] ?? '') === (string) $campaignId
+                : ($value['common_info']['campaign_status'] ?? null) === 'ongoing';
         }));
 
         return $campaign_ongoing;
@@ -311,7 +319,7 @@ class ShopeeServices
         return $response;
     }
 
-    public function editManualProductAds(string $accessToken, int $shop_id, array $data)
+    public function editManualProductAds(string $accessToken, int $shop_id, array $data): array
     {
         $path = '/api/v2/ads/edit_manual_product_ads';
         $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
@@ -326,16 +334,17 @@ class ShopeeServices
             $shop_id
         );
 
-        $response = Http::withHeaders([
-            'Content-Type' => 'application/json',
-        ])->withBody(json_encode($data), 'application/json')->post($url)->throw()->json();
+        try {
+            $httpResponse = Http::connectTimeout(3)->timeout(10)->post($url, $data);
+        } catch (ConnectionException) {
+            throw new \RuntimeException('Hasil perubahan belum dapat dipastikan. Muat ulang pengaturan sebelum mencoba lagi.', 408);
+        }
+        $response = $httpResponse->json();
 
-        if (! empty($response['error'])) {
-            Log::build([
-                'driver' => 'single',
-                'path' => storage_path('logs/shopee-services.log'),
-            ])->error('Shopee API Error [editManualProductAds]: '.json_encode($response));
-            throw new \Exception($response['message']);
+        if (! $httpResponse->successful() || ! is_array($response)
+            || ! array_key_exists('error', $response) || $response['error'] !== '') {
+            // throw new \RuntimeException('Shopee menolak perubahan atau mengembalikan respons tidak valid. Muat ulang pengaturan sebelum mencoba lagi.');
+            throw new \RuntimeException(sprintf('%s [error shopee]', $response['message']));
         }
 
         return $response;

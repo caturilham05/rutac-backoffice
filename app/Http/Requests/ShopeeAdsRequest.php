@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
-use Override;
+use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Validation\Validator;
 
-class ShopeeAdsRequest extends FormRequest
+class ShopeeAdsRequest extends ShopeeAdsIndexRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -18,21 +18,38 @@ class ShopeeAdsRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
+            ...parent::rules(),
+            'return_to_detail' => ['sometimes', 'boolean'],
             'campaign_id' => ['required', 'integer'],
-            'edit_action' => ['required', 'in:pause,resume']
+            'edit_action' => ['required', 'in:pause,resume'],
         ];
+    }
+
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            $marketplace = $this->route('marketplace');
+            if (! $marketplace->access_token || ! $marketplace->shop_id) {
+                $validator->errors()->add('marketplace', 'Toko Shopee belum terhubung dengan benar.');
+            }
+        }];
+    }
+
+    public function listQuery(): array
+    {
+        return $this->safe()->only(array_keys(parent::rules()));
     }
 
     public function message(): array
     {
         return [
             '*.required' => ':attribute tidak boleh kosong',
-            '*.integer'  => ':attribute harus angka'
+            '*.integer' => ':attribute harus angka',
         ];
     }
 
@@ -40,7 +57,7 @@ class ShopeeAdsRequest extends FormRequest
     {
         return [
             'campaign_id' => 'Campaign Id',
-            'edit_action' => 'Action'
+            'edit_action' => 'Action',
         ];
     }
 }

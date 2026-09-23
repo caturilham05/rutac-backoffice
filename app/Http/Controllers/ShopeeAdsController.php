@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ShopeeAdsIndexRequest;
+use App\Http\Requests\ShopeeAdsSettingsRequest;
 use App\Http\Requests\SyncShopeeAdsDailyMetricsRequest;
 use App\Jobs\ShopeeAdsActionJob;
 use App\Models\AdsShopee;
@@ -18,6 +19,39 @@ use Throwable;
 
 class ShopeeAdsController extends Controller
 {
+    public function edit(ShopeeAdsSettingsRequest $request, Marketplace $marketplace, AdsShopee $ad, ShopeeServices $shopee): Response
+    {
+        $result = $ad->settingsForDisplay($marketplace, $shopee);
+        $accepted = $request->session()->get('ads_setting');
+        $feedback = null;
+        if (($accepted['ad_id'] ?? null) === $ad->id) {
+            $actual = $result['settings'][$accepted['field']] ?? null;
+            $feedback = $actual === null
+                ? 'Perubahan diterima; status aktual belum dapat dibaca.'
+                : ($actual != $accepted['value'] ? 'Perubahan diterima; nilai aktual dari Shopee berbeda dari permintaan. Nilai aktual ditampilkan.' : 'Perubahan berhasil dan pengaturan telah dibaca ulang.');
+        }
+
+        return Inertia::render('Backoffice/Configuration/AdsShopeeEdit', [
+            'ad' => $ad->only(['id', 'campaign_id', 'name', 'status', 'bidding_method', 'campaign_budget', 'roas_target', 'enhanced_cpc', 'start_time', 'end_time']),
+            'marketplace' => $marketplace->only(['id', 'store']),
+            'settings' => $result['settings'],
+            'settingsError' => $result['error'],
+            'feedback' => $feedback,
+            'listQuery' => $request->listQuery(),
+        ]);
+    }
+
+    public function update(ShopeeAdsSettingsRequest $request, Marketplace $marketplace, AdsShopee $ad, ShopeeServices $shopee): RedirectResponse
+    {
+        $result = $ad->changeSetting($marketplace, $shopee, $request->validated());
+
+        return redirect()->route('shopee.ads.settings.edit', [
+            'marketplace' => $marketplace->id, 'ad' => $ad->id, ...$request->listQuery(),
+        ])->with('success', $result['message'])
+            ->with('error', $result['error'])
+            ->with('ads_setting', ['ad_id' => $ad->id, 'field' => $result['field'], 'value' => $result['value']]);
+    }
+
     public function index(ShopeeAdsIndexRequest $request): Response
     {
         $validated = $request->validated();
@@ -104,12 +138,12 @@ class ShopeeAdsController extends Controller
                 'driver' => 'single',
                 'path' => storage_path('logs/shopee.log'),
             ]);
-            $log->info($exception->getMessage());
+            $log->warning('Shopee daily metrics synchronization failed.', ['marketplace_id' => $marketplace->id]);
 
             return redirect()->route('shopee.ads.index', [
                 'marketplace_id' => $marketplace->getKey(),
                 ...$dates,
-            ])->with('error', $exception->getMessage());
+            ])->with('error', 'Sinkronisasi Ads Daily gagal. Silakan coba lagi.');
         }
 
         return redirect()->route('shopee.ads.index', [

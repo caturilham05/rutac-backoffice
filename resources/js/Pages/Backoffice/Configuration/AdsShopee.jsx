@@ -1,9 +1,9 @@
 import DataTable from '@/Components/DataTable';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { formatCurrency } from '@/Utils/format';
-import { Head, router, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
 import { LineChart } from '@mui/x-charts/LineChart';
-import { CircleHelp, Pause, Play } from 'lucide-react';
+import { CircleHelp, Pause, Pencil, Play } from 'lucide-react';
 import { useState } from 'react';
 
 const formatCompactCurrency = (value) =>
@@ -15,7 +15,8 @@ const formatCompactCurrency = (value) =>
     }).format(value);
 
 function AdsShopee() {
-    const { ads, daily, flash, filters, sort, campaigns, marketplaces } = usePage().props;
+    const { ads, daily, flash, filters, sort, campaigns, marketplaces } =
+        usePage().props;
     const [bulkProcessing, setBulkProcessing] = useState(false);
     const [selectedMarketplace, setSelectedMarketplace] = useState(
         daily.marketplace_id ?? '',
@@ -148,11 +149,29 @@ function AdsShopee() {
         {
             key: 'edit',
             label: 'Action',
-            render: (row) =>
-                statusConfig[row.status] &&
-                statusConfig[row.status].nextAction && (
-                    <div className="flex gap-2">
+            render: (row) => (
+                <div className="flex items-center gap-2">
+                    <Link
+                        href={route('shopee.ads.settings.edit', {
+                            marketplace: row.marketplace_id,
+                            ad: row.id,
+                            ...filters,
+                            ...sort,
+                            page: ads.current_page,
+                        })}
+                        aria-label="Detail / Edit"
+                        title="Detail / Edit"
+                        className="inline-flex items-center justify-center rounded border border-gray-300 px-3 py-1 text-blue-600 dark:border-gray-600 dark:text-blue-400"
+                    >
+                        <Pencil size={15} aria-hidden="true" />
+                    </Link>
+                    {statusConfig[row.status]?.nextAction && (
                         <button
+                            aria-label={
+                                row.status === 'ongoing'
+                                    ? 'Jeda iklan'
+                                    : 'Lanjutkan iklan'
+                            }
                             onClick={() =>
                                 handleAds(
                                     row.marketplace_id,
@@ -164,8 +183,9 @@ function AdsShopee() {
                         >
                             {statusConfig[row.status].icon}
                         </button>
-                    </div>
-                ),
+                    )}
+                </div>
+            ),
         },
     ];
 

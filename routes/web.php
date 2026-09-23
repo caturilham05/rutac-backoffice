@@ -114,6 +114,8 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
     Route::post('/configuration/ads-shopee/bulk/{action}', [ShopeeAdsController::class, 'bulkAction'])
         ->whereIn('action', ['pause', 'resume'])->name('shopee.ads.bulk');
     Route::get('/configuration/ads-shopee', [ShopeeAdsController::class, 'index'])->name('shopee.ads.index');
+    Route::get('/configuration/{marketplace}/ads-shopee/{ad}/edit', [ShopeeAdsController::class, 'edit'])->name('shopee.ads.settings.edit');
+    Route::patch('/configuration/{marketplace}/ads-shopee/{ad}/settings', [ShopeeAdsController::class, 'update'])->name('shopee.ads.settings.update');
     Route::post('/configuration/ads-shopee/{marketplace}/daily-metrics', [ShopeeAdsController::class, 'syncDailyMetrics'])
         ->name('shopee.ads.daily-metrics.sync');
 });
