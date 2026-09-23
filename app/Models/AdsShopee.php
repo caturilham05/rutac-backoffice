@@ -94,27 +94,19 @@ class AdsShopee extends Model
     }
 
     /** @return array{settings: ?array, error: ?string} */
-    public function settingsForDisplay(Marketplace $marketplace, ShopeeServices $shopee): array
+    public function settingsForDisplay(Marketplace $marketplace): array
     {
-        try {
-            $settings = $this->readSettings($marketplace, $shopee);
-        } catch (Throwable) {
-            return ['settings' => null, 'error' => $this->canReadSettings($marketplace)
-                ? 'Pengaturan terbaru belum dapat dibaca. Data lokal adalah terakhir tersimpan. Coba lagi sebelum mengedit.'
-                : 'Koneksi Shopee atau kolom enhanced_cpc belum tersedia. Operator perlu memeriksa koneksi dan menjalankan migration yang sudah tersedia.'];
-        }
-        $stored = $this->getAttributes();
-        try {
-            if ($settings['enhanced_cpc'] !== null) {
-                $this->update(['enhanced_cpc' => $settings['enhanced_cpc']]);
-            }
-        } catch (Throwable) {
-            $this->setRawAttributes($stored, true);
-
-            return ['settings' => $settings, 'error' => 'Pengaturan Shopee berhasil dibaca, tetapi sinkronisasi lokal gagal. Coba lagi.'];
+        if (! $this->canReadSettings($marketplace)) {
+            return ['settings' => null, 'error' => 'Koneksi Shopee atau kolom enhanced_cpc belum tersedia. Operator perlu memeriksa koneksi dan menjalankan migration yang sudah tersedia.'];
         }
 
-        return ['settings' => $settings, 'error' => null];
+        return ['settings' => [
+            'campaign_budget' => $this->campaign_budget === null ? null : (float) $this->campaign_budget,
+            'roas_target' => $this->roas_target === null ? null : (float) $this->roas_target,
+            'enhanced_cpc' => $this->enhanced_cpc,
+            'bidding_method' => $this->bidding_method,
+            'status' => $this->status,
+        ], 'error' => null];
     }
 
     /** @return array{field: string, value: bool|float, message: string, error: ?string} */

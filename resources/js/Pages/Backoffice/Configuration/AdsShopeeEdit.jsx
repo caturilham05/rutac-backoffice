@@ -34,7 +34,6 @@ export default function AdsShopeeEdit() {
         marketplace,
         settings,
         settingsError,
-        feedback,
         listQuery,
         flash,
     } = usePage().props;
@@ -159,12 +158,15 @@ export default function AdsShopeeEdit() {
                 >
                     <ArrowLeft size={16} aria-hidden="true" /> Kembali
                 </Link>
-                {(feedback || flash.success) && (
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                    Terakhir tersimpan. Perubahan langsung di Shopee akan terlihat setelah sinkronisasi.
+                </p>
+                {flash.success && (
                     <p
                         role="status"
                         className="rounded-lg bg-green-50 p-4 text-green-800 dark:bg-green-950 dark:text-green-200"
                     >
-                        {feedback || flash.success}
+                        {flash.success}
                     </p>
                 )}
                 {flash.error && (

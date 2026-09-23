@@ -138,12 +138,12 @@ export default function ShopeeCalculator({ marketplaces }) {
             }
         >
             <Head title="Kalkulator Shopee" />
-            <div className="mx-auto grid max-w-7xl gap-6 p-4 text-gray-800 dark:text-gray-200 sm:p-6">
+            <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 p-4 text-gray-800 dark:text-gray-200 sm:p-6">
                 <p>
                     Simulasi satu unit SKU per order. Harga jual awal mengikuti
                     SKU; perubahan harga dan tarif hanya berlaku di kalkulator.
                 </p>
-                <section className="grid gap-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:grid-cols-2 sm:p-6">
+                <section className="grid grid-cols-1 gap-4 rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800 sm:grid-cols-2 sm:p-6">
                     <div>
                         <InputLabel
                             htmlFor="calculator-store"
@@ -268,7 +268,7 @@ export default function ShopeeCalculator({ marketplaces }) {
                                             <ComboboxOption
                                                 key={item.sku_id}
                                                 value={item}
-                                                className="cursor-pointer px-4 py-3 data-[focus]:bg-indigo-100 data-[selected]:font-semibold dark:data-[focus]:bg-indigo-900"
+                                                className="cursor-pointer break-words px-4 py-3 data-[focus]:bg-indigo-100 data-[selected]:font-semibold dark:data-[focus]:bg-indigo-900"
                                             >
                                                 {labelSku(item)}
                                             </ComboboxOption>
@@ -319,7 +319,7 @@ export default function ShopeeCalculator({ marketplaces }) {
                     <h2 className="mb-4 text-lg font-semibold">
                         Rincian biaya
                     </h2>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {Object.entries(feeFields).map(([key, label]) => (
                             <div key={key}>
                                 {field(
@@ -350,7 +350,7 @@ export default function ShopeeCalculator({ marketplaces }) {
                         Perbaiki input yang tidak valid untuk melihat hasil.
                     </p>
                 )}
-                <div className="grid gap-6 lg:grid-cols-2">
+                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <Summary
                         title="Ringkasan sebelum iklan"
                         rows={[

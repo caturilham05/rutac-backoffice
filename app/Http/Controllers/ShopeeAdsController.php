@@ -19,24 +19,15 @@ use Throwable;
 
 class ShopeeAdsController extends Controller
 {
-    public function edit(ShopeeAdsSettingsRequest $request, Marketplace $marketplace, AdsShopee $ad, ShopeeServices $shopee): Response
+    public function edit(ShopeeAdsSettingsRequest $request, Marketplace $marketplace, AdsShopee $ad): Response
     {
-        $result = $ad->settingsForDisplay($marketplace, $shopee);
-        $accepted = $request->session()->get('ads_setting');
-        $feedback = null;
-        if (($accepted['ad_id'] ?? null) === $ad->id) {
-            $actual = $result['settings'][$accepted['field']] ?? null;
-            $feedback = $actual === null
-                ? 'Perubahan diterima; status aktual belum dapat dibaca.'
-                : ($actual != $accepted['value'] ? 'Perubahan diterima; nilai aktual dari Shopee berbeda dari permintaan. Nilai aktual ditampilkan.' : 'Perubahan berhasil dan pengaturan telah dibaca ulang.');
-        }
+        $result = $ad->settingsForDisplay($marketplace);
 
         return Inertia::render('Backoffice/Configuration/AdsShopeeEdit', [
             'ad' => $ad->only(['id', 'campaign_id', 'name', 'status', 'bidding_method', 'campaign_budget', 'roas_target', 'enhanced_cpc', 'start_time', 'end_time']),
             'marketplace' => $marketplace->only(['id', 'store']),
             'settings' => $result['settings'],
             'settingsError' => $result['error'],
-            'feedback' => $feedback,
             'listQuery' => $request->listQuery(),
         ]);
     }
@@ -48,8 +39,7 @@ class ShopeeAdsController extends Controller
         return redirect()->route('shopee.ads.settings.edit', [
             'marketplace' => $marketplace->id, 'ad' => $ad->id, ...$request->listQuery(),
         ])->with('success', $result['message'])
-            ->with('error', $result['error'])
-            ->with('ads_setting', ['ad_id' => $ad->id, 'field' => $result['field'], 'value' => $result['value']]);
+            ->with('error', $result['error']);
     }
 
     public function index(ShopeeAdsIndexRequest $request): Response

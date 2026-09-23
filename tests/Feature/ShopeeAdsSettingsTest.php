@@ -197,49 +197,49 @@ test('HTTP business and malformed edit responses never persist', function (mixed
     'null error' => [['error' => null], 200],
 ]);
 
-test('paused campaign detail reads only its campaign and hides credentials and store metrics', function () {
-    $this->travelTo('2026-09-23 12:00:00');
+test('paused campaign detail reads the database without HTTP and hides credentials and store metrics', function () {
     $ad = settingsAd();
     fakeSettings();
     MarketplaceAdDailyMetric::create(['marketplace_id' => $ad->marketplace_id, 'metric_date' => '2026-09-23', 'impressions' => 987]);
 
     $this->actingAs(User::factory()->create())->get(settingsRoute($ad, 'edit', ['page' => 3, 'status' => 'paused', 'redirect' => 'https://evil.test']))
         ->assertInertia(fn (Assert $page) => $page->component('Backoffice/Configuration/AdsShopeeEdit')
-            ->where('settings.status', 'paused')->where('settings.enhanced_cpc', null)->where('ad.enhanced_cpc', false)
+            ->where('settings.status', 'paused')->where('settings.enhanced_cpc', false)->where('ad.enhanced_cpc', false)
             ->where('listQuery', ['status' => 'paused', 'page' => '3'])
-            ->missing('performance')->missing('daily')->missing('marketplace.access_token')->missing('marketplace.refresh_token'));
+            ->missing('feedback')->missing('performance')->missing('daily')->missing('marketplace.access_token')->missing('marketplace.refresh_token'));
 
-    Http::assertSentCount(1);
-    Http::assertSent(fn ($request) => $request['campaign_id_list'] === '11111' && $request['info_type_list'] === '1,2,3,4');
+    Http::assertNothingSent();
 });
 
-test('detail persists real CPC booleans but missing null and string values stay unknown', function (array $campaign, ?bool $actual, bool $saved) {
-    $ad = settingsAd(['enhanced_cpc' => true]);
+test('detail uses stored CPC regardless of the upstream response', function (array $campaign, bool $saved) {
+    $ad = settingsAd(['enhanced_cpc' => $saved]);
     fakeSettings($campaign);
+    $before = $ad->fresh()->getAttributes();
 
     $this->actingAs(User::factory()->create())->get(settingsRoute($ad, 'edit'))
-        ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', $actual)->where('ad.enhanced_cpc', $saved));
+        ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', $saved)->where('ad.enhanced_cpc', $saved));
 
-    expect($ad->fresh()->enhanced_cpc)->toBe($saved);
-    Http::assertSentCount(1);
+    expect($ad->fresh()->getAttributes())->toBe($before);
+    Http::assertNothingSent();
 })->with([
-    'true' => [['manual_bidding_info' => ['enhanced_cpc' => true]], true, true],
-    'false' => [['manual_bidding_info' => ['enhanced_cpc' => false]], false, false],
-    'missing' => [[], null, true],
-    'null' => [['manual_bidding_info' => ['enhanced_cpc' => null]], null, true],
-    'string false' => [['manual_bidding_info' => ['enhanced_cpc' => 'false']], null, true],
+    'upstream true' => [['manual_bidding_info' => ['enhanced_cpc' => true]], false],
+    'upstream false' => [['manual_bidding_info' => ['enhanced_cpc' => false]], true],
+    'missing' => [[], true],
+    'null' => [['manual_bidding_info' => ['enhanced_cpc' => null]], true],
+    'string false' => [['manual_bidding_info' => ['enhanced_cpc' => 'false']], true],
 ]);
 
-test('failed settings read shows local fallback and blocks mutations', function (mixed $body) {
+test('unavailable Shopee settings do not block viewing but still block mutations', function (mixed $body) {
     $ad = settingsAd();
     Http::preventStrayRequests();
     Http::fake(['partner.test/api/v2/ads/get_product_level_campaign_setting_info*' => Http::response($body)]);
     $this->actingAs(User::factory()->create());
 
-    $this->get(settingsRoute($ad, 'edit'))->assertInertia(fn (Assert $page) => $page->where('settings', null)->where('settingsError', fn ($value) => str_contains($value, 'belum dapat dibaca'))->where('ad.campaign_budget', 12000));
+    $this->get(settingsRoute($ad, 'edit'))->assertInertia(fn (Assert $page) => $page->where('settings.campaign_budget', 12000)->where('settingsError', null));
+    Http::assertNothingSent();
     $this->patch(settingsRoute($ad), ['edit_action' => 'change_budget', 'budget' => 15000])->assertSessionHasErrors('settings');
 
-    Http::assertSentCount(2);
+    Http::assertSentCount(1);
     expect($ad->fresh()->campaign_budget)->toEqual(12000);
 })->with(['invalid' => ['bad JSON'], 'empty' => [[]], 'missing campaign' => [['error' => '', 'response' => ['campaign_list' => []]]]]);
 
@@ -275,29 +275,29 @@ test('local persistence failure is reported as successful remote change with a l
     Http::assertSentCount(2);
 });
 
-test('accepted CPC with no readback stays locally saved and reports unknown actual status', function () {
+test('accepted CPC is displayed from the database without claiming remote verification', function () {
     $ad = settingsAd();
     fakeSettings();
 
     $this->actingAs(User::factory()->create())->followingRedirects()->patch(settingsRoute($ad), ['edit_action' => 'change_enhanced_cpc', 'enhanced_cpc' => true])
-        ->assertInertia(fn (Assert $page) => $page->where('feedback', 'Perubahan diterima; status aktual belum dapat dibaca.')->where('settings.enhanced_cpc', null)->where('ad.enhanced_cpc', true));
+        ->assertInertia(fn (Assert $page) => $page->missing('feedback')->where('settings.enhanced_cpc', true)->where('ad.enhanced_cpc', true));
 
     expect($ad->fresh()->enhanced_cpc)->toBeTrue();
-    Http::assertSentCount(3);
+    Http::assertSentCount(2);
 });
 
-test('readback disagreement uses actual CPC and warns the user', function () {
+test('redirect uses the newly saved CPC rather than older upstream settings', function () {
     $ad = settingsAd();
     fakeSettings(['manual_bidding_info' => ['enhanced_cpc' => false]]);
 
     $this->actingAs(User::factory()->create())->followingRedirects()->patch(settingsRoute($ad), ['edit_action' => 'change_enhanced_cpc', 'enhanced_cpc' => true])
-        ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', false)->where('feedback', fn ($value) => str_contains($value, 'berbeda')));
+        ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', true)->missing('feedback'));
 
-    expect($ad->fresh()->enhanced_cpc)->toBeFalse();
-    Http::assertSentCount(3);
+    expect($ad->fresh()->enhanced_cpc)->toBeTrue();
+    Http::assertSentCount(2);
 });
 
-test('failed readback keeps successful persistence and separates the verification error', function () {
+test('redirect performs no readback when Shopee becomes unavailable after saving', function () {
     $ad = settingsAd();
     Http::preventStrayRequests();
     Http::fake([
@@ -306,10 +306,10 @@ test('failed readback keeps successful persistence and separates the verificatio
     ]);
 
     $this->actingAs(User::factory()->create())->followingRedirects()->patch(settingsRoute($ad), ['edit_action' => 'change_enhanced_cpc', 'enhanced_cpc' => true])
-        ->assertInertia(fn (Assert $page) => $page->where('settings', null)->where('ad.enhanced_cpc', true)->where('feedback', 'Perubahan diterima; status aktual belum dapat dibaca.')->where('settingsError', fn ($value) => str_contains($value, 'belum dapat dibaca')));
+        ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', true)->where('ad.enhanced_cpc', true)->missing('feedback')->where('settingsError', null));
 
     expect($ad->fresh()->enhanced_cpc)->toBeTrue();
-    Http::assertSentCount(3);
+    Http::assertSentCount(2);
 });
 
 test('mixed synchronization preserves missing CPC and reads false without dropping ongoing filtering', function () {
@@ -349,21 +349,21 @@ test('pause and resume return to detail with allowed filters and scoped persiste
     Http::assertSent(fn ($request) => array_keys($request->data()) === ['campaign_id', 'edit_action', 'reference_id']);
 })->with([['pause', 'paused'], ['resume', 'ongoing']]);
 
-test('failed read persistence keeps the last stored value separate from verified CPC', function () {
+test('viewing detail never attempts persistence', function () {
     $ad = settingsAd();
     fakeSettings(['manual_bidding_info' => ['enhanced_cpc' => true]]);
     AdsShopee::updating(fn () => throw new RuntimeException('fixture failure'));
 
     try {
         $this->actingAs(User::factory()->create())->get(settingsRoute($ad, 'edit'))
-            ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', true)->where('ad.enhanced_cpc', false)
-                ->where('settingsError', 'Pengaturan Shopee berhasil dibaca, tetapi sinkronisasi lokal gagal. Coba lagi.'));
+            ->assertInertia(fn (Assert $page) => $page->where('settings.enhanced_cpc', false)->where('ad.enhanced_cpc', false)
+                ->where('settingsError', null));
     } finally {
         AdsShopee::flushEventListeners();
     }
 
     expect($ad->fresh()->enhanced_cpc)->toBeFalse();
-    Http::assertSentCount(1);
+    Http::assertNothingSent();
 });
 
 test('the ads list retains filters pagination and safe store identity', function () {
@@ -501,12 +501,12 @@ test('pause rejection displays the Shopee message and preserves status', functio
     Http::assertSentCount(1);
 });
 
-test('detail preserves zero budget as the verified unlimited setting', function () {
+test('detail preserves zero budget from the database', function () {
     $ad = settingsAd(['campaign_budget' => 0]);
     fakeSettings(['common_info' => ['campaign_budget' => 0]]);
 
     $this->actingAs(User::factory()->create())->get(settingsRoute($ad, 'edit'))
         ->assertInertia(fn (Assert $page) => $page->where('settings.campaign_budget', 0)->where('ad.campaign_budget', 0));
 
-    Http::assertSentCount(1);
+    Http::assertNothingSent();
 });
