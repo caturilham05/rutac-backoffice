@@ -26,7 +26,7 @@ class Product_sku extends Model
             ->where('products.marketplace_id', $marketplaceId)
             ->where('marketplaces.marketplace', 'Shopee')
             ->where('product_skus.original_price', '>', 0)
-            ->where('product_skus.discount_price', '>', 0)
+            // ->where('product_skus.discount_price', '>', 0)
             ->where(function (Builder $builder) use ($query): void {
                 $builder->where('products.name', 'like', '%'.$query.'%')
                     ->orWhere('product_variants.name', 'like', '%'.$query.'%')
