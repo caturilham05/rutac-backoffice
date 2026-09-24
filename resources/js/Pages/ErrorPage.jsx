@@ -37,7 +37,7 @@ export default function ErrorPage({ status }) {
                     </p>
                     <div className="-mt-6 rounded-3xl border border-stone-200/80 bg-white/80 p-8 shadow-xl shadow-stone-200/40 backdrop-blur sm:p-12 dark:border-stone-800 dark:bg-stone-900/80 dark:shadow-black/20">
                         <p className="text-sm font-semibold uppercase tracking-[0.3em] text-amber-700 dark:text-amber-400">
-                            Rutac Perfume
+                            Small ERP
                         </p>
                         <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
                             {error.title}
