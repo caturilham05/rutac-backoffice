@@ -9,20 +9,21 @@ use Illuminate\Support\Facades\DB;
 
 class Product extends Model
 {
-    protected $table    = 'products';
+    protected $table = 'products';
+
     protected $fillable = ['cat_id', 'cat_name', 'name', 'description', 'has_variant', 'product_origin_id', 'marketplace_id'];
 
     public static function productUpsert(array $data)
     {
         return DB::transaction(function () use ($data) {
             $productData = [
-                'cat_id'            => $data['cat_id'] ?? 0,
-                'cat_name'          => $data['cat_name'] ?? null,
-                'name'              => $data['name'] ?? null,
-                'description'       => $data['description'] ?? null,
-                'has_variant'       => $data['has_variant'] ?? 0,
+                'cat_id' => $data['cat_id'] ?? 0,
+                'cat_name' => $data['cat_name'] ?? null,
+                'name' => $data['name'] ?? null,
+                'description' => $data['description'] ?? null,
+                'has_variant' => $data['has_variant'] ?? 0,
                 'product_origin_id' => $data['product_origin_id'] ?? 0,
-                'marketplace_id'    => $data['marketplace_id'] ?? 0
+                'marketplace_id' => $data['marketplace_id'] ?? 0,
             ];
 
             $product = self::updateOrCreate(
@@ -30,18 +31,15 @@ class Product extends Model
                 $productData
             );
 
-            if (!empty($data['variants']))
-            {
-                if (!is_array($data['variants']))
-                {
+            if (! empty($data['variants'])) {
+                if (! is_array($data['variants'])) {
                     throw new \Exception('data tidak valid', 400);
                 }
 
                 $variant_id = array_column($data['variants'], 'id');
-                $sku_id     = array_column($data['variants'], 'sku_id');
+                $sku_id = array_column($data['variants'], 'sku_id');
 
-                if (!empty($data['id']))
-                {
+                if (! empty($data['id'])) {
                     Product_variant::where('product_id', $data['id'])->whereNotIn('id', $variant_id)->delete();
                     Product_sku::where('product_id', $data['id'])->whereNotIn('id', $sku_id)->delete();
                 }
@@ -49,7 +47,7 @@ class Product extends Model
                 foreach ($data['variants'] as $variant) {
                     $productVariantData = [
                         'product_id' => $product->id ?? 0,
-                        'name'       => $variant['name']
+                        'name' => $variant['name'],
                     ];
 
                     $productVariantInsert = Product_variant::updateOrCreate(
@@ -58,11 +56,11 @@ class Product extends Model
                     );
 
                     $productSkuData = [
-                        'product_id'         => $product->id ?? 0,
+                        'product_id' => $product->id ?? 0,
                         'product_variant_id' => $productVariantInsert->id ?? 0,
-                        'name'               => !empty($variant['sku']) ? $variant['sku'] : sprintf('%s-%s', self::prefixSku($data['name']), $variant['name']),
-                        'stock'              => $variant['stock'],
-                        'original_price'     => $variant['price']
+                        'name' => ! empty($variant['sku']) ? $variant['sku'] : sprintf('%s-%s', self::prefixSku($data['name']), $variant['name']),
+                        'stock' => $variant['stock'],
+                        'original_price' => $variant['price'],
                     ];
 
                     $productSkuInsert = Product_sku::updateOrCreate(
@@ -74,13 +72,13 @@ class Product extends Model
                 return $product ?? [];
             }
 
-            $prefixSku      = self::prefixSku($data['name']) . '-' . $product->id ?? 0;
+            $prefixSku = self::prefixSku($data['name']).'-'.$product->id ?? 0;
             $productSkuData = [
-                'product_id'         => $product->id ?? 0,
+                'product_id' => $product->id ?? 0,
                 'product_variant_id' => 0,
-                'name'               => !empty($data['sku']) ? $data['sku'] : $prefixSku,
-                'stock'              => $data['stock'],
-                'original_price'     => $data['price'],
+                'name' => ! empty($data['sku']) ? $data['sku'] : $prefixSku,
+                'stock' => $data['stock'],
+                'original_price' => $data['price'],
             ];
 
             $productSkuInsert = Product_sku::updateOrCreate(
@@ -94,8 +92,6 @@ class Product extends Model
 
     /**
      * Get the user associated with the ConfigFee
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function category(): HasOne
     {
@@ -126,10 +122,10 @@ class Product extends Model
     {
         $query = self::with(['category', 'variants.skus', 'skus']);
 
-        if (!empty($filters['name'])) {
-            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        if (! empty($filters['name'])) {
+            $query->where('name', 'like', '%'.$filters['name'].'%');
         }
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->where('cat_id', $filters['category']);
         }
 
@@ -156,13 +152,13 @@ class Product extends Model
 
                         $product->items = $product->variants->map(function ($variant) {
                             return [
-                                'id'         => $variant->id,
+                                'id' => $variant->id,
                                 'product_id' => $variant->product_id,
-                                'name'       => $variant->name,
-                                'sku_id'     => $variant->skus?->id,
-                                'sku'        => $variant->skus?->name,
-                                'stock'      => $variant->skus?->stock,
-                                'price'      => $variant->skus?->original_price,
+                                'name' => $variant->name,
+                                'sku_id' => $variant->skus?->id,
+                                'sku' => $variant->skus?->name,
+                                'stock' => $variant->skus?->stock,
+                                'price' => $variant->skus?->original_price,
                             ];
                         });
 
@@ -170,14 +166,14 @@ class Product extends Model
 
                         $product->items = collect([
                             [
-                                'id'         => 0,
+                                'id' => 0,
                                 'product_id' => $product->id,
-                                'name'       => $product->name,
-                                'sku_id'     => $product->skus?->first()?->id,
-                                'sku'        => $product->skus?->first()?->name,
-                                'stock'      => $product->skus?->first()?->stock,
-                                'price'      => $product->skus?->first()?->original_price,
-                            ]
+                                'name' => $product->name,
+                                'sku_id' => $product->skus?->first()?->id,
+                                'sku' => $product->skus?->first()?->name,
+                                'stock' => $product->skus?->first()?->stock,
+                                'price' => $product->skus?->first()?->original_price,
+                            ],
                         ]);
                     }
 
@@ -193,26 +189,25 @@ class Product extends Model
             $products = $query->findOrFail($id);
             $products->items = collect();
 
-            if ($products->has_variant)
-            {
-                $products->items = $products->variants->map(function($variant) {
+            if ($products->has_variant) {
+                $products->items = $products->variants->map(function ($variant) {
                     return [
-                        'id'         => $variant->id,
+                        'id' => $variant->id,
                         'product_id' => $variant->product_id,
-                        'name'       => $variant->name,
-                    'sku_id'     => $variant->skus?->id,
-                    'sku'        => $variant->skus?->name,
-                    'stock'      => $variant->skus?->stock,
-                    'price'      => $variant->skus?->original_price,
+                        'name' => $variant->name,
+                        'sku_id' => $variant->skus?->id,
+                        'sku' => $variant->skus?->name,
+                        'stock' => $variant->skus?->stock,
+                        'price' => $variant->skus?->original_price,
                     ];
                 });
                 $products->unsetRelation('variants');
                 $products->unsetRelation('skus');
             } else {
                 $products->sku_id = $products->skus?->first()?->id;
-                $products->sku    = $products->skus?->first()?->name;
-                $products->price  = $products->skus?->first()?->original_price;
-                $products->stock  = $products->skus?->first()?->stock;
+                $products->sku = $products->skus?->first()?->name;
+                $products->price = $products->skus?->first()?->original_price;
+                $products->stock = $products->skus?->first()?->stock;
             }
         }
 

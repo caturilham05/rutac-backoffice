@@ -30,11 +30,11 @@ return new class extends Migration
             $table->integer('total_price')->default(0)->comment('Total harga pesanan setelah diskon dan ongkir');
             $table->string('status')->default('pending')->comment('Status pesanan (pending, processed, shipped, delivered, cancelled)');
             $table->index('status');
-            $table->dateTime('order_time')->nullable()->default(NULL)->comment('Tanggal order dari shopee');
+            $table->dateTime('order_time')->nullable()->default(null)->comment('Tanggal order dari shopee');
             $table->index('order_time');
-            $table->string('payment_method')->nullable()->comment('metode pembayaran')->default(NULL);
+            $table->string('payment_method')->nullable()->comment('metode pembayaran')->default(null);
             $table->index('payment_method');
-            $table->text('notes')->nullable()->default(NULL);
+            $table->text('notes')->nullable()->default(null);
             $table->timestamps();
         });
     }

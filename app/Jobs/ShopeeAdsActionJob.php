@@ -23,8 +23,8 @@ class ShopeeAdsActionJob implements ShouldQueue
         }
 
         $shopee->editManualProductAds($marketplace->access_token, (int) $marketplace->shop_id, [
-            'campaign_id'  => $this->ad->campaign_id,
-            'edit_action'  => $this->action,
+            'campaign_id' => $this->ad->campaign_id,
+            'edit_action' => $this->action,
             'reference_id' => Str::uuid()->toString(),
         ]);
 

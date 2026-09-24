@@ -7,7 +7,6 @@ use App\Models\Product;
 use App\Models\Product_category;
 use App\Models\Purchase;
 use App\Models\Purchase_product;
-use Carbon\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -29,7 +28,7 @@ class PurchaseController extends Controller
         $nextIncrement = 1;
 
         if ($lastPurchase) {
-            $parts         = explode('/', $lastPurchase->invoice);
+            $parts = explode('/', $lastPurchase->invoice);
             $nextIncrement = ((int) end($parts)) + 1;
         }
 
@@ -44,12 +43,12 @@ class PurchaseController extends Controller
 
     public function index(Request $request): Response
     {
-        $per_page    = $request->integer('per_page', $this->set_page);
+        $per_page = $request->integer('per_page', $this->set_page);
         $filter_data = $request->only(['invoice', 'vendor', 'start_date', 'end_date']);
-        $sort        = $request->input('sort');
-        $direction   = $request->input('direction', 'asc');
-        $purchases   = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);
-        $purchases->map(function($purchase){
+        $sort = $request->input('sort');
+        $direction = $request->input('direction', 'asc');
+        $purchases = Purchase::purchasePagination($per_page, $filter_data, $sort, $direction);
+        $purchases->map(function ($purchase) {
             $purchase['items'] = $purchase->purchase_products ?? [];
             $purchase['price'] = $purchase->price - $purchase->discount + $purchase->additional_fee;
             $purchase->unsetRelation('purchase_products');
@@ -57,54 +56,56 @@ class PurchaseController extends Controller
             return $purchase;
         });
 
-
         return Inertia::render('Backoffice/Purchases/PurchasesList', [
             'purchases' => $purchases,
-            'filters'   => $filter_data,
-            'sort'      => $sort,
-            'direction' => $direction
+            'filters' => $filter_data,
+            'sort' => $sort,
+            'direction' => $direction,
         ]);
     }
 
     public function create(): Response
     {
-        $invoice        = $this->generateInvoice('PURC');
-        $products       = Product::productGet(0, 15, [], null, 'asc', false);
+        $invoice = $this->generateInvoice('PURC');
+        $products = Product::productGet(0, 15, [], null, 'asc', false);
+
         return Inertia::render('Backoffice/Purchases/PurchasesCreate', [
-            'invoice'  => $invoice,
-            'products' => $products ?? []
+            'invoice' => $invoice,
+            'products' => $products ?? [],
         ]);
     }
 
     public function store(PurchaseRequest $request): RedirectResponse
     {
-        $data            = $request->validated();
-        $invoice         = $this->generateInvoice('PURC');
+        $data = $request->validated();
+        $invoice = $this->generateInvoice('PURC');
         $data['invoice'] = $invoice;
 
         try {
             Purchase::purchaseInsert($data);
+
             return redirect()->route('purchases.list')->with('success', sprintf('Pembelian [%s] berhasil ditambahkan', $data['invoice'] ?? ''));
         } catch (\Throwable $th) {
             return redirect()->route('purchases.list')->with('error', sprintf('error: %s. code: %s', $th->getMessage(), $th->getCode()));
         }
     }
 
-    public function indexPurchaseProducts(Request $request): Response {
-        $per_page    = $request->integer('per_page', $this->set_page);
+    public function indexPurchaseProducts(Request $request): Response
+    {
+        $per_page = $request->integer('per_page', $this->set_page);
         $filter_data = $request->only(['product_name', 'cat_name', 'invoice']);
-        $sort        = $request->input('sort');
-        $direction   = $request->input('direction', 'asc');
-        $categories  = Product_category::select('name')->get();
+        $sort = $request->input('sort');
+        $direction = $request->input('direction', 'asc');
+        $categories = Product_category::select('name')->get();
 
         $purchase_products = Purchase_product::purchaseProductPagination($per_page, $filter_data, $sort, $direction);
 
         return Inertia::render('Backoffice/Purchases/PurchaseProducts', [
             'purchase_products' => $purchase_products,
-            'filters'           => $filter_data,
-            'sort'              => $sort,
-            'direction'         => $direction,
-            'categories'        => $categories,
+            'filters' => $filter_data,
+            'sort' => $sort,
+            'direction' => $direction,
+            'categories' => $categories,
         ]);
     }
 }

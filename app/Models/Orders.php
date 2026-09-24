@@ -61,9 +61,9 @@ class Orders extends Model
             foreach ($items as $item) {
                 OrderProducts::updateOrCreate(
                     [
-                        'order_id'          => $order->id,
+                        'order_id' => $order->id,
                         'product_origin_id' => $item['product_origin_id'],
-                        'product_model_id'  => $item['product_model_id'],
+                        'product_model_id' => $item['product_model_id'],
                     ],
                     $item
                 );

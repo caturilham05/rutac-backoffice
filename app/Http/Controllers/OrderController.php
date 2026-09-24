@@ -2,10 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Marketplace;
 use App\Models\Orders;
-use App\Services\Shopee\ShopeeServices;
-use App\Services\Shopee\ShopeeSignature;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,9 +21,9 @@ class OrderController extends Controller
             ->withQueryString();
 
         return Inertia::render('Backoffice/Orders/Order', [
-            'orders'        => $orders,
-            'filters'       => $request->only(['invoice', 'buyer_username', 'courier', 'status', 'start_date', 'end_date']),
-            'sortColumn'    => $sort,
+            'orders' => $orders,
+            'filters' => $request->only(['invoice', 'buyer_username', 'courier', 'status', 'start_date', 'end_date']),
+            'sortColumn' => $sort,
             'sortDirection' => $direction,
         ]);
     }

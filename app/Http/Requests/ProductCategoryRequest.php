@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,15 +19,15 @@ class ProductCategoryRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             'name' => [
                 'required',
-                Rule::unique('product_categories')->where('name', $this->name)->ignore($this->id)
-            ]
+                Rule::unique('product_categories')->where('name', $this->name)->ignore($this->id),
+            ],
         ];
     }
 
@@ -34,7 +35,7 @@ class ProductCategoryRequest extends FormRequest
     {
         return [
             '*.required' => ':attribute wajib diisi',
-            '*.unique'   => ':attribute sudah terdaftar di sistem'
+            '*.unique' => ':attribute sudah terdaftar di sistem',
         ];
     }
 

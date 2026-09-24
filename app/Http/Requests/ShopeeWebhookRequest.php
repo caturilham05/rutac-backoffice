@@ -24,17 +24,17 @@ class ShopeeWebhookRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'code'                    => ['required', 'integer', Rule::in([3, 4])],
-            'shop_id'                 => ['required', 'integer'],
-            'timestamp'               => ['required', 'integer'],
-            'data'                    => ['required', 'array'],
-            'data.items'              => ['sometimes', 'array'],
-            'data.ordersn'            => ['required', 'string'],
-            'data.status'             => ['required_if:code,3', 'string'],
-            'data.tracking_no'        => ['required_if:code,4', 'string', 'max:255'],
-            'data.package_number'     => ['sometimes', 'string'],
+            'code' => ['required', 'integer', Rule::in([3, 4])],
+            'shop_id' => ['required', 'integer'],
+            'timestamp' => ['required', 'integer'],
+            'data' => ['required', 'array'],
+            'data.items' => ['sometimes', 'array'],
+            'data.ordersn' => ['required', 'string'],
+            'data.status' => ['required_if:code,3', 'string'],
+            'data.tracking_no' => ['required_if:code,4', 'string', 'max:255'],
+            'data.package_number' => ['sometimes', 'string'],
             'data.completed_scenario' => ['nullable', 'string'],
-            'data.update_time'        => ['required_if:code,3', 'integer'],
+            'data.update_time' => ['required_if:code,3', 'integer'],
         ];
     }
 }

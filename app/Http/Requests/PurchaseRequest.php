@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PurchaseRequest extends FormRequest
@@ -17,51 +18,52 @@ class PurchaseRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $rules = [
-            'purchase_date'         => ['required', 'date'],
-            'vendor'                => ['required'],
-            'discount'              => ['integer', 'min:0'],
-            'additional_fee'        => ['integer', 'min:0'],
-            'products'              => ['required', 'array', 'min:1'],
+            'purchase_date' => ['required', 'date'],
+            'vendor' => ['required'],
+            'discount' => ['integer', 'min:0'],
+            'additional_fee' => ['integer', 'min:0'],
+            'products' => ['required', 'array', 'min:1'],
             'products.*.product_id' => ['required', 'distinct'],
-            'products.*.price'      => ['required', 'integer', 'min:0'],
-            'products.*.qty'        => ['required', 'integer', 'min:0'],
+            'products.*.price' => ['required', 'integer', 'min:0'],
+            'products.*.qty' => ['required', 'integer', 'min:0'],
         ];
+
         return $rules;
     }
 
     public function messages(): array
     {
         return [
-            '*.required'                     => ':attribute wajib diisi',
-            '*.integer'                      => ':attribute harus berupa angka',
-            'products.*.array'               => ':attribute harus ada datanya',
+            '*.required' => ':attribute wajib diisi',
+            '*.integer' => ':attribute harus berupa angka',
+            'products.*.array' => ':attribute harus ada datanya',
             'products.*.product_id.required' => ':attribute wajib diisi',
             'products.*.product_id.distinct' => 'Produk yang dipilih tidak boleh sama.',
-            'products.*.price.required'      => ':attribute wajib diisi',
-            'products.*.price.integer'       => ':attribute harus berupa angka',
-            'products.*.price.min'           => ':attribute minimal 0',
-            'products.*.qty.required'        => ':attribute wajib diisi',
-            'products.*.qty.integer'         => ':attribute harus berupa angka',
-            'products.*.qty.min'             => ':attribute minimal 0',
+            'products.*.price.required' => ':attribute wajib diisi',
+            'products.*.price.integer' => ':attribute harus berupa angka',
+            'products.*.price.min' => ':attribute minimal 0',
+            'products.*.qty.required' => ':attribute wajib diisi',
+            'products.*.qty.integer' => ':attribute harus berupa angka',
+            'products.*.qty.min' => ':attribute minimal 0',
         ];
     }
 
     public function attributes(): array
     {
         return [
-            'purchase_date'         => 'Purchase Date',
-            'vendor'                => 'Vendor',
-            'discount'              => 'Discount',
-            'additional_fee'        => 'Biaya tambahan',
-            'products.*'            => 'Products',
+            'purchase_date' => 'Purchase Date',
+            'vendor' => 'Vendor',
+            'discount' => 'Discount',
+            'additional_fee' => 'Biaya tambahan',
+            'products.*' => 'Products',
             'products.*.product_id' => 'Nama Produk',
-            'products.*.price'      => 'Harga',
-            'products.*.qty'        => 'Quantity',
+            'products.*.price' => 'Harga',
+            'products.*.qty' => 'Quantity',
         ];
     }
 }

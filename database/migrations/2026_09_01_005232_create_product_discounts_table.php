@@ -22,7 +22,7 @@ return new class extends Migration
             $table->dateTime('start_date')->nullable();
             $table->dateTime('end_date')->nullable();
             $table->string('status')->nullable();
-            $table->index(['start_date','end_date'], 'start_date_end_date_group_index');
+            $table->index(['start_date', 'end_date'], 'start_date_end_date_group_index');
             $table->timestamps();
         });
     }

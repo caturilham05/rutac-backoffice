@@ -25,11 +25,11 @@ class ProductDiscountRequest extends FormRequest
     {
         return [
             'discount_name' => ['nullable', 'string', 'max:255'],
-            'status'        => ['nullable', 'string', 'max:255'],
-            'start_date'    => ['nullable', 'date'],
-            'end_date'      => ['nullable', 'date', 'after_or_equal:start_date'],
-            'sort'          => ['nullable', Rule::in(['discount_name', 'status', 'start_date'])],
-            'direction'     => ['nullable', Rule::in(['asc', 'desc'])],
+            'status' => ['nullable', 'string', 'max:255'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'sort' => ['nullable', Rule::in(['discount_name', 'status', 'start_date'])],
+            'direction' => ['nullable', Rule::in(['asc', 'desc'])],
         ];
     }
 }

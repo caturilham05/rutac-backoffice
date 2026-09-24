@@ -1,7 +1,7 @@
 export default function ApplicationLogo(props) {
     return (
         <>
-            <h1>Rutac Perfume</h1>
+            {/* <h1>Rutac Perfume</h1> */}
         </>
         // <svg
         //     {...props}

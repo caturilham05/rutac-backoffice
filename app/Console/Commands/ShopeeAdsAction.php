@@ -29,8 +29,9 @@ class ShopeeAdsAction extends Command
     {
         $action = $this->argument('action');
 
-        if (!in_array($action, ['pause', 'resume'])) {
+        if (! in_array($action, ['pause', 'resume'])) {
             $this->error('Invalid action. Use pause or resume.');
+
             return;
         }
 

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,18 +19,18 @@ class MarketplaceRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             'marketplace' => ['required'],
-            'store'       => [
+            'store' => [
                 'required',
-                Rule::unique('marketplaces')->where(function($query){
+                Rule::unique('marketplaces')->where(function ($query) {
                     return $query->where('marketplace', $this->marketplace);
                 })->ignore($this->id),
-            ]
+            ],
         ];
     }
 
@@ -37,7 +38,7 @@ class MarketplaceRequest extends FormRequest
     {
         return [
             '*.required' => ':attribute wajib diisi',
-            '*.unique'   => ':attribute sudah terdaftar di sistem'
+            '*.unique' => ':attribute sudah terdaftar di sistem',
         ];
     }
 
@@ -45,7 +46,7 @@ class MarketplaceRequest extends FormRequest
     {
         return [
             'marketplace' => 'Marketplace',
-            'store'       => 'Store'
+            'store' => 'Store',
         ];
     }
 }

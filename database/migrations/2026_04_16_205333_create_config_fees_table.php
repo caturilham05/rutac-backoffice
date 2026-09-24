@@ -13,14 +13,14 @@ return new class extends Migration
     {
         Schema::create('config_fees', function (Blueprint $table) {
             $table->id();
-            $table->double('admin_fee', 22,2)->unsigned()->default(0);
-            $table->double('free_shipping', 22,2)->unsigned()->default(0);
-            $table->double('extra_promo', 22,2)->unsigned()->default(0);
-            $table->double('processing_fee', 22,2)->unsigned()->default(0);
-            $table->double('affiliate', 22,2)->unsigned()->default(0);
-            $table->double('live', 22,2)->unsigned()->default(0);
-            $table->double('premi_fee', 22,2)->unsigned()->default(0);
-            $table->double('operational', 22,2)->unsigned()->default(0);
+            $table->double('admin_fee', 22, 2)->unsigned()->default(0);
+            $table->double('free_shipping', 22, 2)->unsigned()->default(0);
+            $table->double('extra_promo', 22, 2)->unsigned()->default(0);
+            $table->double('processing_fee', 22, 2)->unsigned()->default(0);
+            $table->double('affiliate', 22, 2)->unsigned()->default(0);
+            $table->double('live', 22, 2)->unsigned()->default(0);
+            $table->double('premi_fee', 22, 2)->unsigned()->default(0);
+            $table->double('operational', 22, 2)->unsigned()->default(0);
             $table->timestamps();
         });
     }

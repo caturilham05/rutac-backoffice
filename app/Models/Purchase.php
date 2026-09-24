@@ -8,10 +8,13 @@ use Illuminate\Support\Facades\DB;
 
 class Purchase extends Model
 {
-    protected $table    = 'purchases';
+    protected $table = 'purchases';
+
     protected $fillable = ['invoice', 'vendor', 'price', 'discount', 'additional_fee', 'purchase_date'];
-    protected $appends  = ['created_at_formatted', 'purchase_date_formatted'];
-    protected $casts    = [
+
+    protected $appends = ['created_at_formatted', 'purchase_date_formatted'];
+
+    protected $casts = [
         'purchase_date' => 'date',
     ];
 
@@ -34,32 +37,31 @@ class Purchase extends Model
             }
 
             $purchase = self::create([
-                'vendor'         => $data['vendor'],
-                'invoice'        => $data['invoice'],
-                'price'          => $price_total,
-                'discount'       => $data['discount'],
+                'vendor' => $data['vendor'],
+                'invoice' => $data['invoice'],
+                'price' => $price_total,
+                'discount' => $data['discount'],
                 'additional_fee' => $data['additional_fee'],
-                'purchase_date'  => $data['purchase_date'],
+                'purchase_date' => $data['purchase_date'],
             ]);
 
-            $product_ids    = array_column($data['products'], 'product_id');
-            $products       = Product::whereIn('id', $product_ids)->get()->keyBy('id');
+            $product_ids = array_column($data['products'], 'product_id');
+            $products = Product::whereIn('id', $product_ids)->get()->keyBy('id');
             $product_insert = [];
             foreach ($data['products'] as $product) {
-                $product_get    = $products[$product['product_id']];
+                $product_get = $products[$product['product_id']];
                 $product_insert[] = [
-                    'purchase_id'  => $purchase->id,
-                    'product_id'   => $product['product_id'],
+                    'purchase_id' => $purchase->id,
+                    'product_id' => $product['product_id'],
                     'product_name' => $product_get->name ?? '',
-                    'cat_id'       => $product_get->cat_id ?? '',
-                    'cat_name'     => $product_get->cat_name ?? '',
-                    'price'        => $product['price'],
-                    'qty'          => $product['qty'],
-                    'created_at'   => now(),
-                    'updated_at'   => now(),
+                    'cat_id' => $product_get->cat_id ?? '',
+                    'cat_name' => $product_get->cat_name ?? '',
+                    'price' => $product['price'],
+                    'qty' => $product['qty'],
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ];
             }
-
 
             Purchase_product::insert($product_insert);
 
@@ -69,11 +71,8 @@ class Purchase extends Model
         });
     }
 
-
     /**
      * Get all of the purchase_products for the Purchase
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasMany
      */
     public function purchase_products(): HasMany
     {
@@ -84,19 +83,19 @@ class Purchase extends Model
     {
         $query = self::with(['purchase_products']);
 
-        if (!empty($filters['invoice'])) {
+        if (! empty($filters['invoice'])) {
             $query->where('invoice', 'like', '%'.$filters['invoice'].'%');
         }
 
-        if (!empty($filters['vendor'])) {
+        if (! empty($filters['vendor'])) {
             $query->where('vendor', 'like', '%'.$filters['vendor'].'%');
         }
 
-        if (!empty($filters['start_date'])) {
+        if (! empty($filters['start_date'])) {
             $query->whereDate('purchase_date', '>=', $filters['start_date']);
         }
 
-        if (!empty($filters['end_date'])) {
+        if (! empty($filters['end_date'])) {
             $query->whereDate('purchase_date', '<=', $filters['end_date']);
         }
 
@@ -114,6 +113,7 @@ class Purchase extends Model
         }
 
         $purchases = $query->paginate($per_page);
+
         return $purchases;
     }
 }

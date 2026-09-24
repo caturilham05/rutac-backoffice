@@ -7,13 +7,12 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Purchase_product extends Model
 {
-    protected $table    = 'purchase_products';
+    protected $table = 'purchase_products';
+
     protected $fillable = ['purchase_id', 'product_id', 'product_name', 'cat_id', 'cat_name', 'price', 'qty'];
 
     /**
      * Get the user associated with the Purchase_product
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\HasOne
      */
     public function purchase(): HasOne
     {
@@ -24,15 +23,15 @@ class Purchase_product extends Model
     {
         $query = self::with(['purchase']);
 
-        if (!empty($filter['invoice'])) {
-            $query->whereHas('purchase', fn($q) => $q->where('invoice', 'like', '%' . $filter['invoice'] . '%'));
+        if (! empty($filter['invoice'])) {
+            $query->whereHas('purchase', fn ($q) => $q->where('invoice', 'like', '%'.$filter['invoice'].'%'));
         }
 
-        if (!empty($filter['product_name'])) {
+        if (! empty($filter['product_name'])) {
             $query->where('product_name', 'like', '%'.$filter['product_name'].'%');
         }
 
-        if (!empty($filter['cat_name'])) {
+        if (! empty($filter['cat_name'])) {
             $query->where('cat_name', 'like', '%'.$filter['cat_name'].'%');
         }
 
@@ -50,6 +49,7 @@ class Purchase_product extends Model
         }
 
         $purchase_products = $query->paginate($per_page);
+
         return $purchase_products;
     }
 }
