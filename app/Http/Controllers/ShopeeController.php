@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ShopeeAdsRequest;
+use App\Jobs\SyncShopeeOrders;
 use App\Models\AdsShopee;
 use App\Models\Marketplace;
-use App\Models\Orders;
 use App\Models\Product;
 use App\Models\Product_sku;
 use App\Services\Shopee\ShopeeServices;
@@ -178,100 +178,15 @@ class ShopeeController extends Controller
 
     public function orderSync(Marketplace $marketplace, Request $request)
     {
-        try {
-            $shopee_services = new ShopeeServices(app(ShopeeSignature::class));
-            $startDate = new \DateTime($request->time_from);
-            $endDate = new \DateTime($request->time_to);
-            $currentDate = clone $startDate;
+        $validated = $request->validate([
+            'time_from' => ['required', 'date'],
+            'time_to' => ['required', 'date', 'after_or_equal:time_from'],
+        ]);
 
-            while ($currentDate < $endDate) {
-                $nextDate = (clone $currentDate)->modify('+1 day');
-                if ($nextDate > $endDate) {
-                    $nextDate = $endDate;
-                }
+        SyncShopeeOrders::dispatch($marketplace->id, $validated['time_from'], $validated['time_to'])
+            ->onConnection('redis')
+            ->onQueue('shopee');
 
-                $timeFrom = $currentDate->format('Y-m-d H:i:s');
-                $timeTo = $nextDate->format('Y-m-d H:i:s');
-
-                $cursor = null;
-                do {
-                    $response = $shopee_services->getOrder(
-                        $marketplace->access_token,
-                        $marketplace->shop_id,
-                        $timeFrom,
-                        $timeTo,
-                        100,
-                        $cursor
-                    );
-
-                    $order_list_response = $response['response'] ?? [];
-                    $order_sn_list = array_column($order_list_response['order_list'] ?? [], 'order_sn');
-
-                    if (! empty($order_sn_list)) {
-                        $response_detail = $shopee_services->getOrderDetail(
-                            $marketplace->access_token,
-                            $marketplace->shop_id,
-                            implode(',', $order_sn_list)
-                        );
-
-                        foreach ($response_detail['response']['order_list'] ?? [] as $order_data) {
-                            $escrow = $shopee_services->getEscrowDetail($marketplace->access_token, $marketplace->shop_id, $order_data['order_sn']);
-                            $escrow_resp = $escrow['response'];
-                            $income_data = $escrow_resp['order_income'];
-                            $payment_info = $escrow_resp['buyer_payment_info'];
-
-                            $discount = abs($payment_info['shopee_voucher'] ?? 0) + abs($payment_info['seller_voucher'] ?? 0) + abs($payment_info['shopee_coins_redeemed'] ?? 0) - ($payment_info['shipping_fee'] ?? 0) - ($payment_info['buyer_service_fee'] ?? 0);
-                            if ($discount < 0) {
-                                $discount = 0;
-                            }
-                            $total_fees = ($income_data['commission_fee'] ?? 0) + ($income_data['seller_order_processing_fee'] ?? 0) + ($income_data['service_fee'] ?? 0) + ($income_data['delivery_seller_protection_fee_premium_amount'] ?? 0) + ($income_data['voucher_from_seller'] ?? 0);
-
-                            $preparedOrder = [
-                                'invoice' => $order_data['order_sn'],
-                                'waybill' => $order_data['package_list'][0]['package_number'] ?? null,
-                                'marketplace_id' => $marketplace->id,
-                                'buyer_user_id' => (string) $order_data['buyer_user_id'],
-                                'buyer_username' => $order_data['buyer_username'],
-                                'buyer_phone' => $order_data['recipient_address']['phone'] ?? '',
-                                'buyer_address' => $order_data['recipient_address']['full_address'] ?? '',
-                                'courier' => $order_data['shipping_carrier'] ?? '',
-                                'qty' => array_sum(array_column($order_data['item_list'], 'model_quantity_purchased')),
-                                'discount' => $discount,
-                                'total_price' => $order_data['total_amount'],
-                                'status' => strtolower($order_data['order_status']),
-                                'order_time' => date('Y-m-d H:i:s', $order_data['create_time']),
-                                'payment_method' => $order_data['payment_method'] ?? null,
-                                'notes' => $order_data['message_to_seller'] ?? null,
-                                'income' => ($income_data['cost_of_goods_sold'] ?? 0) - $total_fees,
-                            ];
-
-                            $preparedItems = [];
-                            foreach ($order_data['item_list'] as $item) {
-                                $product_sku = Product_sku::where('product_model_id', $item['model_id'])->first();
-                                $preparedItems[] = [
-                                    'product_id' => $product_sku->product_id ?? 0,
-                                    'product_origin_id' => $item['item_id'],
-                                    'product_model_id' => $item['model_id'],
-                                    'product_name' => $item['item_name'],
-                                    'qty' => $item['model_quantity_purchased'],
-                                    'price' => $item['model_original_price'],
-                                    'sale' => $item['model_discounted_price'],
-                                    'discount' => $item['model_original_price'] - $item['model_discounted_price'],
-                                ];
-                            }
-                            Orders::insertOrderFromShopee($preparedOrder, $preparedItems);
-                        }
-                    }
-
-                    $cursor = ($order_list_response['more'] ?? false) ? $order_list_response['next_cursor'] : null;
-                } while ($cursor);
-
-                $currentDate = $nextDate;
-            }
-
-            return redirect()->route('order.sync')->with('success', sprintf('Berhasil menyinkronkan pesanan Shopee secara bertahap pada periode %s - %s', $request->time_from, $request->time_to));
-        } catch (\Throwable $th) {
-            return redirect()->route('order.sync')->with('error', $th->getMessage());
-        }
+        return redirect()->route('order.sync')->with('success', 'Sinkronisasi pesanan Shopee sudah masuk antrean.');
     }
 }

@@ -8,7 +8,6 @@ function OrderSync() {
     const [marketplaceId, setMarketplaceId] = useState(1);
     const [timeFrom, setTimeFrom]           = useState('');
     const [timeTo, setTimeTo]               = useState('');
-    const [orders, setOrders]               = useState([]);
 
     const fetchOrders = () => {
         if (!timeFrom || !timeTo) {
@@ -22,10 +21,7 @@ function OrderSync() {
             time_to  : timeTo
         }, {
             preserveState: true,
-            onSuccess: (page) => {
-                setOrders(page.props.data || []);
-                setLoading(false);
-            },
+            onSuccess: () => setLoading(false),
             onError: () => setLoading(false)
         });
     };
@@ -70,30 +66,6 @@ function OrderSync() {
                                 </button>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white dark:bg-gray-800">
-                                    <thead>
-                                        <tr>
-                                            <th className="py-2 px-4 border-b">Order SN</th>
-                                            <th className="py-2 px-4 border-b">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {orders.length > 0 ? (
-                                            orders.map(order => (
-                                                <tr key={order.order_sn}>
-                                                    <td className="py-2 px-4 border-b">{order.order_sn}</td>
-                                                    <td className="py-2 px-4 border-b">{order.order_status}</td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="2" className="py-4 text-center">No orders found.</td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
                         </div>
                     </div>
                 </div>
