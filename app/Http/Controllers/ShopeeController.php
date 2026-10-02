@@ -224,7 +224,7 @@ class ShopeeController extends Controller
                             if ($discount < 0) {
                                 $discount = 0;
                             }
-                            $total_fees = ($income_data['commission_fee'] ?? 0) + ($income_data['seller_order_processing_fee'] ?? 0) + ($income_data['service_fee'] ?? 0) + ($income_data['delivery_seller_protection_fee_premium_amount'] ?? 0);
+                            $total_fees = ($income_data['commission_fee'] ?? 0) + ($income_data['seller_order_processing_fee'] ?? 0) + ($income_data['service_fee'] ?? 0) + ($income_data['delivery_seller_protection_fee_premium_amount'] ?? 0) + ($income_data['voucher_from_seller'] ?? 0);
 
                             $preparedOrder = [
                                 'invoice' => $order_data['order_sn'],

@@ -438,4 +438,34 @@ class ShopeeServices
 
         return $response;
     }
+
+    public function getWalletTransactionList(string $accessToken, int $shop_id, string $from_date, string $end_date, int $page_no, int $page_size)
+    {
+        $path       = '/api/v2/payment/get_wallet_transaction_list';
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
+        $sign       = hash_hmac('sha256', $baseString, $this->partnerKey);
+        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&create_time_from=%s&create_time_to=%s&page_no=%s&page_size=%s',
+            $this->host,
+            $path,
+            $this->partnerId,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shop_id,
+            $from_date,
+            $end_date,
+            $page_no,
+            $page_size
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->connectTimeout(3)->timeout(15)->get($url)->throw()->json();
+
+        if (! empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        return $response;
+    }
 }
