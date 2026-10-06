@@ -120,7 +120,7 @@ export default function Dashboard({ filters, stats, daily_chart, top_order_produ
                                 <tr>
                                     <th className="border-b p-2">Product Name</th>
                                     <th className="border-b p-2">Total Qty</th>
-                                    <th className="border-b p-2">Total Price</th>
+                                    <th className="border-b p-2">Average Income</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -128,7 +128,7 @@ export default function Dashboard({ filters, stats, daily_chart, top_order_produ
                                     <tr key={idx}>
                                         <td className="border-b p-2">{p.product_name}</td>
                                         <td className="border-b p-2">{p.total_qty}</td>
-                                        <td className="border-b p-2">{formatCurrency(p.total_price)}</td>
+                                        <td className="border-b p-2">{formatCurrency(p.average_income)}</td>
                                     </tr>
                                 ))}
                             </tbody>

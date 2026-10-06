@@ -90,9 +90,9 @@ class DashboardController extends Controller
                 ->whereDate('order_time', '<=', $endDate)
                 ->where('status', 'completed');
         })
-            ->select('product_name', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(sale * qty) as total_price'))
+            ->select('product_name', DB::raw('SUM(qty) as total_qty'), DB::raw('SUM(sale * qty) as total_price'), DB::raw('AVG(income) as average_income'))
             ->groupBy('product_name')
-            ->orderByDesc('total_qty')
+            ->orderByDesc('average_income')
             ->limit(5)
             ->get();
 
