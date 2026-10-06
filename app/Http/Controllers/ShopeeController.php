@@ -4,15 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\ShopeeAdsRequest;
 use App\Jobs\SyncShopeeOrders;
+use App\Jobs\SyncShopeeProducts;
 use App\Models\AdsShopee;
 use App\Models\Marketplace;
-use App\Models\Product;
-use App\Models\Product_sku;
 use App\Services\Shopee\ShopeeServices;
 use App\Services\Shopee\ShopeeSignature;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ShopeeController extends Controller
@@ -26,102 +24,15 @@ class ShopeeController extends Controller
 
     public function shopeeGetProducts(Marketplace $marketplace, Request $request)
     {
-        $access_token = $marketplace->access_token;
-        $shop_id = $marketplace->shop_id;
+        $validated = $request->validate([
+            'offset' => ['sometimes', 'integer', 'min:0'],
+        ]);
 
-        try {
-            $shopee_services = new ShopeeServices($this->signature);
+        SyncShopeeProducts::dispatch($marketplace->id, (int) ($validated['offset'] ?? 0))
+            ->onConnection('redis')
+            ->onQueue('shopee');
 
-            $model_skus = [];
-
-            $responses = $shopee_services->getProducts(
-                $access_token,
-                $shop_id,
-                $request->offset ?? 0
-            );
-
-            foreach ($responses['response']['item_list'] as $item) {
-                foreach ($item['item_model'] as $model) {
-
-                    if (empty($model['model_sku'])) {
-                        continue;
-                    }
-
-                    $sku = strtolower(trim($model['model_sku']));
-
-                    $priceInfo = $model['price_info'][0] ?? [];
-
-                    $model_skus[$sku] = [
-                        'model_id' => $model['model_id'],
-                        'item_id' => $item['item_id'],
-                        'current_price' => $priceInfo['current_price'] ?? 0,
-                        'original_price' => $priceInfo['original_price'] ?? 0,
-                        'description' => $item['description'],
-                    ];
-                }
-            }
-
-            $skuNames = array_keys($model_skus);
-
-            $products = Product::with([
-                'variants',
-                'skus' => function ($query) use ($skuNames) {
-                    $query->whereIn('name', $skuNames);
-                },
-            ])
-                ->whereHas('skus', function ($query) use ($skuNames) {
-                    $query->whereIn('name', $skuNames);
-                })
-                ->get();
-
-            $data = [];
-            foreach ($products as $product) {
-                $shopeeItemId = null;
-
-                foreach ($product->skus as $sku) {
-                    $shopee = $model_skus[strtolower($sku->name)] ?? null;
-
-                    if (! $shopee) {
-                        continue;
-                    }
-
-                    $shopeeItemId = $shopee['item_id'];
-
-                    $data[] = [
-                        'id' => $sku->id,
-                        'product_id' => $sku->product_id,
-                        'product_variant_id' => $sku->product_variant_id,
-                        'name' => $sku->name,
-                        'product_model_id' => (string) $shopee['model_id'],
-                        'discount_price' => $shopee['current_price'],
-                        'updated_at' => now(),
-                    ];
-                }
-
-                if ($shopeeItemId) {
-                    $product->update([
-                        'product_origin_id' => (string) $shopeeItemId,
-                        'description' => $shopee['description'] ?? $product->description,
-                    ]);
-                }
-            }
-
-            if (! empty($data)) {
-                Product_sku::upsert(
-                    $data,
-                    ['id'], // kolom unik untuk mencocokkan record
-                    ['product_model_id', 'discount_price', 'updated_at'] // kolom yang diupdate
-                );
-            }
-
-        } catch (\Throwable $th) {
-            dd($th->getMessage());
-            $log = Log::build([
-                'driver' => 'single',
-                'path' => storage_path('logs/shopee.log'),
-            ]);
-            $log->error('Error in shopeeGetProducts: '.$th->getMessage());
-        }
+        return back()->with('success', 'Sinkronisasi produk Shopee sudah masuk antrean.');
     }
 
     public function shopeeAds(Marketplace $marketplace)
