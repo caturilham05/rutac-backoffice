@@ -84,10 +84,14 @@ class SyncShopeeOrders implements ShouldQueue
                             'income' => ($income['cost_of_goods_sold'] ?? 0) - $fees,
                         ];
 
-                        $averageIncome = $preparedOrder['qty'] > 0 ? $preparedOrder['income'] / $preparedOrder['qty'] : 0;
+                        $totalSale = array_sum(array_map(
+                            fn (array $item): float => ($item['model_discounted_price'] ?? $item['model_original_price']) * $item['model_quantity_purchased'],
+                            $orderData['item_list']
+                        ));
                         $preparedItems = [];
                         foreach ($orderData['item_list'] as $item) {
                             $sku = Product_sku::where('product_model_id', $item['model_id'])->first();
+                            $sale = $item['model_discounted_price'] ?? $item['model_original_price'];
                             $preparedItems[] = [
                                 'product_id' => $sku->product_id ?? 0,
                                 'product_origin_id' => $item['item_id'],
@@ -95,9 +99,9 @@ class SyncShopeeOrders implements ShouldQueue
                                 'product_name' => $item['item_name'],
                                 'qty' => $item['model_quantity_purchased'],
                                 'price' => $item['model_original_price'],
-                                'sale' => $item['model_discounted_price'],
-                                'discount' => $item['model_original_price'] - $item['model_discounted_price'],
-                                'income' => $averageIncome,
+                                'sale' => $sale,
+                                'discount' => $item['model_original_price'] - $sale,
+                                'income' => $totalSale > 0 ? $preparedOrder['income'] * ($sale * $item['model_quantity_purchased']) / $totalSale : 0,
                             ];
                         }
 
