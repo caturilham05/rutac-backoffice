@@ -100,4 +100,19 @@ class ShopeeController extends Controller
 
         return redirect()->route('order.sync')->with('success', 'Sinkronisasi pesanan Shopee sudah masuk antrean.');
     }
+
+    public function escrowDetail(Marketplace $marketplace, Request $request)
+    {
+        $access_token = $marketplace->access_token;
+        $shop_id = $marketplace->shop_id;
+        $invoice = $request->invoice;
+
+        try {
+            $shopee_services = new ShopeeServices($this->signature);
+            $order = $shopee_services->getEscrowDetail($access_token, $shop_id, $invoice);
+            dd($order);
+        } catch (\Throwable $th) {
+            dd($th->getMessage());
+        }
+    }
 }

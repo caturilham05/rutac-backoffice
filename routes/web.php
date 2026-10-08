@@ -61,6 +61,7 @@ Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function ()
         Route::get('/configuration/{marketplace}/ads-shopee', 'shopeeAds')->name('shopee.ads');
         Route::post('/configuration/{marketplace}/ads-shopee', 'shopeeAdsEdit')->name('shopee.ads.edit');
         Route::post('/{marketplace}/order-sync', 'orderSync')->name('shopee.order.get');
+        Route::get('/{marketplace}/test', 'escrowDetail')->name('shopee.order.escrow');
     });
 
     Route::prefix('purchases')->controller(PurchaseController::class)->group(function () {

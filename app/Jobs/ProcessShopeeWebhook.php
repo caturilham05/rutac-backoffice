@@ -82,7 +82,7 @@ class ProcessShopeeWebhook implements ShouldQueue
             throw new RuntimeException('Shopee returned incomplete escrow details for '.$invoice);
         }
         $data['discount'] = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0));
-        $data['income'] = ($income['cost_of_goods_sold'] ?? 0) - ($income['commission_fee'] ?? 0) - ($income['seller_order_processing_fee'] ?? 0) - ($income['service_fee'] ?? 0) - ($income['delivery_seller_protection_fee_premium_amount'] ?? 0) - ($income['voucher_from_seller'] ?? 0);
+        $data['income'] = ($income['cost_of_goods_sold'] ?? 0) - ($income['commission_fee'] ?? 0) - ($income['seller_order_processing_fee'] ?? 0) - ($income['service_fee'] ?? 0) - ($income['delivery_seller_protection_fee_premium_amount'] ?? 0) - ($income['voucher_from_seller'] ?? 0) - ($income['order_ams_commission_fee'] ?? 0);
 
         $totalSale = array_sum(array_map(fn (array $item): float => $item['sale'] * $item['qty'], $items));
         foreach ($items as &$item) {

@@ -63,7 +63,7 @@ class SyncShopeeOrders implements ShouldQueue
                         $income = $escrow['response']['order_income'];
                         $payment = $escrow['response']['buyer_payment_info'];
                         $discount = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0));
-                        $fees = ($income['commission_fee'] ?? 0) + ($income['seller_order_processing_fee'] ?? 0) + ($income['service_fee'] ?? 0) + ($income['delivery_seller_protection_fee_premium_amount'] ?? 0) + ($income['voucher_from_seller'] ?? 0);
+                        $fees = ($income['commission_fee'] ?? 0) + ($income['seller_order_processing_fee'] ?? 0) + ($income['service_fee'] ?? 0) + ($income['delivery_seller_protection_fee_premium_amount'] ?? 0) + ($income['voucher_from_seller'] ?? 0) + ($income['order_ams_commission_fee'] ?? 0);
 
                         $preparedOrder = [
                             'invoice' => $orderData['order_sn'],
