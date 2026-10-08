@@ -65,9 +65,16 @@ class SyncShopeeOrders implements ShouldQueue
                         $discount = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0));
                         $fees = ($income['commission_fee'] ?? 0) + ($income['seller_order_processing_fee'] ?? 0) + ($income['service_fee'] ?? 0) + ($income['delivery_seller_protection_fee_premium_amount'] ?? 0) + ($income['voucher_from_seller'] ?? 0) + ($income['order_ams_commission_fee'] ?? 0);
 
+                        $waybill = $shopee->getTrackingNumber($marketplace->access_token, (int)$marketplace->shop_id, $orderData['order_sn']);
+                        if ($orderData['order_sn'] == '261003N7KCC321') {
+                            Log::channel('shopee-order-sync')->error('Shopee order sync failed.', [
+                                'data' => $waybill
+                            ]);
+                        }
+
                         $preparedOrder = [
                             'invoice' => $orderData['order_sn'],
-                            'waybill' => $orderData['package_list'][0]['package_number'] ?? null,
+                            'waybill' => empty($waybill['error']) ? $waybill['response']['tracking_number'] : null,
                             'marketplace_id' => $marketplace->id,
                             'buyer_user_id' => (string) $orderData['buyer_user_id'],
                             'buyer_username' => $orderData['buyer_username'],

@@ -439,6 +439,35 @@ class ShopeeServices
         return $response;
     }
 
+    public function getTrackingNumber(string $accessToken, int $shop_id, string $order_sn)
+    {
+        // diskon pembeli -> shopee_voucher + seller_voucher - shipping_fee - buyer_service_fee
+        // biaya penjual -> commision_fee = biaya admin + seller_order_processing_fee = biaya proses pesanan + service_fee = biaya layanan (gratis ongkir extra + biaya layanan) + delivery_seller_protection_fee_premium_amount = premi + voucher_from_seller = voucher penjual
+        $path = '/api/v2/logistics/get_tracking_number';
+        $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
+        $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&order_sn=%s',
+            $this->host,
+            $path,
+            $this->partnerId,
+            $this->time,
+            $sign,
+            $accessToken,
+            $shop_id,
+            $order_sn
+        );
+
+        $response = Http::withHeaders([
+            'Content-Type' => 'application/json',
+        ])->connectTimeout(3)->timeout(15)->get($url)->throw()->json();
+
+        if (! empty($response['error'])) {
+            throw new \Exception($response['message']);
+        }
+
+        return $response;
+    }
+
     public function getWalletTransactionList(string $accessToken, int $shop_id, string $from_date, string $end_date, int $page_no, int $page_size)
     {
         $path       = '/api/v2/payment/get_wallet_transaction_list';

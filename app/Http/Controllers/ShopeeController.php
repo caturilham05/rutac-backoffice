@@ -109,7 +109,7 @@ class ShopeeController extends Controller
 
         try {
             $shopee_services = new ShopeeServices($this->signature);
-            $order = $shopee_services->getEscrowDetail($access_token, $shop_id, $invoice);
+            $order = $shopee_services->getTrackingNumber($access_token, $shop_id, $invoice);
             dd($order);
         } catch (\Throwable $th) {
             dd($th->getMessage());
