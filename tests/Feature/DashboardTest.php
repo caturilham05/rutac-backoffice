@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AdsShopeeTransaction;
 use App\Models\Marketplace;
 use App\Models\MarketplaceAdDailyMetric;
 use App\Models\Orders;
@@ -34,6 +35,34 @@ test('dashboard charts aggregate completed order income and daily amounts within
             ]));
 });
 
+test('dashboard shows ads totals and top payment channels within the selected date range', function () {
+    foreach ([
+        [1, '2026-09-01 10:00:00', 'ShopeePay', 'Wallet', 100, 5, 2],
+        [2, '2026-09-02 10:00:00', 'ShopeePay', 'Wallet', 200, 10, 4],
+        [3, '2026-09-02 11:00:00', 'Bank', 'Visa', 300, 15, 6],
+        [4, '2026-08-31 11:00:00', 'Outside', 'Old', 900, 90, 9],
+    ] as [$invoice, $date, $method, $channel, $price, $fee, $tax]) {
+        AdsShopeeTransaction::create([
+            'invoice' => $invoice,
+            'name' => 'Ad top up',
+            'actual_price' => $price,
+            'order_time' => $date,
+            'payment_method' => $method,
+            'payment_method_channel' => $channel,
+            'transaction_fee' => $fee,
+            'tax_amount' => $tax,
+        ]);
+    }
+
+    $this->actingAs(User::factory()->create())->get(route('dashboard', ['start_date' => '2026-09-01', 'end_date' => '2026-09-03']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('stats.ads', ['total_actual_price' => 600, 'total_transaction_fee' => 30, 'total_tax_amount' => 12])
+            ->has('top_payment_channels', 2)
+            ->where('top_payment_channels.0.payment_method', 'ShopeePay')
+            ->where('top_payment_channels.0.payment_method_channel', 'Wallet')
+            ->where('top_payment_channels.0.total_transactions', 2));
+});
+
 test('dashboard top purchase products filters by parfum category id regardless of category name', function () {
     $purchase = Purchase::create(['purchase_date' => '2026-09-01', 'price' => 10300, 'discount' => 0, 'additional_fee' => 0]);
     foreach ([['parfum', 3], ['bottle', 100]] as $index => [$category, $qty]) {
@@ -56,11 +85,14 @@ test('dashboard top purchase products filters by parfum category id regardless o
             ->where('top_purchase_products.0.total_price', 300));
 });
 
-test('dashboard defaults to today with no transactions', function () {
+test('dashboard defaults to the current month with no transactions', function () {
     $this->travelTo('2026-09-05 12:00:00');
     $this->actingAs(User::factory()->create())->get(route('dashboard'))
-        ->assertInertia(fn (Assert $page) => $page->has('daily_chart', 1)
-            ->where('daily_chart.0', ['date' => '2026-09-05', 'order_income' => 0, 'purchase_total' => 0, 'ad_expense' => null]));
+        ->assertInertia(fn (Assert $page) => $page->has('daily_chart', 5)
+            ->where('filters.start_date', '2026-09-01')
+            ->where('filters.end_date', '2026-09-05')
+            ->where('daily_chart.0', ['date' => '2026-09-01', 'order_income' => 0, 'purchase_total' => 0, 'ad_expense' => null])
+            ->where('daily_chart.4', ['date' => '2026-09-05', 'order_income' => 0, 'purchase_total' => 0, 'ad_expense' => null]));
 });
 
 test('dashboard rejects invalid chart dates', function (array $filters, string $field) {

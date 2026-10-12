@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AdsShopeeTransaction;
 use App\Models\MarketplaceAdDailyMetric;
 use App\Models\OrderProducts;
 use App\Models\Orders;
@@ -18,14 +19,14 @@ class DashboardController extends Controller
     public function index(Request $request): Response
     {
         $request->mergeIfMissing([
-            'start_date' => now()->toDateString(),
+            'start_date' => now()->startOfMonth()->toDateString(),
             'end_date' => now()->toDateString(),
         ]);
         $request->validate([
             'start_date' => ['required', 'date_format:Y-m-d'],
             'end_date' => ['required', 'date_format:Y-m-d', 'after_or_equal:start_date'],
         ]);
-        $startDate = $request->input('start_date', now()->toDateString());
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
 
         $dailyOrders = Orders::whereDate('order_time', '>=', $startDate)
@@ -79,6 +80,20 @@ class DashboardController extends Controller
                 DB::raw('SUM(discount) as total_discount'),
             ])
             ->first();
+
+        $adsTransactions = AdsShopeeTransaction::whereDate('order_time', '>=', $startDate)
+            ->whereDate('order_time', '<=', $endDate);
+        $adsStats = (clone $adsTransactions)->select([
+            DB::raw('SUM(actual_price) as total_actual_price'),
+            DB::raw('SUM(transaction_fee) as total_transaction_fee'),
+            DB::raw('SUM(tax_amount) as total_tax_amount'),
+        ])->first();
+        $topPaymentChannels = (clone $adsTransactions)
+            ->select('payment_method', 'payment_method_channel', DB::raw('COUNT(*) as total_transactions'))
+            ->groupBy('payment_method', 'payment_method_channel')
+            ->orderByDesc('total_transactions')
+            ->limit(5)
+            ->get();
 
         $totalQty = Purchase_product::whereHas('purchase', function ($query) use ($startDate, $endDate) {
             $query->whereDate('purchase_date', '>=', $startDate)
@@ -153,7 +168,13 @@ class DashboardController extends Controller
                     'total_additional_fee' => $purchaseStats->total_additional_fee ?? 0,
                     'total_qty' => $totalQty ?? 0,
                 ],
+                'ads' => [
+                    'total_actual_price' => $adsStats->total_actual_price ?? 0,
+                    'total_transaction_fee' => $adsStats->total_transaction_fee ?? 0,
+                    'total_tax_amount' => $adsStats->total_tax_amount ?? 0,
+                ],
             ],
+            'top_payment_channels' => $topPaymentChannels,
             'top_order_products' => $topOrderProducts,
             'top_purchase_products' => $topPurchaseProducts,
             'top_buyers' => $topBuyers,

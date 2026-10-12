@@ -7,7 +7,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useTheme } from '@/Hooks/useTheme';
 import { useMemo } from 'react';
 
-export default function Dashboard({ filters, stats, daily_chart, top_order_products, top_purchase_products, top_buyers, top_vendors }) {
+export default function Dashboard({ filters, stats, daily_chart, top_order_products, top_purchase_products, top_buyers, top_vendors, top_payment_channels }) {
     const { errors } = usePage().props;
     const { theme } = useTheme();
     const chartTheme = useMemo(() => createTheme({ palette: { mode: theme } }), [theme]);
@@ -67,6 +67,47 @@ export default function Dashboard({ filters, stats, daily_chart, top_order_produ
                         </ThemeProvider>
                     </div>
                 </section>
+
+                {/* Ads Statistic */}
+                <div className="mb-4">
+                    <h3 className="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-wider">Ads Statistic</h3>
+                </div>
+                <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {[
+                        { label: 'Total Actual Price', value: formatCurrency(stats.ads.total_actual_price) },
+                        { label: 'Transaction Fee', value: formatCurrency(stats.ads.total_transaction_fee) },
+                        { label: 'Tax Amount', value: formatCurrency(stats.ads.total_tax_amount) },
+                    ].map((item) => (
+                        <div key={item.label} className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800">
+                            <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">{item.label}</p>
+                            <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{item.value}</p>
+                        </div>
+                    ))}
+                </div>
+                <div className="mb-10 rounded-xl border border-gray-100 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                    <h3 className="mb-6 text-lg font-bold text-gray-800 dark:text-white">Top 5 Payment Method Channel</h3>
+                    <table className="w-full text-left">
+                        <thead>
+                            <tr>
+                                <th className="border-b p-2">Payment Method</th>
+                                <th className="border-b p-2">Channel</th>
+                                <th className="border-b p-2">Transactions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {top_payment_channels.map((channel, index) => (
+                                <tr key={`${channel.payment_method}-${channel.payment_method_channel}`}>
+                                    <td className="border-b p-2">{channel.payment_method}</td>
+                                    <td className="border-b p-2">{channel.payment_method_channel}</td>
+                                    <td className="border-b p-2">{channel.total_transactions}</td>
+                                </tr>
+                            ))}
+                            {top_payment_channels.length === 0 && (
+                                <tr><td colSpan="3" className="p-2 text-gray-500 dark:text-gray-400">No payment channel data for this date range.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
 
                 {/* Order Statistic */}
                 <div className="mb-4">
