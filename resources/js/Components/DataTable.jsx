@@ -160,6 +160,33 @@ export default function DataTable({
                         className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
                     />
                 );
+            case 'date-range':
+                return (
+                    <div className="flex items-center gap-2">
+                        {['start_date', 'end_date'].map((key) => (
+                            <input
+                                key={key}
+                                type="date"
+                                aria-label={`${filter.label} ${key === 'start_date' ? 'mulai' : 'akhir'}`}
+                                value={localFilters[key] || ''}
+                                onChange={(e) => {
+                                    const newFilters = {
+                                        ...localFilters,
+                                        [key]: e.target.value,
+                                    };
+                                    setLocalFilters(newFilters);
+                                    if (
+                                        newFilters.start_date &&
+                                        newFilters.end_date
+                                    ) {
+                                        applyFilters(newFilters);
+                                    }
+                                }}
+                                className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800"
+                            />
+                        ))}
+                    </div>
+                );
             case 'number':
                 return (
                     <input

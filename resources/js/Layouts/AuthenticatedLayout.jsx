@@ -21,6 +21,7 @@ export default function AuthenticatedLayout({ header, children }) {
     const isConfigurationActive =
         route().current('ShopeeFee') ||
         route().current('shopee.ads.index') ||
+        route().current('ads-transactions.*') ||
         route().current('shopee.calculator.*');
 
     return (
@@ -187,6 +188,11 @@ export default function AuthenticatedLayout({ header, children }) {
                                                 href={route('shopee.ads.index')}
                                             >
                                                 Ads Shopee
+                                            </Dropdown.Link>
+                                            <Dropdown.Link
+                                                href={route('ads-transactions.index')}
+                                            >
+                                                Ads Transaction
                                             </Dropdown.Link>
                                             <Dropdown.Link
                                                 href={route(
@@ -457,6 +463,12 @@ export default function AuthenticatedLayout({ header, children }) {
                                     active={route().current('shopee.ads.index')}
                                 >
                                     Ads Shopee
+                                </ResponsiveNavLink>
+                                <ResponsiveNavLink
+                                    href={route('ads-transactions.index')}
+                                    active={route().current('ads-transactions.*')}
+                                >
+                                    Ads Transaction
                                 </ResponsiveNavLink>
                                 <ResponsiveNavLink
                                     href={route('shopee.calculator.index')}

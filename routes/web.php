@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdsShopeeTransactionController;
 use App\Http\Controllers\Auth\AuthMarketplaceController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\MarketplaceController;
@@ -39,6 +40,8 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/ads-transactions', [AdsShopeeTransactionController::class, 'index'])->name('ads-transactions.index');
+    Route::get('/ads-transactions/{adsShopeeTransaction}', [AdsShopeeTransactionController::class, 'show'])->name('ads-transactions.show');
 
     Route::get('configuration/shopee-calculator', [ShopeeCalculatorController::class, 'index'])->name('shopee.calculator.index');
     Route::get('configuration/shopee-calculator/products', [ShopeeCalculatorController::class, 'products'])->name('shopee.calculator.products');
