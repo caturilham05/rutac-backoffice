@@ -68,6 +68,22 @@ export default function Dashboard({ filters, stats, daily_chart, top_order_produ
                     </div>
                 </section>
 
+                <section aria-labelledby="financial-summary-title" className="mb-8 rounded-xl border border-gray-100 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+                    <h3 id="financial-summary-title" className="text-lg font-bold text-gray-800 dark:text-white">Purchase vs Order Income vs Ads</h3>
+                    <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                        {[
+                            { label: 'Total Purchase', value: formatCurrency(stats.purchase.total_price) },
+                            { label: 'Total Income Order', value: formatCurrency(stats.order.total_income) },
+                            { label: 'Total Ads', value: formatCurrency(stats.ads.total_actual_price) },
+                        ].map((item) => (
+                            <div key={item.label} className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                                <p className="text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-300">{item.label}</p>
+                                <p className="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{item.value}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+
                 {/* Ads Statistic */}
                 <div className="mb-4">
                     <h3 className="text-lg font-bold text-gray-800 dark:text-white uppercase tracking-wider">Ads Statistic</h3>
