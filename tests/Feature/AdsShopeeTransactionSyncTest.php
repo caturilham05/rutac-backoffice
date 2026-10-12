@@ -52,7 +52,7 @@ test('queued sync fetches all Shopee pages and updates transactions without dupl
 
     $transaction = AdsShopeeTransaction::where('invoice', 660065464048669)->firstOrFail();
     expect(AdsShopeeTransaction::where('invoice', 660065464048669)->count())->toBe(1);
-    expect($transaction->name)->toBe('Saldo Iklan Shopee');
+    expect($transaction->name)->toBe('Saldo Iklan Shopee - Rp100.000 Top Up');
     expect($transaction->original_price)->toBe(100000.0);
     expect($transaction->actual_price)->toBe(112000.0);
     expect($transaction->payment_method)->toBe('Transfer Bank');
