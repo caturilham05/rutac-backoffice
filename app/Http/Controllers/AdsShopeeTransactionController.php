@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AdsShopeeTransactionRequest;
-use App\Models\Marketplace;
+use App\Jobs\SyncAdsShopeeTransactions;
 use App\Models\AdsShopeeTransaction;
+use App\Models\Marketplace;
+use App\Services\Shopee\ShopeeServices;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Crypt;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -43,5 +48,29 @@ class AdsShopeeTransactionController extends Controller
             ]),
             'storeName' => Marketplace::query()->where('marketplace', 'Shopee')->value('store'),
         ]);
+    }
+
+    public function sync(): Response
+    {
+        return Inertia::render('Backoffice/AdsTransactions/Sync');
+    }
+
+    public function storeSync(Request $request, ShopeeServices $shopeeServices): RedirectResponse
+    {
+        $validated = $request->validate([
+            'curl' => ['required', 'string', 'max:30000'],
+        ]);
+
+        try {
+            $shopeeServices->validateAdsTransactionCurl($validated['curl']);
+        } catch (\InvalidArgumentException $exception) {
+            return back()->with('error', $exception->getMessage());
+        }
+
+        SyncAdsShopeeTransactions::dispatch(Crypt::encryptString($validated['curl']))
+            ->onConnection('redis')
+            ->onQueue('shopee');
+
+        return redirect()->route('ads-transactions.index')->with('success', 'Sinkronisasi transaksi iklan dimasukkan ke antrean.');
     }
 }

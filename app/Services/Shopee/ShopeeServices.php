@@ -2,6 +2,7 @@
 
 namespace App\Services\Shopee;
 
+use App\Models\AdsShopeeTransaction;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 
@@ -24,6 +25,65 @@ class ShopeeServices
         $this->partnerId = (int) config('services.shopee.partner_id');
         $this->partnerKey = config('services.shopee.partner_key');
         $this->time = time();
+    }
+
+    public function syncAdsTransactionsFromCurl(string $curl): int
+    {
+        [$url, $query, $cookie] = $this->parseAdsTransactionCurl($curl);
+
+        $headers = [
+            'Cookie' => $cookie,
+            'User-Agent' => 'Mozilla/5.0',
+            'Accept' => 'application/json',
+        ];
+
+        $count = 0;
+        $page = (int) $query['page_number'];
+        do {
+            $query['page_number'] = $page;
+            $response = Http::connectTimeout(5)->timeout(30)->withHeaders($headers)
+                ->get((string) parse_url($url, PHP_URL_SCHEME).'://'.parse_url($url, PHP_URL_HOST).parse_url($url, PHP_URL_PATH), $query)
+                ->throw()
+                ->json();
+
+            $orders = data_get($response, 'data.list', data_get($response, 'data.order_list', data_get($response, 'data.order_list_info', data_get($response, 'response.order_list', data_get($response, 'data', [])))));
+            $orders = isset($orders['order_sn']) ? [$orders] : $orders;
+            if (! is_array($orders)) {
+                throw new \RuntimeException('Format data transaksi dari Shopee tidak dikenali.');
+            }
+
+            $count += AdsShopeeTransaction::syncFromShopeeOrders($orders);
+
+            $page++;
+        } while ($orders !== []);
+
+        return $count;
+    }
+
+    public function validateAdsTransactionCurl(string $curl): void
+    {
+        $this->parseAdsTransactionCurl($curl);
+    }
+
+    /** @return array{string, array<string, string>, string} */
+    private function parseAdsTransactionCurl(string $curl): array
+    {
+        if (! preg_match('/^\s*curl\s+[\'\"](https:\/\/seller\.shopee\.co\.id\/api\/valueadded\/v1\/search_order_list\/\?[^\'\"]+)[\'\"]/m', $curl, $matches)) {
+            throw new \InvalidArgumentException('URL cURL harus menggunakan endpoint transaksi Shopee yang valid.');
+        }
+
+        $url = $matches[1];
+        parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+        if (! isset($query['SPC_CDS'], $query['page_size'], $query['page_number'], $query['biz_id'], $query['status'])) {
+            throw new \InvalidArgumentException('Parameter transaksi pada URL cURL belum lengkap.');
+        }
+
+        preg_match('/(?:^|\\s)-H\\s+[\'\"]Cookie:\\s*([^\'\"]*)[\'\"]/m', $curl, $cookieMatch);
+        if (empty($cookieMatch[1])) {
+            throw new \InvalidArgumentException('Header Cookie tidak ditemukan pada cURL.');
+        }
+
+        return [$url, $query, $cookieMatch[1]];
     }
 
     public function getTokenShopLevel(?string $code, int $shopId)
@@ -470,10 +530,10 @@ class ShopeeServices
 
     public function getWalletTransactionList(string $accessToken, int $shop_id, string $from_date, string $end_date, int $page_no, int $page_size)
     {
-        $path       = '/api/v2/payment/get_wallet_transaction_list';
+        $path = '/api/v2/payment/get_wallet_transaction_list';
         $baseString = $this->partnerId.$path.$this->time.$accessToken.$shop_id;
-        $sign       = hash_hmac('sha256', $baseString, $this->partnerKey);
-        $url        = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&create_time_from=%s&create_time_to=%s&page_no=%s&page_size=%s',
+        $sign = hash_hmac('sha256', $baseString, $this->partnerKey);
+        $url = sprintf('%s%s?partner_id=%s&timestamp=%s&sign=%s&access_token=%s&shop_id=%s&create_time_from=%s&create_time_to=%s&page_no=%s&page_size=%s',
             $this->host,
             $path,
             $this->partnerId,

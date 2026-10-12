@@ -41,6 +41,8 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->prefix('backoffice')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/ads-transactions', [AdsShopeeTransactionController::class, 'index'])->name('ads-transactions.index');
+    Route::get('/ads-transactions/sync', [AdsShopeeTransactionController::class, 'sync'])->name('ads-transactions.sync');
+    Route::post('/ads-transactions/sync', [AdsShopeeTransactionController::class, 'storeSync'])->name('ads-transactions.sync.store');
     Route::get('/ads-transactions/{adsShopeeTransaction}', [AdsShopeeTransactionController::class, 'show'])->name('ads-transactions.show');
 
     Route::get('configuration/shopee-calculator', [ShopeeCalculatorController::class, 'index'])->name('shopee.calculator.index');

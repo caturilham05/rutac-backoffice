@@ -1,11 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
+import FlashMessage from '@/Components/FlashMessage';
 import DataTable from '@/Components/DataTable';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 
 const formatCurrency = (value) =>
     `Rp${Number(value ?? 0).toLocaleString('id-ID')}`;
 
 export default function Index({ transactions, filters, sortColumn, sortDirection }) {
+    const { flash } = usePage().props;
     const columns = [
         {
             key: 'name',
@@ -61,6 +63,15 @@ export default function Index({ transactions, filters, sortColumn, sortDirection
             <div className="py-8 sm:py-12">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="rounded-lg bg-white shadow-sm dark:bg-gray-800">
+                        <div className="px-4 pt-4">
+                            <FlashMessage message={flash.success} role="status" />
+                            <FlashMessage message={flash.error} type="error" role="alert" />
+                        </div>
+                        <div className="flex justify-end p-4">
+                            <Link href={route('ads-transactions.sync')} className="rounded-md bg-orange-600 px-4 py-2 text-sm font-semibold text-white hover:bg-orange-700">
+                                Sync Transaction Ads
+                            </Link>
+                        </div>
                         <DataTable
                             columns={columns}
                             data={transactions.data}
