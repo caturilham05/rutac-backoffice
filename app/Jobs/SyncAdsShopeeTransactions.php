@@ -22,6 +22,7 @@ class SyncAdsShopeeTransactions implements ShouldQueue
 
     public function __construct(public string $encryptedCurl) {}
 
+    /** Sync Shopee ads transactions from a seller order-list cURL request. */
     public function handle(ShopeeServices $shopeeServices): void
     {
         $shopeeServices->syncAdsTransactionsFromCurl(Crypt::decryptString($this->encryptedCurl));

@@ -62,7 +62,7 @@ class SyncShopeeOrders implements ShouldQueue
                         $escrow = $shopee->getEscrowDetail($marketplace->access_token, (int) $marketplace->shop_id, $orderData['order_sn']);
                         $income = $escrow['response']['order_income'];
                         $payment = $escrow['response']['buyer_payment_info'];
-                        $discount = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0));
+                        $discount = max(0, abs($payment['shopee_voucher'] ?? 0) + abs($payment['seller_voucher'] ?? 0) + abs($payment['shopee_coins_redeemed'] ?? 0) - ($payment['shipping_fee'] ?? 0) - ($payment['buyer_service_fee'] ?? 0) - ($payment['credit_card_promotion'] ?? 0));
                         $fees = ($income['commission_fee'] ?? 0) + ($income['seller_order_processing_fee'] ?? 0) + ($income['service_fee'] ?? 0) + ($income['delivery_seller_protection_fee_premium_amount'] ?? 0) + ($income['voucher_from_seller'] ?? 0) + ($income['order_ams_commission_fee'] ?? 0);
 
                         $waybill = $shopee->getTrackingNumber($marketplace->access_token, (int)$marketplace->shop_id, $orderData['order_sn']);
