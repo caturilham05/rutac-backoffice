@@ -9,6 +9,7 @@ use App\Services\Shopee\ShopeeServices;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 
 class ProcessShopeeWebhook implements ShouldQueue
@@ -78,6 +79,12 @@ class ProcessShopeeWebhook implements ShouldQueue
         $escrow = $shopee->getEscrowDetail($marketplace->access_token, (int) $marketplace->shop_id, $invoice);
         $income = $escrow['response']['order_income'] ?? null;
         $payment = $escrow['response']['buyer_payment_info'] ?? null;
+        Log::channel('shopee-order-sync')->info('Shopee webhook escrow income received.', [
+            'invoice' => $invoice,
+            'order_ams_commission_fee_present' => is_array($income) && array_key_exists('order_ams_commission_fee', $income),
+            'order_ams_commission_fee' => $income['order_ams_commission_fee'] ?? null,
+            'cost_of_goods_sold' => $income['cost_of_goods_sold'] ?? null,
+        ]);
         if (! is_array($income) || ! is_array($payment)) {
             throw new RuntimeException('Shopee returned incomplete escrow details for '.$invoice);
         }
