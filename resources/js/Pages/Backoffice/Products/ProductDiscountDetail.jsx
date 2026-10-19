@@ -97,8 +97,7 @@ export default function ProductDiscountDetail({
         },
     ];
 
-    const submit = (event) => {
-        event.preventDefault();
+    const submit = () => {
         put(route('product_discounts.update', discount.discount_id));
     };
 
@@ -190,8 +189,7 @@ export default function ProductDiscountDetail({
                         </div>
                     </div>
 
-                    <form
-                        onSubmit={submit}
+                    <div
                         className="flex flex-col gap-4 rounded-lg bg-white shadow-sm dark:bg-gray-800"
                     >
                         <DataTable
@@ -216,14 +214,18 @@ export default function ProductDiscountDetail({
 
                         {editing && (
                             <div className="flex justify-end px-4 pb-4">
-                                <PrimaryButton disabled={processing}>
+                                <PrimaryButton
+                                    type="button"
+                                    disabled={processing}
+                                    onClick={submit}
+                                >
                                     {processing
                                         ? 'Menyimpan...'
                                         : 'Simpan Perubahan'}
                                 </PrimaryButton>
                             </div>
                         )}
-                    </form>
+                    </div>
                 </div>
             </div>
         </AuthenticatedLayout>
