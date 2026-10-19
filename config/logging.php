@@ -134,7 +134,7 @@ return [
         'shopee-order-sync' => [
             'driver' => 'single',
             'path' => storage_path('logs/shopee-order-sync.log'),
-            'level' => 'error',
+            'level' => 'info',
         ],
     ],
 
