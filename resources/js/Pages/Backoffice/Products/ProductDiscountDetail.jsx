@@ -4,6 +4,7 @@ import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 const formatDate = (date) => date?.replace('T', ' ').slice(0, 16) || '-';
 const value = (data) => data ?? '-';
@@ -16,24 +17,26 @@ export default function ProductDiscountDetail({
 }) {
     const { flash } = usePage().props;
     const { data, setData, put, processing, errors } = useForm({
-        items: items.data.map((item) => ({
-            id: item.id,
-            promotion_price:
-                item.model_promotion_price ?? item.item_promotion_price ?? '',
-        })),
+        items: [],
     });
 
-    const updateItem = (id, value) => {
-        setData(
-            'items',
-            data.items.map((item) =>
-                item.id === id ? { ...item, promotion_price: value } : item,
-            ),
-        );
-    };
+    useEffect(() => {
+        setData('items', items.data.map((item) => ({
+            id: item.id,
+            promotion_price: item.model_promotion_price ?? item.item_promotion_price ?? '',
+        })));
+    }, [items.data]);
+
+    const updateItem = (id, price) => setData('items', [
+        ...data.items.filter((item) => item.id !== id),
+        { id, promotion_price: price },
+    ]);
 
     const promotionPriceInput = (item) => {
         const index = data.items.findIndex((row) => row.id === item.id);
+        const promotionPrice = index >= 0
+            ? data.items[index].promotion_price
+            : item.model_promotion_price ?? item.item_promotion_price ?? '';
 
         return (
             <div className="min-w-32">
@@ -41,7 +44,7 @@ export default function ProductDiscountDetail({
                     type="number"
                     min="0.01"
                     step="0.01"
-                    value={data.items[index].promotion_price}
+                    value={promotionPrice}
                     onChange={(event) =>
                         updateItem(item.id, event.target.value)
                     }
