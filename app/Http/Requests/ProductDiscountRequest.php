@@ -24,6 +24,7 @@ class ProductDiscountRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'search' => ['nullable', 'string', 'max:255'],
             'discount_name' => ['nullable', 'string', 'max:255'],
             'status' => ['nullable', 'string', 'max:255'],
             'start_date' => ['nullable', 'date'],

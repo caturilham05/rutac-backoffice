@@ -3,7 +3,8 @@ import FlashMessage from '@/Components/FlashMessage';
 import InputError from '@/Components/InputError';
 import PrimaryButton from '@/Components/PrimaryButton';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, Link, useForm, usePage } from '@inertiajs/react';
+import { Head, Link, router, useForm, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 
 const formatDate = (date) => date?.replace('T', ' ').slice(0, 16) || '-';
 const value = (data) => data ?? '-';
@@ -11,9 +12,11 @@ const value = (data) => data ?? '-';
 export default function ProductDiscountDetail({
     discount,
     items,
+    filters = {},
     editing = false,
 }) {
     const { flash } = usePage().props;
+    const [search, setSearch] = useState(filters.search || '');
     const { data, setData, put, processing, errors } = useForm({
         items: items.data.map((item) => ({
             id: item.id,
@@ -101,6 +104,17 @@ export default function ProductDiscountDetail({
         put(route('product_discounts.update', discount.discount_id));
     };
 
+    const searchItems = (event) => {
+        event.preventDefault();
+        router.get(
+            editing
+                ? route('product_discounts.edit', discount.discount_id)
+                : route('product_discounts.show', discount.discount_id),
+            { search },
+            { preserveState: true, preserveScroll: true, replace: true },
+        );
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -141,6 +155,7 @@ export default function ProductDiscountDetail({
                                 href={route('product_discounts.edit', {
                                     productDiscount: discount.discount_id,
                                     page: items.current_page,
+                                    search: filters.search,
                                 })}
                                 className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
                             >
@@ -192,6 +207,23 @@ export default function ProductDiscountDetail({
                         onSubmit={submit}
                         className="flex flex-col gap-4 rounded-lg bg-white shadow-sm dark:bg-gray-800"
                     >
+                        <div className="flex gap-2 px-4 pt-4">
+                            <input
+                                type="search"
+                                aria-label="Cari produk atau item"
+                                value={search}
+                                onChange={(event) => setSearch(event.target.value)}
+                                placeholder="Cari nama atau ID produk/item..."
+                                className="w-full max-w-md rounded-md border-gray-300 text-sm shadow-sm focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100"
+                            />
+                            <button
+                                type="button"
+                                onClick={searchItems}
+                                className="rounded-md bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Cari
+                            </button>
+                        </div>
                         <DataTable
                             columns={columns}
                             data={items.data}

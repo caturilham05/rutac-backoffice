@@ -49,19 +49,41 @@ class ProductDiscountController extends Controller
         }
     }
 
-    public function show(ProductDiscount $productDiscount): Response
+    public function show(ProductDiscountRequest $request, ProductDiscount $productDiscount): Response
     {
         return Inertia::render('Backoffice/Products/ProductDiscountDetail', [
             'discount' => $productDiscount,
-            'items' => $productDiscount->items()->paginate(15),
+            'items' => $productDiscount->items()
+                ->when($request->validated('search'), function ($query, string $search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query->where('product_origin_id', 'like', "%{$search}%")
+                            ->orWhere('product_model_id', 'like', "%{$search}%")
+                            ->orWhere('item_name', 'like', "%{$search}%")
+                            ->orWhere('model_name', 'like', "%{$search}%");
+                    });
+                })
+                ->paginate(15)
+                ->withQueryString(),
+            'filters' => $request->safe()->only('search'),
         ]);
     }
 
-    public function edit(ProductDiscount $productDiscount): Response
+    public function edit(ProductDiscountRequest $request, ProductDiscount $productDiscount): Response
     {
         return Inertia::render('Backoffice/Products/ProductDiscountDetail', [
             'discount' => $productDiscount,
-            'items' => $productDiscount->items()->paginate(15),
+            'items' => $productDiscount->items()
+                ->when($request->validated('search'), function ($query, string $search): void {
+                    $query->where(function ($query) use ($search): void {
+                        $query->where('product_origin_id', 'like', "%{$search}%")
+                            ->orWhere('product_model_id', 'like', "%{$search}%")
+                            ->orWhere('item_name', 'like', "%{$search}%")
+                            ->orWhere('model_name', 'like', "%{$search}%");
+                    });
+                })
+                ->paginate(15)
+                ->withQueryString(),
+            'filters' => $request->safe()->only('search'),
             'editing' => true,
         ]);
     }
