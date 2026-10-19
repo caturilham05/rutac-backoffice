@@ -84,6 +84,7 @@ class ProcessShopeeWebhook implements ShouldQueue
             'order_ams_commission_fee_present' => is_array($income) && array_key_exists('order_ams_commission_fee', $income),
             'order_ams_commission_fee' => $income['order_ams_commission_fee'] ?? null,
             'cost_of_goods_sold' => $income['cost_of_goods_sold'] ?? null,
+            'income' => json_encode($income)
         ]);
         if (! is_array($income) || ! is_array($payment)) {
             throw new RuntimeException('Shopee returned incomplete escrow details for '.$invoice);
