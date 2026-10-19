@@ -68,7 +68,7 @@ class SyncShopeeOrders implements ShouldQueue
                         try {
                             $waybill = $shopee->getTrackingNumber($marketplace->access_token, (int) $marketplace->shop_id, $orderData['order_sn']);
                         } catch (Throwable $exception) {
-                            Log::channel('shopee-order-sync')->error('Shopee tracking number unavailable during order sync.', [
+                            Log::channel('shopee-order-sync')->info('Shopee tracking number unavailable during order sync.', [
                                 'invoice' => $orderData['order_sn'],
                                 'error_message' => $exception->getMessage(),
                             ]);
